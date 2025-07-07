@@ -5,6 +5,7 @@
 CREATE TABLE IF NOT EXISTS conversions (
     source_id INTEGER NOT NULL REFERENCES units(id),
     destination_id INTEGER NOT NULL REFERENCES units(id),
+    weekly_pattern_id INTEGER REFERENCES week_pattern(id),
     bidirectional BOOLEAN NOT NULL,
     -- slope FLOAT,
     -- intercept FLOAT,
