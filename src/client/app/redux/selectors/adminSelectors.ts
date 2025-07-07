@@ -331,10 +331,11 @@ export const selectDefaultCreateConversionValues = createAppSelector(
 			destinationId: -999,
 			destinationOptions: sortedUnitData.filter(unit => unit.typeOfUnit !== 'meter'),
 			bidirectional: true,
-			note: '',
+			overallConversionNote: '',
+			initialConversionNote: '',
 			slope: 0,
 			intercept: 0,
-			pattern: 'No Pattern'
+			weeklyPattern: 'No Pattern'
 		};
 		return defaultValues;
 	}
