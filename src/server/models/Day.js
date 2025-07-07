@@ -70,6 +70,8 @@ class Day {
         if (day.id === undefined) {
             throw new Error('Attempted to update a day with no ID');
         }
-        await conn.none(sqlFile('day/update_day_pattern.sql'));
+        await conn.none(sqlFile('day/update_day_pattern.sql'), day);
     }
 }
+
+module.exports = Day;

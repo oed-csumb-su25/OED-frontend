@@ -10,16 +10,12 @@ class Conversion {
 	 * @param {*} sourceId The unit id of the source.
 	 * @param {*} destinationId The unit id of the destination.
 	 * @param {*} bidirectional Is this conversion bidirectional?
-	 * @param {*} slope The slope of the conversion.
-	 * @param {*} intercept The intercept of the conversion.
 	 * @param {*} note Comments by the admin or OED inserted.
 	 */
-	constructor(sourceId, destinationId, bidirectional, slope, intercept, note) {
+	constructor(sourceId, destinationId, bidirectional, note) {
 		this.sourceId = sourceId;
 		this.destinationId = destinationId;
 		this.bidirectional = bidirectional;
-		this.slope = slope;
-		this.intercept = intercept;
 		this.note = note;
 	}
 
@@ -38,7 +34,7 @@ class Conversion {
 	 * @returns The new conversion object.
 	 */
 	static mapRow(row) {
-		return new Conversion(row.source_id, row.destination_id, row.bidirectional, row.slope, row.intercept, row.note);
+		return new Conversion(row.source_id, row.destination_id, row.bidirectional, row.note);
 	}
 
 	/**

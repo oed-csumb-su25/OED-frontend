@@ -84,3 +84,5 @@ class DaySegment {
         await conn.none(sqlFile('daySegment/update_day_segment.sql'), daySegment);
     }
 }
+
+module.exports = DaySegment;

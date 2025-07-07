@@ -102,4 +102,6 @@ class Week {
         await conn.none(sqlFile('week/update_week_pattern.sql'), week);
     }
 
-} module.exports = Week;
+} 
+
+module.exports = Week;
