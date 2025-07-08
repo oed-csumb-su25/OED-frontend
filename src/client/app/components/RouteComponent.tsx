@@ -27,6 +27,7 @@ import ErrorComponent from './router/ErrorComponent';
 import { selectSelectedLanguage } from '../redux/slices/appStateSlice';
 import LogMsgComponent from './admin/LogMsgComponent';
 import VisualUnitDetailComponent from './visual-unit/VisualUnitDetailComponent';
+import DayDetailComponent from './days/DayDetailComponent';
 
 /**
  * @returns the router component Responsible for client side routing.
@@ -57,6 +58,7 @@ const router = createBrowserRouter([
 					{ path: 'admin', element: <AdminComponent /> },
 					{ path: 'calibration', element: <MapCalibrationContainer /> },
 					{ path: 'conversions', element: <ConversionsDetailComponent /> },
+					{ path: 'dailyPatterns', element: <DayDetailComponent /> },
 					{ path: 'csvMeters', element: <MetersCSVUploadComponent /> },
 					{ path: 'maps', element: <MapsDetailContainer /> },
 					{ path: 'units', element: <UnitsDetailComponent /> },

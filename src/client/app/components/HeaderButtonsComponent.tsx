@@ -64,6 +64,7 @@ export default function HeaderButtonsComponent() {
 		shouldCSVReadingsButtonDisabled: true,
 		shouldUnitsButtonDisabled: true,
 		shouldConversionsButtonDisabled: true,
+		shouldDailyPatternsButtonDisabled: true,
 		shouldLogMsgButtonDisabled: true,
 		shouldVisualUnitMapButtonDisabled: true,
 		// Translated menu title that depend on whether logged in.
@@ -102,6 +103,7 @@ export default function HeaderButtonsComponent() {
 			shouldCSVReadingsButtonDisabled: pathname === '/csvReadings',
 			shouldUnitsButtonDisabled: pathname === '/units',
 			shouldConversionsButtonDisabled: pathname === '/conversions',
+			shouldDailyPatternsButtonDisabled: pathname === '/dailyPatterns',
 			shouldLogMsgButtonDisabled: pathname === '/logmsg',
 			shouldVisualUnitMapButtonDisabled: pathname === '/visual-unit'
 		}));
@@ -190,6 +192,13 @@ export default function HeaderButtonsComponent() {
 								tag={Link}
 								to="/conversions">
 								<FormattedMessage id='conversions' />
+							</DropdownItem>
+							<DropdownItem
+								style={state.adminViewableLinkStyle}
+								disabled={state.shouldDailyPatternsButtonDisabled}
+								tag={Link}
+								to="/dailyPatterns">
+								<FormattedMessage id='daily.patterns' />
 							</DropdownItem>
 							<DropdownItem
 								style={state.adminViewableLinkStyle}
