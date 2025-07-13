@@ -7,19 +7,17 @@ import { selectCik, selectConversionsDetails } from '../../redux/api/conversions
 import { selectAllGroups } from '../../redux/api/groupsApi';
 import { selectAllMeters, selectMeterById } from '../../redux/api/metersApi';
 import { selectAdminPreferences } from '../../redux/slices/adminSlice';
+import { selectSelectedLanguage } from '../../redux/slices/appStateSlice';
 import { ConversionData } from '../../types/redux/conversions';
 import { MeterData, MeterTimeSortType } from '../../types/redux/meters';
-import { UnitData, UnitType } from '../../types/redux/units';
+import { DisableChecksType, UnitData, UnitType } from '../../types/redux/units';
 import { unitsCompatibleWithUnit } from '../../utils/determineCompatibleUnits';
 import { AreaUnitType } from '../../utils/getAreaUnitConversion';
-import { noUnitTranslated, potentialGraphicUnits } from '../../utils/input';
+import { MAX_VAL, MIN_VAL, noUnitTranslated, potentialGraphicUnits } from '../../utils/input';
 import translate from '../../utils/translate';
 import { selectAllUnits, selectUnitDataById } from '../api/unitsApi';
 import { selectVisibleMetersAndGroups } from './authVisibilitySelectors';
 import { createAppSelector } from './selectors';
-import { selectSelectedLanguage } from '../../redux/slices/appStateSlice';
-import { DisableChecksType } from '../../types/redux/units';
-import { MAX_VAL, MIN_VAL } from '../../utils/input';
 
 export const MIN_DATE_MOMENT = moment(0).utc();
 export const MAX_DATE_MOMENT = moment(0).utc().add(5000, 'years');
@@ -339,6 +337,23 @@ export const selectDefaultCreateConversionValues = createAppSelector(
 		};
 		return defaultValues;
 	}
+);
+
+// TODO (evan-carey): if Day ID is a number instead of a string, fix this.
+export const selectDefaultCreateWeekValues = createAppSelector(
+	[],
+	() => ({
+		id: -1,
+		name: '',
+		note: '',
+		sunday: '-1',
+		monday: '-1',
+		tuesday: '-1',
+		wednesday: '-1',
+		thursday: '-1',
+		friday: '-1',
+		saturday: '-1'
+	})
 );
 
 /* Create Meter Validation:
