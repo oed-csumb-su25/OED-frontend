@@ -341,6 +341,23 @@ export const selectDefaultCreateConversionValues = createAppSelector(
 	}
 );
 
+export const selectDefaultCreateDailyPatternValues = createAppSelector(
+	[selectAllUnits],
+	() => {
+		const defaultValues = {
+			name: '',
+			dailyPatternNote: '',
+			slope: 0,
+			intercept: 0,
+			startHour:0,
+			endHour: 24,
+			initialPatternNote: ''
+		};
+		return defaultValues;
+	}
+);
+
+
 /* Create Meter Validation:
 	Name cannot be blank
 	Area must be positive or zero

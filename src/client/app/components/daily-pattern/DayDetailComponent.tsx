@@ -8,7 +8,7 @@ import { selectSelectedLanguage } from '../../redux/slices/appStateSlice';
 import { titleStyle, tooltipBaseStyle } from '../../styles/modalStyle';
 import { Day } from '../../types/redux/days';
 import DayViewComponent from './DayViewComponent';
-import { Button } from 'reactstrap';
+import CreateDailyPatternModalComponent from './CreateDailyPatternModalComponent';
 
 /**
  * Hardcoded day data for demonstration.
@@ -70,9 +70,7 @@ export default function DayDetailComponent() {
 						</h2>
 						<div className="edit-btn">
 							{/* Placeholder for create day modal */}
-							<Button color='secondary'>
-								<FormattedMessage id="daily.patterns.create" />
-							</Button>
+							<CreateDailyPatternModalComponent />
 						</div>
 						<div className="card-container">
 							{hardcodedDays

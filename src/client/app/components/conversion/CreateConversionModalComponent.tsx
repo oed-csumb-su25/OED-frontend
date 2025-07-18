@@ -47,25 +47,25 @@ export default function CreateConversionModalComponent() {
 
 	// Handlers for each type of input change
 	const [conversionState, setConversionState] = useState({
-  overallConversion: {
-    sourceId: defaultValues.sourceId,
-    destinationId: defaultValues.destinationId,
-    bidirectional: defaultValues.bidirectional,
-    note: defaultValues.overallConversionNote
-  },
-  initialConversion: {
-    sourceId: defaultValues.sourceId,
-    destinationId: defaultValues.destinationId,
-    bidirectional: defaultValues.bidirectional,
-    slope: defaultValues.slope,
-    intercept: defaultValues.intercept,
-    pattern: defaultValues.weeklyPattern,
-    note: defaultValues.initialConversionNote
-  },
-  sourceOptions: defaultValues.sourceOptions,
-  destinationOptions: defaultValues.destinationOptions,
-  weeklyPatterns: defaultValues.weeklyPattern
-});
+		overallConversion: {
+			sourceId: defaultValues.sourceId,
+			destinationId: defaultValues.destinationId,
+			bidirectional: defaultValues.bidirectional,
+			note: defaultValues.overallConversionNote
+		},
+		initialConversion: {
+			sourceId: defaultValues.sourceId,
+			destinationId: defaultValues.destinationId,
+			bidirectional: defaultValues.bidirectional,
+			slope: defaultValues.slope,
+			intercept: defaultValues.intercept,
+			pattern: defaultValues.weeklyPattern,
+			note: defaultValues.initialConversionNote
+		},
+		sourceOptions: defaultValues.sourceOptions,
+		destinationOptions: defaultValues.destinationOptions,
+		weeklyPatterns: defaultValues.weeklyPattern
+	});
 
 	// If the currently selected conversion is valid
 	// TODO: Add a check for the weekly pattern as well.
@@ -100,7 +100,7 @@ export default function CreateConversionModalComponent() {
             }
         }));
     }
-};
+	};
 	// const handleBooleanChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 	// 	setConversionState({ ...conversionState, [e.target.name]: JSON.parse(e.target.value) });
 	// };
@@ -429,7 +429,9 @@ export default function CreateConversionModalComponent() {
 								value={conversionState.overallConversion.note} />
 						</FormGroup>
 						{/*Initial conversion*/}
-						<h5 className="mt-3 mb-2">Initial Conversion</h5>
+						<h5 className="mt-3 mb-2">
+							<FormattedMessage id="initial.conversion" />
+						</h5>
 						<Row xs='1' lg='2'>
 							<Col>
 								{/* Slope input*/}
