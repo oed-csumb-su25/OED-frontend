@@ -14,7 +14,7 @@ INSERT INTO week_patterns (
     friday, 
     saturday
 ) VALUES (
-    ${week_name}, 
+    ${weekName}, 
     ${note}, 
     ${sunday}, 
     ${monday}, 

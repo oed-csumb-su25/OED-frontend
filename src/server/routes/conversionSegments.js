@@ -53,13 +53,13 @@ const validConversionSegment = {
 
 function formatConversionSegmentForResponse(item) {
 	return {
-		sourceId: item.source_id, 
-        destinationId: item.destination_id, 
-        weekPatternsId: item.week_patterns_id, 
+		sourceId: item.sourceId, 
+        destinationId: item.destinationId, 
+        weekPatternsId: item.weekPatternsId, 
         slope: item.slope, 
         intercept: item.intercept, 
-        startTime: item.start_time, 
-        endTime: item.end_time, 
+        startTime: item.startTime, 
+        endTime: item.endTime, 
         note: item.note
 	};
 }
@@ -79,25 +79,25 @@ router.get('/', async (req, res) => {
 
 /**
  * GET information for a specific conversion segment by source, destination, and start time
- * @param {int} source_id
- * @param {int} destination_id
- * @param {time} start_time
+ * @param {int} sourceId
+ * @param {int} destinationId
+ * @param {time} startTime
  */
-router.get('/:source_id/:destination_id/:start_time', async (req, res) => {
+router.get('/:sourceId/:destinationId/:startTime', async (req, res) => {
     const validParams = {
         type: 'object',
-        required: ['source_id', 'destination_id', 'start_time'],
+        required: ['sourceId', 'destinationId', 'startTime'],
         additionalProperties: false,
         properties: {
-			source_id: { 
+			sourceId: { 
                 type: 'string', 
                 pattern: '^\\d+$' 
             },
-			destination_id: { 
+			destinationId: { 
                 type: 'string', 
                 pattern: '^\\d+$' 
             },
-			start_time: { 
+			startTime: { 
                 type: 'string', 
                 format: 'date-time' 
             }
@@ -113,9 +113,9 @@ router.get('/:source_id/:destination_id/:start_time', async (req, res) => {
 		const conn = getConnection();
 		try {
 			const rows = await ConversionSegment.getBySourceDestinationStart(
-                req.params.source_id, 
-                req.params.destination_id, 
-                req.params.start_time, 
+                req.params.sourceId, 
+                req.params.destinationId, 
+                req.params.startTime, 
                 conn
             );
 			res.json(rows);

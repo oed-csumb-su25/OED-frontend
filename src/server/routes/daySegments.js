@@ -14,9 +14,9 @@ const router = express.Router();
 function formatDaySegmentForResponse(item) {
 	return {
 		id: item.id, 
-        dayId: item.day_id,
-        startHour: item.start_hour,
-        endHour: item.end_hour,
+        dayId: item.dayId,
+        startHour: item.startHour,
+        endHour: item.endHour,
         slope: item.slope,
         intercept: item.intercept,
         note: item.note, 
@@ -78,14 +78,14 @@ router.get('/dayId/:dayId', async(req, res) => {
 		}
 	};
 	if (!validate(req.params, validParams).valid) {
-		return res.status(400).json({error: 'Invalid day_id'});
+		return res.status(400).json({error: 'Invalid dayId'});
 	} else {
 		const conn = getConnection();
 		try {
 			const rows = await DaySegment.getByDayId(req.params.dayId, conn);
 			res.json(rows.map(formatDaySegmentForResponse));
 		} catch (err) {
-			log.error(`Error while performing GET day segments by day_id: ${err}`);
+			log.error(`Error while performing GET day segments by dayId: ${err}`);
 		}
 	}
 });

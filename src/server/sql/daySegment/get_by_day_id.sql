@@ -3,5 +3,5 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
  
 SELECT * FROM day_segments
-WHERE day_id = ${day_id}
+WHERE day_id = ${dayId}
 ORDER BY start_hour;

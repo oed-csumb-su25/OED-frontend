@@ -7,23 +7,23 @@ const sqlFile = database.sqlFile;
 
 class ConversionSegment {
     /**
-     * @param {*} source_id The unit id of the source.
-     * @param {*} destination_id The unit id of the destination.
-     * @param {*} week_patterns_id The foreign key to the week_patterns if a pre-existing pattern is selected.
+     * @param {*} sourceId The unit id of the source.
+     * @param {*} destinationId The unit id of the destination.
+     * @param {*} weekPatternsId The foreign key to the week_patterns if a pre-existing pattern is selected.
      * @param {*} slope The slope of the conversion.
      * @param {*} intercept The intercept of the conversion.
-     * @param {*} start_time The hour the segment starts.
-     * @param {*} end_time The hour the segment ends.
+     * @param {*} startTime The hour the segment starts.
+     * @param {*} endTime The hour the segment ends.
      * @param {*} note Comments by the admin or OED inserted.
      */
-    constructor(source_id, destination_id, week_patterns_id, slope, intercept, start_time, end_time, note) {
-        this.source_id = source_id;
-        this.destination_id = destination_id;
-        this.week_patterns_id = week_patterns_id;
+    constructor(sourceId, destinationId, weekPatternsId, slope, intercept, startTime, endTime, note) {
+        this.sourceId = sourceId;
+        this.destinationId = destinationId;
+        this.weekPatternsId = weekPatternsId;
         this.slope = slope;
         this.intercept = intercept;
-        this.start_time = start_time;
-        this.end_time = end_time;
+        this.startTime = startTime;
+        this.endTime = endTime;
         this.note = note;
     }
 
@@ -42,7 +42,7 @@ class ConversionSegment {
 	 * @returns The new conversion segment object.
 	 */
 	static mapRow(row) {
-		return new ConversionSegment(row.source_id, row.destination_id, row.week_patterns_id, row.slope, row.intercept, row.start_time, row.end_time, row.note);
+		return new ConversionSegment(row.sourceId, row.destinationId, row.weekPatternsId, row.slope, row.intercept, row.startTime, row.endTime, row.note);
 	}
 
 	/**
@@ -56,10 +56,10 @@ class ConversionSegment {
 	}
 
 	/**
-	 * Returns the conversion segment associated with source, destination, and start_time. If the conversion segment doesn't exist then return null.
+	 * Returns the conversion segment associated with source, destination, and startTime. If the conversion segment doesn't exist then return null.
 	 * @param {*} source The source unit id.
 	 * @param {*} destination The destination unit id.
-	 * @param {*} start_time The conversion segment start time
+	 * @param {*} startTime The conversion segment start time
 	 * @param {*} conn The connection to use.
 	 * @returns {Promise.<ConversionSegment>}
 	 */
@@ -67,7 +67,7 @@ class ConversionSegment {
 		const row = await conn.oneOrNone(sqlFile('conversionSegment/get_by_source_destination_start.sql'), {
 			source: source,
 			destination: destination,
-			start_time: start
+			startTime: start
 		});
 		return row === null ? null : ConversionSegment.mapRow(row);
 	}
@@ -91,17 +91,17 @@ class ConversionSegment {
 	}
 
 	/**
-	 * Deletes the conversion associated with source, destination, and start_time from the database.
+	 * Deletes the conversion associated with source, destination, and startTime from the database.
 	 * @param {*} source The source unit id.
 	 * @param {*} destination The destination unit id.
-     * @param {*} start_time The time the segment starts.
+     * @param {*} startTime The time the segment starts.
 	 * @param {*} conn The connection to use.
 	 */
-	static async delete(source, destination, start_time, conn) {
+	static async delete(source, destination, startTime, conn) {
 		await conn.none(sqlFile('conversionSegment/delete_conversion_segment.sql'), {
 			source: source,
 			destination: destination,
-            start_time: start_time
+            startTime: startTime
 		});
 	}
 }

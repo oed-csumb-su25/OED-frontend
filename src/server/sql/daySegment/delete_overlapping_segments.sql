@@ -3,4 +3,4 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
  
 DELETE FROM day_segments
-WHERE day_id = ${day_id} AND start_hour < ${end_hour} AND end_hour > ${start_hour};
+WHERE day_id = ${dayId} AND start_hour < ${endHour} AND end_hour > ${startHour};

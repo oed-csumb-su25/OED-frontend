@@ -14,7 +14,7 @@ const router = express.Router();
 function formatDayForResponse(item) {
 	return {
 		id: item.id, 
-        dayName: item.day_name, 
+        dayName: item.dayName, 
         note: item.note, 
 	};
 }

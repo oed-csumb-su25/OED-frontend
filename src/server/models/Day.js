@@ -7,18 +7,18 @@ const sqlFile = database.sqlFile;
 
 class Day {
     /**
-     * @param {*} id This day_patterns' id.
-     * @param {*} day_name This day_pattern's name.
+     * @param {*} id This day patterns' id.
+     * @param {*} dayName This day pattern's name.
      * @param {*} note Comments by the admin.
      */
-    constructor(id, day_name, note) {
+    constructor(id, dayName, note) {
         this.id = id;
-        this.day_name = day_name;
+        this.dayName = dayName;
         this.note = note;
     }
 
     /**
-     * Returns a promise to create the day_patterns table.
+     * Returns a promise to create the day patterns table.
      * @param {*} conn The connection to use.
      * @returns {Promise.<>}
      */
@@ -34,7 +34,7 @@ class Day {
     static mapRow(row) {
         return new Day(
             row.id,
-            row.day_name,
+            row.dayName,
             row.note
         );
     }
@@ -93,9 +93,9 @@ class Day {
 
         // insert default day segment, including the new day id
         const defaultSegment = {
-            day_id: this.id,
-            start_hour: 0,
-            end_hour: 24,
+            dayId: this.id,
+            startHour: 0,
+            endHour: 24,
             slope: slope,
             intercept: intercept,
             note: this.note

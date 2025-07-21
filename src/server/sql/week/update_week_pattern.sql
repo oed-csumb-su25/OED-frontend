@@ -4,7 +4,7 @@
 -- Does not return a value
 
 UPDATE week_patterns
-    SET week_name = ${week_name},
+    SET week_name = ${weekName},
         note = ${note},
         sunday = ${sunday},
         monday = ${monday},

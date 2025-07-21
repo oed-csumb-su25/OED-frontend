@@ -3,4 +3,4 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
  
 SELECT * FROM day_patterns
-WHERE LOWER(day_name) = LOWER(${day_name});
+WHERE day_name = ${dayName};

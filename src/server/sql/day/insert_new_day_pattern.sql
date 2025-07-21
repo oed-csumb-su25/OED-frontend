@@ -3,5 +3,5 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
  
 INSERT INTO day_patterns(day_name, note)
-VALUES (${day_name}, ${note})
+VALUES (${dayName}, ${note})
 RETURNING id;

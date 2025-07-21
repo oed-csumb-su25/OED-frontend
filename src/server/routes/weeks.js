@@ -14,7 +14,7 @@ const router = express.Router();
 function formatWeekForResponse(item) {
 	return {
 		id: item.id, 
-        weekName: item.week_name, 
+        weekName: item.weekName, 
         note: item.note,
         sunday: item.sunday,
         monday: item.monday,
