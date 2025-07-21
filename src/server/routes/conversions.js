@@ -13,7 +13,7 @@ const router = express.Router();
 
 function formatConversionForResponse(item) {
 	return {
-		sourceId: item.sourceId, destinationId: item.destinationId, bidirectional: item.bidirectional, slope: item.slope, intercept: item.intercept, note: item.note
+		sourceId: item.sourceId, destinationId: item.destinationId, bidirectional: item.bidirectional, note: item.note
 	};
 }
 
@@ -36,7 +36,7 @@ router.get('/', async (req, res) => {
 router.post('/edit', async (req, res) => {
 	const validConversion = {
 		type: 'object',
-		required: ['sourceId', 'destinationId', 'bidirectional', 'slope', 'intercept'],
+		required: ['sourceId', 'destinationId', 'bidirectional'],
 		properties: {
 			sourceId: {
 				type: 'number',
@@ -50,12 +50,6 @@ router.post('/edit', async (req, res) => {
 			},
 			bidirectional: {
 				type: 'boolean'
-			},
-			slope: {
-				type: 'float'
-			},
-			intercept: {
-				type: 'float'
 			},
 			note: {
 				oneOf: [
@@ -74,7 +68,7 @@ router.post('/edit', async (req, res) => {
 		const conn = getConnection();
 		try {
 			const updatedConversion = new Conversion(req.body.sourceId, req.body.destinationId, req.body.bidirectional,
-				req.body.slope, req.body.intercept, req.body.note);
+			req.body.note);
 			await updatedConversion.update(conn);
 		} catch (err) {
 			log.error(`Error while editing conversion with error(s): ${err}`);
@@ -90,7 +84,7 @@ router.post('/edit', async (req, res) => {
 router.post('/addConversion', async (req, res) => {
 	const validConversion = {
 		type: 'object',
-		required: ['sourceId', 'destinationId', 'bidirectional', 'slope', 'intercept'],
+		required: ['sourceId', 'destinationId', 'bidirectional'],
 		properties: {
 			sourceId: {
 				type: 'number',
@@ -104,12 +98,6 @@ router.post('/addConversion', async (req, res) => {
 			},
 			bidirectional: {
 				type: 'boolean'
-			},
-			slope: {
-				type: 'float'
-			},
-			intercept: {
-				type: 'float'
 			},
 			note: {
 				oneOf: [
@@ -131,8 +119,6 @@ router.post('/addConversion', async (req, res) => {
 					req.body.sourceId,
 					req.body.destinationId,
 					req.body.bidirectional,
-					req.body.slope,
-					req.body.intercept,
 					req.body.note
 				);
 				await newConversion.insert(t);
