@@ -1,20 +1,24 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+ 
 const database = require('./database');
 const sqlFile = database.sqlFile;
 
 class Day {
     /**
-     * @param {*} id This day_patterns' id.
-     * @param {*} day_name This day_pattern's name.
+     * @param {*} id This day patterns' id.
+     * @param {*} dayName This day pattern's name.
      * @param {*} note Comments by the admin.
      */
-    constructor(id, day_name, note) {
+    constructor(id, dayName, note) {
         this.id = id;
-        this.day_name = day_name;
+        this.dayName = dayName;
         this.note = note;
     }
 
     /**
-     * Returns a promise to create the day_patterns table.
+     * Returns a promise to create the day patterns table.
      * @param {*} conn The connection to use.
      * @returns {Promise.<>}
      */
@@ -63,7 +67,7 @@ class Day {
      * @returns {Promise.<Day>}
      */
     static async getById(id, conn) {
-        const row = await conn.oneOrNone(sqlFile('day/get_by_id.sql'), {
+        const row = await conn.one(sqlFile('day/get_by_id.sql'), {
             id: id
         });
         return row === null ? null : Day.mapRow(row);
@@ -77,27 +81,33 @@ class Day {
      * @param conn The database connection to use.
      * @returns {Promise.<>}
      */
-    async insert(slope, intercept, conn) {
+    async insert(slope, intercept, segmentNote, conn) {
         const day = this;
+
         if (day.id !== undefined) {
             throw new Error(`Attempted to insert a day that already has an ID ${day.id}`);
         }
         
         // insert new day
-        const resp = await conn.one(sqlFile('day/insert_new_day_pattern.sql'), day);
+        const dayData = {
+            dayName: day.dayName,
+            note: day.note
+        };
+
+        const resp = await conn.one(sqlFile('day/insert_new_day_pattern.sql'), dayData);
         this.id = resp.id;
 
         // insert default day segment, including the new day id
-        const defaultSegment = {
-            day_id: this.id,
-            start_hour: 0,
-            end_hour: 24,
+        const daySegment = {
+            dayId: this.id,
+            startHour: 0,
+            endHour: 24,
             slope: slope,
             intercept: intercept,
-            note: this.note
+            note: segmentNote
         };
 
-        await conn.none(sqlFile('daySegment/insert_new_day_segment.sql'), defaultSegment);
+        await conn.none(sqlFile('daySegment/insert_new_day_segment.sql'), daySegment);
     }
 
     /**

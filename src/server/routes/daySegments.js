@@ -1,3 +1,7 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+ 
 const express = require('express');
 const { log } = require('../log');
 const { getConnection } = require('../db');
@@ -10,9 +14,9 @@ const router = express.Router();
 function formatDaySegmentForResponse(item) {
 	return {
 		id: item.id, 
-        dayId: item.day_id,
-        startHour: item.start_hour,
-        endHour: item.end_hour,
+        dayId: item.dayId,
+        startHour: item.startHour,
+        endHour: item.endHour,
         slope: item.slope,
         intercept: item.intercept,
         note: item.note, 
@@ -38,6 +42,7 @@ router.get('/', async (req, res) => {
 router.get('/:id', async(req, res) => {
 	const validParams = {
 		type: 'object',
+		maxProperties: 1,
 		required: ['id'],
 		properties: {
 			id: {
@@ -65,6 +70,7 @@ router.get('/:id', async(req, res) => {
 router.get('/dayId/:dayId', async(req, res) => {
 	const validParams = {
 		type: 'object',
+		maxProperties: 1,
 		required: ['dayId'],
 		properties: {
 			dayId: {
@@ -74,14 +80,14 @@ router.get('/dayId/:dayId', async(req, res) => {
 		}
 	};
 	if (!validate(req.params, validParams).valid) {
-		return res.status(400).json({error: 'Invalid day_id'});
+		return res.status(400).json({error: 'Invalid dayId'});
 	} else {
 		const conn = getConnection();
 		try {
 			const rows = await DaySegment.getByDayId(req.params.dayId, conn);
 			res.json(rows.map(formatDaySegmentForResponse));
 		} catch (err) {
-			log.error(`Error while performing GET day segments by day_id: ${err}`);
+			log.error(`Error while performing GET day segments by dayId: ${err}`);
 		}
 	}
 });
@@ -92,12 +98,11 @@ router.get('/dayId/:dayId', async(req, res) => {
 router.post('/edit', async (req, res) => {
 	const validDaySegment = {
 		type: 'object',
+		maxProperties: 7,
 		required: ['id'],
 		properties: {
 			id: {
-				type: 'number',
-				// Do not allow negatives for now
-				minimum: 0
+				type: 'number'
 			},
 			dayId: {
 				type: 'number',
@@ -159,6 +164,7 @@ router.post('/edit', async (req, res) => {
 router.post('/add', async (req, res) => {
 	const validDaySegment = {
 		type: 'object',
+		maxProperties: 6,
 		required: ['dayId', 'startHour', 'endHour', 'slope', 'intercept'],
 		additionalProperties: false,
 		properties: {
@@ -229,12 +235,11 @@ router.post('/add', async (req, res) => {
 router.post('/delete', async (req, res) => {
 	const validDaySegment = {
 		type: 'object',
+		maxProperties: 7,
 		required: ['id'],
 		properties: {
 			id: {
-				type: 'number',
-				// Do not allow negatives for now
-				minimum: 0
+				type: 'number'
 			},
 			dayId: {
 				type: 'number',
