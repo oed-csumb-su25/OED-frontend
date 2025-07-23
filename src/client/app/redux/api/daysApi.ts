@@ -13,7 +13,7 @@ export const daysApi = baseApi.injectEndpoints({
 			query: id => `api/days/${id}`,
 			providesTags: (result, error, id) => [{ type: 'DailyPattern', id }]
 		}),
-		addDailyPattern: builder.mutation<void, { dayName: string; slope: number; intercept: number; note?: string }>({
+		addDailyPattern: builder.mutation<void, { dayName: string; slope: number; intercept: number; note?: string, segmentNote?: string }>({
 			query: dailyPattern => ({
 				url: 'api/days/add',
 				method: 'POST',

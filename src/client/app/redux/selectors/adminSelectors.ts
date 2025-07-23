@@ -345,7 +345,7 @@ export const selectDefaultCreateDailyPatternValues = createAppSelector(
 	[selectAllUnits],
 	() => {
 		const defaultValues = {
-			name: '',
+			dayName: '',
 			dailyPatternNote: '',
 			slope: 0,
 			intercept: 0,
@@ -410,10 +410,10 @@ export const isValidCreateMeter = createAppSelector(
 
 export const selectIsValidCreateDailyPattern = createAppSelector(
 	[
-		(_state, dailyPattern: { name: string }) => dailyPattern
+		(_state, dailyPattern: { dayName: string }) => dailyPattern
 	],
 	(dailyPattern): [boolean, string] => {
-		if (!dailyPattern.name || dailyPattern.name.trim() === '') {
+		if (!dailyPattern.dayName || dailyPattern.dayName.trim() === '') {
 			return [false, translate('daily.patterns.create.name.required')];
 		}
 		return [true, 'Daily Pattern is Valid'];

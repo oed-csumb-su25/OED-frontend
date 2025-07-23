@@ -38,7 +38,7 @@ export default function DayViewComponent(props: DayViewComponentProps) {
 	// Create header from sourceId, destinationId identifiers
 	//const conversionIdentifier = String(unitDataById[props.conversion.sourceId]?.identifier + conversionArrow(props.conversion.bidirectional) +
 	//  unitDataById[props.conversion.destinationId]?.identifier);
-	const dayIdentifier = props.day.name || 'Unnamed Day';
+	const dayIdentifier = props.day.dayName || 'Unnamed Day';
 
 	// Unlike the details component, we don't check if units are loaded since must come through that page.
 

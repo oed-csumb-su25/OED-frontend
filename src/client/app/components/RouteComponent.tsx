@@ -27,7 +27,7 @@ import ErrorComponent from './router/ErrorComponent';
 import { selectSelectedLanguage } from '../redux/slices/appStateSlice';
 import LogMsgComponent from './admin/LogMsgComponent';
 import VisualUnitDetailComponent from './visual-unit/VisualUnitDetailComponent';
-import DayDetailComponent from './daily-pattern/DayDetailComponent';
+import DayDetailComponent from './day/DayDetailComponent';
 
 /**
  * @returns the router component Responsible for client side routing.

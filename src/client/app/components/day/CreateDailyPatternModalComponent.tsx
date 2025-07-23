@@ -44,7 +44,7 @@ export default function CreateDailyPatternModalComponent() {
 	// Handlers for each type of input change
 	const [patternState, setPatternState] = useState({
   dailyPattern: {
-		name: defaultValues.name,
+		dayName: defaultValues.dayName,
     note: defaultValues.dailyPatternNote
   },
   initialPattern: {
@@ -59,7 +59,7 @@ export default function CreateDailyPatternModalComponent() {
 	// Check if the daily pattern is valid
 	const [isValidDailyPattern, reason] = useAppSelector(state =>
 		selectIsValidCreateDailyPattern(state, {
-			name: patternState.dailyPattern.name
+			dayName: patternState.dailyPattern.dayName
 			// You can add more fields if your selector uses them
 		})
 	);
@@ -87,7 +87,7 @@ export default function CreateDailyPatternModalComponent() {
 						...prev,
 						dailyPattern: {
 								...prev.dailyPattern,
-								name: value
+								dayName: value
 						}
 				}));
 		}
@@ -121,10 +121,11 @@ export default function CreateDailyPatternModalComponent() {
 		setShowWarningModal(false);
 		// Add the new pattern and update the store
 		addDailyPatternMutation({
-			dayName: patternState.dailyPattern.name,
+			dayName: patternState.dailyPattern.dayName,
 			slope: patternState.initialPattern.slope,
 			intercept: patternState.initialPattern.intercept,
-			note: patternState.dailyPattern.note
+			note: patternState.dailyPattern.note,
+			segmentNote: patternState.initialPattern.note
 		});
 		// Reset the state to default values
 		resetState();
@@ -139,7 +140,7 @@ export default function CreateDailyPatternModalComponent() {
 	const resetState = () => {
 		setPatternState({
 			dailyPattern: {
-				name: defaultValues.name,
+				dayName: defaultValues.dayName,
 				note: defaultValues.dailyPatternNote
 			},
 			initialPattern: {
@@ -164,10 +165,11 @@ export default function CreateDailyPatternModalComponent() {
 			setShowModal(false);
 			// Add the new pattern and update the store
 			addDailyPatternMutation({
-				dayName: patternState.dailyPattern.name,
+				dayName: patternState.dailyPattern.dayName,
 				slope: patternState.initialPattern.slope,
 				intercept: patternState.initialPattern.intercept,
-				note: patternState.dailyPattern.note
+				note: patternState.dailyPattern.note,
+				segmentNote: patternState.initialPattern.note
 			});
 			// Reset the state to default values
 			resetState();
@@ -213,8 +215,8 @@ export default function CreateDailyPatternModalComponent() {
 								name='dailyPatternName'
 								type='text'
 								onChange={e => handleStringChange(e)}
-								value={patternState.dailyPattern.name}
-								invalid={!patternState.dailyPattern.name || patternState.dailyPattern.name.trim() === ''}
+								value={patternState.dailyPattern.dayName}
+								invalid={!patternState.dailyPattern.dayName || patternState.dailyPattern.dayName.trim() === ''}
 								required
 							/>
 							<FormFeedback>
