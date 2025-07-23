@@ -1,10 +1,14 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+ 
 const database = require('./database');
 const sqlFile = database.sqlFile;
 
 class Week {
     /**
      * @param {*} id This week_pattern's id.
-     * @param {*} week_name This week_pattern's name.
+     * @param {*} weekName This week_pattern's name.
      * @param {*} note This week_pattern's note.
      * @param {*} sunday The id for sunday's day_pattern.
      * @param {*} monday The id for monday's day_pattern.
@@ -14,9 +18,9 @@ class Week {
      * @param {*} friday The id for friday's day_pattern.
      * @param {*} saturday The id for saturday's day_pattern.
      */
-    constructor(id, week_name, note, sunday, monday, tuesday, wednesday, thursday, friday, saturday) {
+    constructor(id, weekName, note, sunday, monday, tuesday, wednesday, thursday, friday, saturday) {
         this.id = id;
-        this.week_name = week_name;
+        this.weekName = weekName;
         this.note = note;
         this.sunday = sunday;
         this.monday = monday;
@@ -33,7 +37,7 @@ class Week {
      * @returns {Promise.<>}
      */
     static createTable(conn) {
-        return conn.none(sqlFile('week/create_week_pattern_table.sql'));
+        return conn.none(sqlFile('week/create_week_patterns_table.sql'));
     }
 
     /**
@@ -84,7 +88,7 @@ class Week {
      * @returns {Promise.<Week>}
      */
     static async getById(id, conn) {
-        const row = await conn.oneOrNone(sqlFile('week/get_by_id.sql'), {
+        const row = await conn.one(sqlFile('week/get_by_id.sql'), {
             id: id
         });
         return row === null ? null : Week.mapRow(row);

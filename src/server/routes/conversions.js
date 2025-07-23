@@ -80,11 +80,13 @@ router.post('/edit', async (req, res) => {
 
 /**
  * Route for POST add conversion.
+ * The slope, intercept, week pattern id, and note are included to create a new conversion segment spanning from -infinity to infinity.
  */
-router.post('/addConversion', async (req, res) => {
+router.post('/add', async (req, res) => {
 	const validConversion = {
 		type: 'object',
-		required: ['sourceId', 'destinationId', 'bidirectional'],
+		maxProperties: 8,
+		required: ['sourceId', 'destinationId', 'bidirectional', 'slope', 'intercept'],
 		properties: {
 			sourceId: {
 				type: 'number',
@@ -104,15 +106,32 @@ router.post('/addConversion', async (req, res) => {
 					{ type: 'string' },
 					{ type: 'null' }
 				]
+			},
+			weekPatternsId: {
+				type: 'number'
+			},
+			slope: {
+				type: 'number'
+			},
+			intercept: {
+				type: 'number'
+			},
+			segmentNote: {
+				oneOf: [
+					{ type: 'string' },
+					{ type: 'null' }
+				]
 			}
 		}
 	};
 	const validatorResult = validate(req.body, validConversion);
+
 	if (!validatorResult.valid) {
 		log.error(`Got request to insert conversion with invalid conversion data, errors: ${validatorResult.errors}`);
 		failure(res, 400, `Got request to insert conversion with invalid conversion data. Error(s): ${validatorResult.errors}`);
 	} else {
 		const conn = getConnection();
+
 		try {
 			await conn.tx(async t => {
 				const newConversion = new Conversion(
@@ -121,7 +140,13 @@ router.post('/addConversion', async (req, res) => {
 					req.body.bidirectional,
 					req.body.note
 				);
-				await newConversion.insert(t);
+				await newConversion.insert(
+					req.body.weekPatternsId,
+					req.body.slope,
+					req.body.intercept,
+					req.body.segmentNote,
+					t
+				);
 			});
 			res.sendStatus(200);
 		} catch (err) {

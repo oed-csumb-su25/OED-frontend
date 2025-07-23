@@ -1,3 +1,7 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+ 
 const express = require('express');
 const { log } = require('../log');
 const { getConnection } = require('../db');
@@ -10,7 +14,7 @@ const router = express.Router();
 function formatWeekForResponse(item) {
 	return {
 		id: item.id, 
-        weekName: item.week_name, 
+        weekName: item.weekName, 
         note: item.note,
         sunday: item.sunday,
         monday: item.monday,
@@ -41,12 +45,11 @@ router.get('/', async (req, res) => {
 router.post('/edit', async (req, res) => {
 	const validWeek = {
 		type: 'object',
+		maxProperties: 10,
 		required: ['id'],
 		properties: {
 			id: {
-				type: 'number',
-				// Do not allow negatives for now
-				minimum: 0
+				type: 'number'
 			},
 			weekName: {
 				type: 'string',
@@ -115,6 +118,7 @@ router.post('/edit', async (req, res) => {
 router.post('/add', async (req, res) => {
 	const validWeek= {
 		type: 'object',
+		maxProperties: 9,
 		required: ['weekName', 'sunday','monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'],
 		properties: {
 			weekName: {
@@ -186,12 +190,11 @@ router.post('/add', async (req, res) => {
 router.post('/delete', async (req, res) => {
 	const validWeek = {
 		type: 'object',
+		maxProperties: 1,
 		required: ['id'],
 		properties: {
 			id: {
-				type: 'number',
-				// Do not allow negatives for now
-				minimum: 0
+				type: 'number'
 			}
 		}
 	};

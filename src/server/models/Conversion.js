@@ -63,12 +63,40 @@ class Conversion {
 	}
 
 	/**
-	 * Inserts a new conversion to the database.
+	 * Inserts a new conversion to the database, along with a conversion segment.
+	 * The default conversion segment spans from -inf to inf.
 	 * @param {*} conn The connection to use.
 	 */
-	async insert(conn) {
+	async insert(weekPatternsId, slope, intercept, segmentNote, conn) {
 		const conversion = this;
-		await conn.none(sqlFile('conversion/insert_new_conversion.sql'), conversion);
+
+		if (conversion.id !== undefined) {
+			throw new Error(`Attempted to insert a conversion that already has an ID ${conversion.id}`);
+		}
+
+		// insert new conversion
+		const conversionData = {
+			sourceId: this.sourceId,
+			destinationId: this.destinationId,
+			bidirectional: this.bidirectional,
+			note: this.note
+		};
+
+		await conn.none(sqlFile('conversion/insert_new_conversion.sql'), conversionData);
+
+		// insert new conversion segment
+		const conversionSegment = {
+			sourceId: this.sourceId,
+			destinationId: this.destinationId,
+			weekPatternsId: weekPatternsId,
+			slope: slope,
+			intercept: intercept,
+			startTime: '-infinity',
+			endTime: 'infinity',
+			note: segmentNote
+		};
+
+		await conn.none(sqlFile('conversionSegment/insert_new_conversion_segment.sql'), conversionSegment);
 	}
 
 	/**
