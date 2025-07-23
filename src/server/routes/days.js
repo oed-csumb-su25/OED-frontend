@@ -1,3 +1,7 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+ 
 const express = require('express');
 const { log } = require('../log');
 const { getConnection } = require('../db');
@@ -10,7 +14,7 @@ const router = express.Router();
 function formatDayForResponse(item) {
 	return {
 		id: item.id, 
-        dayName: item.day_name, 
+        dayName: item.dayName, 
         note: item.note, 
 	};
 }
@@ -49,12 +53,11 @@ router.get('/:id', async (req, res) => {
 router.post('/edit', async (req, res) => {
 	const validDay = {
 		type: 'object',
+		maxProperties: 3,
 		required: ['id'],
 		properties: {
 			id: {
-				type: 'number',
-				// Do not allow negatives for now
-				minimum: 0
+				type: 'number'
 			},
 			dayName: {
 				type: 'string',
@@ -92,10 +95,17 @@ router.post('/edit', async (req, res) => {
 router.post('/add', async (req, res) => {
 	const validDay = {
 		type: 'object',
+		maxProperties: 5,
 		required: ['dayName', 'slope', 'intercept'],
 		properties: {
 			dayName: {
 				type: 'string'
+			},
+			note: {
+				oneOf: [
+					{ type: 'string' },
+					{ type: 'null' }
+				]
 			},
 			slope: {
 				type: 'number'
@@ -103,7 +113,7 @@ router.post('/add', async (req, res) => {
 			intercept: {
 				type: 'number'
 			},
-			note: {
+			segmentNote: {
 				oneOf: [
 					{ type: 'string' },
 					{ type: 'null' }
@@ -113,19 +123,27 @@ router.post('/add', async (req, res) => {
 	};
 
 	const validatorResult = validate(req.body, validDay);
+
 	if (!validatorResult.valid) {
 		log.error(`Got request to insert day with invalid day data, errors: ${validatorResult.errors}`);
 		failure(res, 400, `Got request to insert day with invalid day data. Error(s): ${validatorResult.errors}`);
 	} else {
 		const conn = getConnection();
+
 		try {
+			// Insert 
 			await conn.tx(async t => {
 				const newDay = new Day(
 					undefined,
 					req.body.dayName,
 					req.body.note
 				);
-				await newDay.insert(req.body.slope, req.body.intercept, t);
+				await newDay.insert(
+					req.body.slope, 
+					req.body.intercept, 
+					req.body.segmentNote,
+					t
+				);
 			});
 			res.sendStatus(200);
 		} catch (err) {
@@ -141,12 +159,11 @@ router.post('/add', async (req, res) => {
 router.post('/delete', async (req, res) => {
 	const validDay = {
 		type: 'object',
+		maxProperties: 1,
 		required: ['id'],
 		properties: {
 			id: {
-				type: 'number',
-				// Do not allow negatives for now
-				minimum: 0
+				type: 'number'
 			}
 		}
 	};

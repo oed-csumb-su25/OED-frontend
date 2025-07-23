@@ -1,3 +1,7 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+ 
 const express = require('express');
 const { log } = require('../log');
 const { getConnection } = require('../db');
@@ -8,6 +12,7 @@ const validate = require('jsonschema').validate;
 const router = express.Router();
 const validConversionSegment = {
     type: 'object',
+    maxProperties: 8,
     required: ['sourceId', 'destinationId'],
     properties: {
         sourceId: {
@@ -49,13 +54,13 @@ const validConversionSegment = {
 
 function formatConversionSegmentForResponse(item) {
 	return {
-		sourceId: item.source_id, 
-        destinationId: item.destination_id, 
-        weekPatternsId: item.week_patterns_id, 
+		sourceId: item.sourceId, 
+        destinationId: item.destinationId, 
+        weekPatternsId: item.weekPatternsId, 
         slope: item.slope, 
         intercept: item.intercept, 
-        startTime: item.start_time, 
-        endTime: item.end_time, 
+        startTime: item.startTime, 
+        endTime: item.endTime, 
         note: item.note
 	};
 }
@@ -74,26 +79,69 @@ router.get('/', async (req, res) => {
 });
 
 /**
- * GET information for a specific conversion segment by source, destination, and start time
- * @param {int} source_id
- * @param {int} destination_id
- * @param {time} start_time
+ * GET information for a specific conversion segment by source and destination
+ * @param {int} sourceId
+ * @param {int} destinationId
  */
-router.get('/:source_id/:destination_id/:start_time', async (req, res) => {
+router.get('/:sourceId/:destinationId', async (req, res) => {
     const validParams = {
         type: 'object',
-        required: ['source_id', 'destination_id', 'start_time'],
-        additionalProperties: false,
+        maxProperties: 2,
+        required: ['sourceId', 'destinationId'],
         properties: {
-			source_id: { 
+			sourceId: { 
                 type: 'string', 
                 pattern: '^\\d+$' 
             },
-			destination_id: { 
+			destinationId: { 
+                type: 'string', 
+                pattern: '^\\d+$' 
+            }
+		}
+	};
+
+    const validatorResult = validate(req.params, validParams);
+
+    if (!validatorResult.valid) {
+		log.warn(`Invalid route parameters for conversion segment, errors: ${validatorResult.errors}`);
+		failure(res, 400, `Invalid route parameters for conversion segment, errors: ${validatorResult.errors}`);
+	} else {
+		const conn = getConnection();
+		try {
+			const rows = await ConversionSegment.getBySourceDestination(
+                req.params.sourceId, 
+                req.params.destinationId, 
+                conn
+            );
+			res.json(rows);
+		} catch (err) {
+			log.error(`Error while preforming GET on conversion segment : ${err}`, err);
+			res.sendStatus(500);
+		}
+	}
+});
+
+/**
+ * GET information for a specific conversion segment by source, destination, and start time
+ * @param {int} sourceId
+ * @param {int} destinationId
+ * @param {time} startTime
+ */
+router.get('/:sourceId/:destinationId/:startTime', async (req, res) => {
+    const validParams = {
+        type: 'object',
+        maxProperties: 3,
+        required: ['sourceId', 'destinationId', 'startTime'],
+        properties: {
+			sourceId: { 
                 type: 'string', 
                 pattern: '^\\d+$' 
             },
-			start_time: { 
+			destinationId: { 
+                type: 'string', 
+                pattern: '^\\d+$' 
+            },
+			startTime: { 
                 type: 'string', 
                 format: 'date-time' 
             }
@@ -109,9 +157,9 @@ router.get('/:source_id/:destination_id/:start_time', async (req, res) => {
 		const conn = getConnection();
 		try {
 			const rows = await ConversionSegment.getBySourceDestinationStart(
-                req.params.source_id, 
-                req.params.destination_id, 
-                req.params.start_time, 
+                req.params.sourceId, 
+                req.params.destinationId, 
+                req.params.startTime, 
                 conn
             );
 			res.json(rows);
@@ -158,8 +206,8 @@ router.post('/edit', async (req, res) => {
 router.post('/add', async (req, res) => {
     const validatorResult = validate(req.body, validConversionSegment);
     if (!validatorResult.valid) {
-		log.warn(`Got request to edit conversion segments with invalid conversion segment data, errors: ${validatorResult.errors}`);
-		failure(res, 400, `Got request to edit conversion segments with invalid conversion segment data, errors: ${validatorResult.errors}`);
+		log.warn(`Got request to add conversion segments with invalid conversion segment data, errors: ${validatorResult.errors}`);
+		failure(res, 400, `Got request to add conversion segments with invalid conversion segment data, errors: ${validatorResult.errors}`);
 	} else {
         const conn = getConnection();
         try {
