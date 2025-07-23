@@ -41,7 +41,7 @@ export const daysApi = baseApi.injectEndpoints({
 });
 
 export const selectDaysQueryState = daysApi.endpoints.getDailyPatterns.select();
-export const selectDays = createSelector(
+export const selectAllDays = createSelector(
 	selectDaysQueryState,
 	({ data: days = [] }) => days
 );

@@ -195,13 +195,6 @@ export default function HeaderButtonsComponent() {
 							</DropdownItem>
 							<DropdownItem
 								style={state.adminViewableLinkStyle}
-								disabled={state.shouldDailyPatternsButtonDisabled}
-								tag={Link}
-								to="/dailyPatterns">
-								<FormattedMessage id='daily.patterns' />
-							</DropdownItem>
-							<DropdownItem
-								style={state.adminViewableLinkStyle}
 								disabled={state.shouldCSVMetersButtonDisabled}
 								tag={Link}
 								to="/csvMeters">
@@ -232,6 +225,13 @@ export default function HeaderButtonsComponent() {
 								tag={Link}
 								to="/meters">
 								<FormattedMessage id='meters' />
+							</DropdownItem>
+							<DropdownItem
+								style={state.adminViewableLinkStyle}
+								disabled={state.shouldDailyPatternsButtonDisabled}
+								tag={Link}
+								to="/dailyPatterns">
+								<FormattedMessage id='daily.patterns' />
 							</DropdownItem>
 							<DropdownItem
 								style={state.adminViewableLinkStyle}

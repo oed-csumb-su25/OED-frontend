@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/indent */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -15,6 +16,7 @@ import { AreaUnitType } from '../../utils/getAreaUnitConversion';
 import { noUnitTranslated, potentialGraphicUnits } from '../../utils/input';
 import translate from '../../utils/translate';
 import { selectAllUnits, selectUnitDataById } from '../api/unitsApi';
+import { selectAllDays } from '../api/daysApi';
 import { selectVisibleMetersAndGroups } from './authVisibilitySelectors';
 import { createAppSelector } from './selectors';
 import { selectSelectedLanguage } from '../../redux/slices/appStateSlice';
@@ -408,14 +410,32 @@ export const isValidCreateMeter = createAppSelector(
 	}
 );
 
+/**
+ * Validates the creation of a new daily pattern.
+ * - Ensures the day name is not blank.
+ * - Ensures the day name does not already exist (case-insensitive) in the list of days.
+ * Returns a tuple: [isValid, message].
+ * @param _state The Redux state (unused in this selector).
+ * @param dailyPattern The daily pattern object containing the day name.
+ * @param dailyPattern.dayName The name of the day to validate for uniqueness and non-blank value.
+ * @returns A tuple where the first element is a boolean indicating validity, and the second is a message string.
+ */
 export const selectIsValidCreateDailyPattern = createAppSelector(
-	[
-		(_state, dailyPattern: { dayName: string }) => dailyPattern
-	],
-	(dailyPattern): [boolean, string] => {
-		if (!dailyPattern.dayName || dailyPattern.dayName.trim() === '') {
-			return [false, translate('daily.patterns.create.name.required')];
-		}
-		return [true, 'Daily Pattern is Valid'];
-	}
+    [
+        selectAllDays,
+        (_state, dailyPattern: { dayName: string }) => dailyPattern
+    ],
+    (days, dailyPattern): [boolean, string] => {
+        if (!dailyPattern.dayName || dailyPattern.dayName.trim() === '') {
+            return [false, translate('daily.patterns.create.name.required')];
+        }
+        // Check if dayName already exists (case-insensitive)
+        const exists = days.some(day =>
+            day.dayName?.toLowerCase() === dailyPattern.dayName.trim().toLowerCase()
+        );
+        if (exists) {
+            return [false, translate('daily.patterns.create.name.exists')];
+        }
+        return [true, 'Daily Pattern is Valid'];
+    }
 );
