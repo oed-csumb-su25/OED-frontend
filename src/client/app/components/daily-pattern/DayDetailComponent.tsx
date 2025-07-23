@@ -1,22 +1,22 @@
 import * as React from 'react';
 import { FormattedMessage } from 'react-intl';
-import SpinnerComponent from '../SpinnerComponent';
-import TooltipHelpComponent from '../TooltipHelpComponent';
-import TooltipMarkerComponent from '../TooltipMarkerComponent';
+import { Button } from 'reactstrap';
 import { useAppSelector } from '../../redux/reduxHooks';
 import { selectSelectedLanguage } from '../../redux/slices/appStateSlice';
 import { titleStyle, tooltipBaseStyle } from '../../styles/modalStyle';
 import { Day } from '../../types/redux/days';
+import SpinnerComponent from '../SpinnerComponent';
+import TooltipHelpComponent from '../TooltipHelpComponent';
+import TooltipMarkerComponent from '../TooltipMarkerComponent';
 import DayViewComponent from './DayViewComponent';
-import { Button } from 'reactstrap';
 
 /**
  * Hardcoded day data for demonstration.
  */
 const hardcodedDays: Day[] = [
 	{
-		id: '1',
-		name: 'Weekday',
+		id: 1,
+		dayName: 'Weekday',
 		note: 'Standard weekday pattern',
 		segments: [
 			{ id: '1-1', dayId: '1', hour: 0, slope: 0.5, intercept: 1, note: 'Midnight to morning' },
@@ -25,8 +25,8 @@ const hardcodedDays: Day[] = [
 		]
 	},
 	{
-		id: '2',
-		name: 'Weekend',
+		id: 2,
+		dayName: 'Weekend',
 		note: 'Weekend pattern',
 		segments: [
 			{ id: '2-1', dayId: '2', hour: 0, slope: 0.3, intercept: 0.9, note: 'All day' }
@@ -76,7 +76,7 @@ export default function DayDetailComponent() {
 						</div>
 						<div className="card-container">
 							{hardcodedDays
-								.sort((a, b) => (a.name || '').toLowerCase().localeCompare((b.name || '').toLowerCase(), locale, { sensitivity: 'accent' }))
+								.sort((a, b) => (a.dayName || '').toLowerCase().localeCompare((b.dayName || '').toLowerCase(), locale, { sensitivity: 'accent' }))
 								.map(day => (
 									<DayViewComponent key={day.id} day={day} />
 								))}

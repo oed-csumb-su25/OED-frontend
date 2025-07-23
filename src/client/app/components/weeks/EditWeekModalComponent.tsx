@@ -5,12 +5,16 @@
 import * as React from 'react';
 import { FormattedMessage } from 'react-intl';
 import { Button, Col, Container, FormFeedback, FormGroup, Input, Label, Modal, ModalBody, ModalFooter, ModalHeader, Row, Table } from 'reactstrap';
+import { daysApi } from '../../redux/api/daysApi';
+import { weeksApi } from '../../redux/api/weeksApi';
 import { tooltipBaseStyle } from '../../styles/modalStyle';
+import { LocaleDataKey } from '../../translations/data';
 import { Week } from '../../types/redux/weeks';
+import { showErrorNotification, showSuccessNotification } from '../../utils/notifications';
 import translate from '../../utils/translate';
+import ConfirmActionModalComponent from '../ConfirmActionModalComponent';
 import TooltipHelpComponent from '../TooltipHelpComponent';
 import TooltipMarkerComponent from '../TooltipMarkerComponent';
-import { fakeDaysData } from './fake-week-data';
 
 interface EditWeekModalComponentProps {
 	/**
@@ -18,6 +22,9 @@ interface EditWeekModalComponentProps {
 	 */
 	show: boolean;
 
+	/**
+	 * The week to edit
+	 */
 	week: Week;
 
 	/**
@@ -33,43 +40,100 @@ interface EditWeekModalComponentProps {
  */
 export default function EditWeekModalComponent(props: EditWeekModalComponentProps): React.ReactElement {
 
-	const values = { ...props.week };
+	// #region Edit week
+	// State to hold the week details being edited. Initialized with the week passed in through props
+	const [weekDetails, setWeekDetails] = React.useState({ ...props.week });
 
-	const [weekDetails, setWeekDetails] = React.useState(values);
+	// Fetch days data
+	const { data: days, isFetching: isFetchingDays } = daysApi.useGetDaysDetailsQuery();
 
-	// reference to the submit button
-	const submitButtonRef = React.useRef<HTMLButtonElement>(null);
+	// Sort days by day name to make the dropdown more user-friendly
+	const sortedDays = React.useMemo(() => {
+		if (!days) {
+			return [];
+		}
+		return [...days].sort((a, b) => a.dayName.toLocaleLowerCase().localeCompare(b.dayName.toLocaleLowerCase()));
+	}, [days]);
+
+	// Fetch weeks data (used to check if week name already exists)
+	const { data: weeks } = weeksApi.useGetWeeksQuery();
+
+	const [editWeekMutation, { isLoading: isSaving }] = weeksApi.useEditWeekMutation();
 
 	const resetState = () => {
-		setWeekDetails(values);
+		setWeekDetails({ ...props.week });
 	};
 
-	// TODO (evan-carey): Add logic to save changes
+	// Function to handle form submission. Validates the week details and submits them to the API
 	const handleSubmit = () => {
-		// prevent multiple submissions
-		submitButtonRef.current?.setAttribute('disabled', 'true');
+		if (!isWeekValid) {
+			return;
+		}
 
-		console.log('Week details submitted:', weekDetails);
-
-		// TODO (evan-carey): Add logic to save the week details, update redux state, close modal, and show success toast
+		editWeekMutation(weekDetails).unwrap()
+			.then(() => {
+				showSuccessNotification(translate('week.edit.success'));
+				props.handleClose();
+			})
+			.catch(error => {
+				showErrorNotification(translate('week.edit.failure') + error);
+			});
 	};
 
+	// State to hold validation message for week name
+	// This is used to show an error message if the week name is invalid
+	const [nameValidationMessageId, setNameValidationMessageId] = React.useState<LocaleDataKey | null>(null);
+
+	// Validate the week name to ensure it is not empty and does not already exist
+	const isWeekNameValid = React.useMemo(() => {
+		const trimmedName = weekDetails.weekName.trim();
+		if (trimmedName === '') {
+			setNameValidationMessageId('error.required');
+			return false;
+		}
+		if (weeks?.some(week => week.weekName.toLowerCase() === trimmedName.toLowerCase() && week.id !== weekDetails.id)) {
+			setNameValidationMessageId('week.validation.name.exists');
+			return false;
+		}
+
+		setNameValidationMessageId(null);
+		return true;
+	}, [weekDetails.weekName, weeks, weekDetails.id]);
+
+	// Validate the week details to ensure all days are selected and the week name is valid
+	// This is used to enable/disable the submit button
+	const isWeekValid = React.useMemo(() => {
+		return isWeekNameValid && weekDetails.sunday >= 0 &&
+			weekDetails.monday >= 0 &&
+			weekDetails.tuesday >= 0 &&
+			weekDetails.wednesday >= 0 &&
+			weekDetails.thursday >= 0 &&
+			weekDetails.friday >= 0 &&
+			weekDetails.saturday >= 0;
+	}, [weekDetails, isWeekNameValid]);
+	// #endregion Edit week
+
+	// #region Delete week
+	const [showDeleteModal, setShowDeleteModal] = React.useState(false);
+	const [deleteWeekMutation, { isLoading: isDeleting }] = weeksApi.useDeleteWeekMutation();
+
+	// Function to delete the week
 	const handleDelete = () => {
-		// TODO (evan-carey): Add logic to delete the week
+		setShowDeleteModal(false);
+		deleteWeekMutation({ id: weekDetails.id }).unwrap()
+			.then(() => {
+				showSuccessNotification(translate('week.delete.success'));
+				props.handleClose();
+			})
+			.catch(error => {
+				showErrorNotification(translate('week.delete.failure') + error);
+			});
 	};
-
-	const handleClose = () => {
-		props.handleClose();
-		resetState();
-	};
-
-	// TODO (evan-carey): Add proper validation logic?
-	// For now, just check if the name is not empty
-	const isValidWeek = weekDetails.name.trim() !== '';
+	// #endregion Delete week
 
 	return (
 		<>
-			<Modal isOpen={props.show} toggle={props.handleClose} backdrop="static">
+			<Modal isOpen={props.show} toggle={props.handleClose} backdrop="static" onClosed={resetState}>
 				<ModalHeader toggle={props.handleClose}>
 					<FormattedMessage id="week.edit" />
 					<TooltipHelpComponent page="week-edit" />
@@ -89,11 +153,11 @@ export default function EditWeekModalComponent(props: EditWeekModalComponentProp
 										type="text"
 										name="name"
 										required
-										value={weekDetails.name}
-										invalid={!weekDetails.name}
-										onChange={event => setWeekDetails({ ...weekDetails, name: event.target.value })} />
+										value={weekDetails.weekName}
+										invalid={!isWeekNameValid}
+										onChange={event => setWeekDetails({ ...weekDetails, weekName: event.target.value })} />
 									<FormFeedback>
-										<FormattedMessage id="error.required" />
+										{nameValidationMessageId && <FormattedMessage id={nameValidationMessageId as string} />}
 									</FormFeedback>
 								</FormGroup>
 							</Col>
@@ -131,13 +195,13 @@ export default function EditWeekModalComponent(props: EditWeekModalComponentProp
 														type="select"
 														name={day}
 														value={weekDetails[day]}
-														invalid={weekDetails[day] === '-1'}
-														onChange={event => setWeekDetails({ ...weekDetails, [day]: event.target.value })}
+														invalid={weekDetails[day] < 0}
+														disabled={isFetchingDays}
+														onChange={event => setWeekDetails({ ...weekDetails, [day]: Number(event.target.value) })}
 													>
-														{/* TODO (evan-carey): populate with real days data */}
-														{fakeDaysData.map(fakeDay => (
-															<option key={fakeDay.id} value={fakeDay.id}>
-																{fakeDay.name}
+														{sortedDays?.map(day => (
+															<option key={day.id} value={day.id} title={day.note}>
+																{day.dayName}
 															</option>
 														))}
 													</Input>
@@ -152,23 +216,34 @@ export default function EditWeekModalComponent(props: EditWeekModalComponentProp
 				</ModalBody>
 				<ModalFooter>
 					{/* Delete week */}
-					<Button color="danger" onClick={handleDelete}>
+					<Button
+						color="danger"
+						onClick={() => setShowDeleteModal(true)}
+						disabled={isSaving || isDeleting}>
 						<FormattedMessage id="delete.week" />
 					</Button>
 					{/* Discard changes */}
-					<Button color="secondary" onClick={handleClose}>
+					<Button color="secondary" onClick={props.handleClose}>
 						<FormattedMessage id="discard.changes" />
 					</Button>
 					{/* Save changes */}
 					<Button
 						color="primary"
 						onClick={handleSubmit}
-						innerRef={submitButtonRef}
-						disabled={!isValidWeek}
+						disabled={!isWeekValid || isSaving || isDeleting}
 					>
 						<FormattedMessage id="save.all" />
 					</Button>
 				</ModalFooter>
+
+				{/* Delete confirmation modal */}
+				<ConfirmActionModalComponent
+					show={showDeleteModal}
+					actionConfirmMessage={translate('week.delete.confirm')}
+					actionFunction={handleDelete}
+					handleClose={() => setShowDeleteModal(false)}
+					actionConfirmText={translate('week.delete')}
+					actionRejectText={translate('cancel')} />
 			</Modal>
 		</>
 	);

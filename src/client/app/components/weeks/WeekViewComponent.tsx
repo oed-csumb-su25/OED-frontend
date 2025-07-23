@@ -25,7 +25,7 @@ export default function WeekViewComponent(props: WeekViewComponentProps): React.
 
 	return (
 		<div className="card">
-			<div className="identifier-container">{week.name}</div>
+			<div className="identifier-container">{week.weekName}</div>
 			<div className="item-container p-2">
 				<b><FormattedMessage id="note" /></b> {week.note}
 			</div>

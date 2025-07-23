@@ -10,7 +10,15 @@ import { Day } from './days';
  */
 export interface Week {
 	id: number;
-	name: string;
+
+	/**
+	 * The name of the week
+	 */
+	weekName: string;
+
+	/**
+	 * An optional note for the week
+	 */
 	note: string;
 
 	/**

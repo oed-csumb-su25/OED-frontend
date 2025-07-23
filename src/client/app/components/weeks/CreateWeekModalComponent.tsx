@@ -5,61 +5,125 @@
 import * as React from 'react';
 import { FormattedMessage } from 'react-intl';
 import { Button, Col, Container, FormFeedback, FormGroup, Input, Label, Modal, ModalBody, ModalFooter, ModalHeader, Row, Table } from 'reactstrap';
+import { daysApi } from '../../redux/api/daysApi';
+import { weeksApi } from '../../redux/api/weeksApi';
 import { useAppSelector } from '../../redux/reduxHooks';
 import { selectDefaultCreateWeekValues } from '../../redux/selectors/adminSelectors';
 import { tooltipBaseStyle } from '../../styles/modalStyle';
+import { LocaleDataKey } from '../../translations/data';
+import { showErrorNotification, showSuccessNotification } from '../../utils/notifications';
 import translate from '../../utils/translate';
 import TooltipHelpComponent from '../TooltipHelpComponent';
 import TooltipMarkerComponent from '../TooltipMarkerComponent';
-import { fakeDaysData } from './fake-week-data';
 
 /**
  * Defines a button that opens a modal to create a new weekly conversion pattern.
  * @returns Weekly pattern create element
  */
 export default function CreateWeekModalComponent(): React.ReactElement {
-
+	// State to control modal visibility
 	const [showModal, setShowModal] = React.useState(false);
 
+	// Fetch days data
+	const { data: days, isFetching: isFetchingDays } = daysApi.useGetDaysDetailsQuery();
+
+	// Sort days by day name to make the dropdown more user-friendly
+	const sortedDays = React.useMemo(() => {
+		if (!days) {
+			return [];
+		}
+		return [...days].sort((a, b) => a.dayName.toLocaleLowerCase().localeCompare(b.dayName.toLocaleLowerCase()));
+	}, [days]);
+
+	// Fetch weeks data (used to check if week name already exists)
+	const { data: weeks } = weeksApi.useGetWeeksQuery();
+
+	const [addWeekMutation, { isLoading: isSaving }] = weeksApi.useAddWeekMutation();
+
+	// Default values for the week creation form
 	const defaultValues = useAppSelector(selectDefaultCreateWeekValues);
 
+	// State to hold the week details being created. Initialized with default values.
 	const [weekDetails, setWeekDetails] = React.useState(defaultValues);
 
-	// reference to the submit button
-	const submitButtonRef = React.useRef<HTMLButtonElement>(null);
+	// Function to toggle the modal visibility
+	const toggleModal = () => setShowModal(!showModal);
 
-	const onToggleModal = () => {
-		setShowModal(!showModal);
-		if (showModal) {
-			resetState();
-		}
-	};
-
+	// Function to handle form submission
+	// Validates the week details and submits them to the API
 	const handleSubmit = () => {
-		// prevent multiple submissions
-		submitButtonRef.current?.setAttribute('disabled', 'true');
+		if (!isWeekValid) {
+			return;
+		}
 
-		// TODO (evan-carey): Add logic to save the week details
-		console.log('Week details submitted:', weekDetails);
+		addWeekMutation(weekDetails).unwrap()
+			.then(() => {
+				showSuccessNotification(translate('week.create.success'));
+				toggleModal();
+			})
+			.catch(error => {
+				showErrorNotification(translate('week.create.failure') + error);
+			});
 	};
 
+	// Function to reset the week details to default values
 	const resetState = () => {
 		setWeekDetails(defaultValues);
 	};
 
-	// TODO (evan-carey): Add validation logic
-	const isValidWeek = true;
+	// State to hold validation message for week name
+	// This is used to show an error message if the week name is invalid
+	const [nameValidationMessageId, setNameValidationMessageId] = React.useState<LocaleDataKey | null>(null);
+
+	// Validate the week name to ensure it is not empty and does not already exist
+	const isWeekNameValid = React.useMemo(() => {
+		const trimmedName = weekDetails.weekName.trim();
+		if (trimmedName === '') {
+			setNameValidationMessageId('error.required');
+			return false;
+		}
+
+		if (weeks?.some(week => week.weekName.toLowerCase() === trimmedName.toLowerCase())) {
+			setNameValidationMessageId('week.validation.name.exists');
+			return false;
+		}
+
+		setNameValidationMessageId(null);
+		return true;
+	}, [weekDetails.weekName, weeks]);
+
+	// Validate the week details to ensure all days are selected and the week name is valid
+	// This is used to enable/disable the submit button
+	const isWeekValid = React.useMemo(() => {
+		return isWeekNameValid &&
+			weekDetails.sunday !== -999 &&
+			weekDetails.monday !== -999 &&
+			weekDetails.tuesday !== -999 &&
+			weekDetails.wednesday !== -999 &&
+			weekDetails.thursday !== -999 &&
+			weekDetails.friday !== -999 &&
+			weekDetails.saturday !== -999;
+	}, [weekDetails, isWeekNameValid]);
+
+	// Reference to the name input field to set focus when the modal opens
+	const nameInputFieldRef = React.useRef<HTMLInputElement>(null);
 
 	return (
 		<>
-			{/* Show cerate modal button */}
-			<Button color="secondary" onClick={onToggleModal}>
+			{/* Show create modal button */}
+			<Button color="secondary" onClick={toggleModal}>
 				<FormattedMessage id="week.create" />
 			</Button>
 
 
-			<Modal isOpen={showModal} toggle={onToggleModal} backdrop="static">
-				<ModalHeader toggle={onToggleModal}>
+			<Modal
+				isOpen={showModal}
+				toggle={toggleModal}
+				backdrop="static"
+				onOpened={() => nameInputFieldRef.current?.focus()}
+				onClosed={resetState}
+			>
+				<ModalHeader toggle={toggleModal}>
 					<FormattedMessage id="week.create" />
 					<TooltipHelpComponent page="week-create" />
 					<div style={tooltipBaseStyle}>
@@ -78,11 +142,13 @@ export default function CreateWeekModalComponent(): React.ReactElement {
 										type="text"
 										name="name"
 										required
-										value={weekDetails.name}
-										invalid={!weekDetails.name}
-										onChange={event => setWeekDetails({ ...weekDetails, name: event.target.value })} />
+										value={weekDetails.weekName}
+										invalid={!isWeekNameValid}
+										onChange={event => setWeekDetails({ ...weekDetails, weekName: event.target.value })}
+										innerRef={nameInputFieldRef} // Set focus on this field when modal opens
+									/>
 									<FormFeedback>
-										<FormattedMessage id="error.required" />
+										{nameValidationMessageId && <FormattedMessage id={nameValidationMessageId as string} />}
 									</FormFeedback>
 								</FormGroup>
 							</Col>
@@ -120,17 +186,17 @@ export default function CreateWeekModalComponent(): React.ReactElement {
 														type="select"
 														name={day}
 														value={weekDetails[day]}
-														// TODO (evan-carey): change if the day ID is a number instead of a string
-														invalid={weekDetails[day] === '-999'}
-														onChange={event => setWeekDetails({ ...weekDetails, [day]: event.target.value })}
+														invalid={weekDetails[day] === -999}
+														disabled={isFetchingDays}
+														onChange={event => setWeekDetails({ ...weekDetails, [day]: Number(event.target.value) })}
 													>
-														<option value="-999" key="" hidden={weekDetails[day] !== '-1'} disabled>
+														<option value={-999} key="" hidden={weekDetails[day] !== -999} disabled>
 															{translate('select.day')}
 														</option>
-														{/* TODO (evan-carey): populate with real days data */}
-														{fakeDaysData.map(fakeDay => (
-															<option key={fakeDay.id} value={fakeDay.id}>
-																{fakeDay.name}
+
+														{sortedDays?.map(day => (
+															<option key={day.id} value={day.id} title={day.note}>
+																{day.dayName}
 															</option>
 														))}
 													</Input>
@@ -144,14 +210,15 @@ export default function CreateWeekModalComponent(): React.ReactElement {
 					</Container>
 				</ModalBody>
 				<ModalFooter>
-					<Button color="secondary" onClick={onToggleModal}>
+					{/* Cancel button */}
+					<Button color="secondary" onClick={toggleModal}>
 						<FormattedMessage id="discard.changes" />
 					</Button>
+					{/* Submit button */}
 					<Button
 						color="primary"
 						onClick={handleSubmit}
-						innerRef={submitButtonRef}
-						disabled={!isValidWeek}
+						disabled={!isWeekValid || isSaving}
 					>
 						<FormattedMessage id="save.all" />
 					</Button>

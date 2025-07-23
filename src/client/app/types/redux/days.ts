@@ -1,6 +1,6 @@
 export interface Day {
-	id: string;
-	name: string;
+	id: number;
+	dayName: string;
 	note: string;
 	segments: DaySegment[];
 }

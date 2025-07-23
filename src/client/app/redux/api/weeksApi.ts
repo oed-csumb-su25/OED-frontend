@@ -6,8 +6,6 @@ import { createSelector } from '@reduxjs/toolkit';
 import { Week } from '../../types/redux/weeks';
 import { baseApi } from './baseApi';
 
-// NOTE (evan-carey): This file is a WIP, as the backend API for weeks is not yet implemented.
-
 /**
  * This file defines the weeksApi using RTK Query.
  * It provides endpoints for fetching, adding, deleting, and editing weekly patterns.
@@ -17,46 +15,44 @@ export const weeksApi = baseApi.injectEndpoints({
 	endpoints: builder => ({
 		getWeeks: builder.query<Week[], void>({
 			query: () => 'api/weeks',
-			providesTags: ['Weeks']
+			// Provides a list of 'Weeks' by id.
+			// If any mutation invalidates any of these tags, the query will refetch.
+			// The 'LIST' tag is used to invalidate the entire list.
+			providesTags: result =>
+				result ?
+					[...result.map(({ id }) => ({ type: 'Weeks', id }) as const), { type: 'Weeks', id: 'LIST' }] :
+					[{ type: 'Weeks', id: 'LIST' }]
 		}),
+
 		addWeek: builder.mutation<void, Week>({
 			query: week => ({
-				url: 'api/weeks/addWeek',
+				url: 'api/weeks/add',
 				method: 'POST',
 				body: week
 			}),
-			onQueryStarted: async (_arg, api) => {
-				api.queryFulfilled
-					.then(() => {
-						api.dispatch(weeksApi.endpoints.getWeeks.initiate());
-					});
-			}
+			transformErrorResponse: res => res.data,
+			// On successful addition, invalidates the 'Weeks' list to refetch it.
+			invalidatesTags: (result, error) => !error ? [{ type: 'Weeks', id: 'LIST' }] : []
 		}),
+
 		deleteWeek: builder.mutation<void, Pick<Week, 'id'>>({
 			query: weekId => ({
 				url: 'api/weeks/delete',
 				method: 'POST',
 				body: weekId
 			}),
-			onQueryStarted: async (_, { queryFulfilled, dispatch }) => {
-				queryFulfilled
-					.then(() => {
-						dispatch(weeksApi.endpoints.getWeeks.initiate());
-					});
-			}
+			transformErrorResponse: res => res.data,
+			invalidatesTags: (result, error, weekId) => [{ type: 'Weeks', id: weekId.id }]
 		}),
+
 		editWeek: builder.mutation<void, Week>({
 			query: week => ({
 				url: 'api/weeks/edit',
 				method: 'POST',
 				body: week
 			}),
-			onQueryStarted: async (_arg, api) => {
-				api.queryFulfilled
-					.then(() => {
-						api.dispatch(weeksApi.endpoints.getWeeks.initiate());
-					});
-			}
+			transformErrorResponse: res => res.data,
+			invalidatesTags: (result, error, week) => [{ type: 'Weeks', id: week.id }]
 		})
 	})
 });

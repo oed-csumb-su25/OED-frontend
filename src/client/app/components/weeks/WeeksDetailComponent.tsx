@@ -4,11 +4,12 @@
 
 import * as React from 'react';
 import { FormattedMessage } from 'react-intl';
+import { weeksApi } from '../../redux/api/weeksApi';
 import { titleStyle, tooltipBaseStyle } from '../../styles/modalStyle';
+import SpinnerComponent from '../SpinnerComponent';
 import TooltipHelpComponent from '../TooltipHelpComponent';
 import TooltipMarkerComponent from '../TooltipMarkerComponent';
 import CreateWeekModalComponent from './CreateWeekModalComponent';
-import { fakeWeeksData } from './fake-week-data';
 import WeekViewComponent from './WeekViewComponent';
 
 /**
@@ -16,32 +17,43 @@ import WeekViewComponent from './WeekViewComponent';
  * @returns Weekly patterns page element
  */
 export default function WeeksDetailComponent() {
-	// const locale = useAppSelector(selectSelectedLanguage);
 
-	// TODO (evan-carey): Replace with real weeks data
-	const weeks = fakeWeeksData;
+	const { data: weeks, isFetching } = weeksApi.useGetWeeksQuery();
+
+	// Sort weeks by week name
+	const sortedWeeks = React.useMemo(() => {
+		if (!weeks) {
+			return [];
+		}
+		return [...weeks].sort((a, b) => a.weekName.toLocaleLowerCase().localeCompare(b.weekName.toLocaleLowerCase()));
+	}, [weeks]);
 
 	return (
 		<div className="flexGrowOne">
-			<div>
-				<TooltipHelpComponent page="weeks" />
-
-				<div className="container-fluid">
-					<h2 style={titleStyle}>
-						<FormattedMessage id="weeks" />
-						<div style={tooltipBaseStyle}>
-							<TooltipMarkerComponent page="weeks" helpTextId="help.admin.weekview" />
+			{isFetching ? (
+				<div className='text-center'>
+					<SpinnerComponent loading width={50} height={50} />
+					<FormattedMessage id='redo.cik.and.refresh.db.views'></FormattedMessage>
+				</div>
+			) : (
+				<div>
+					<TooltipHelpComponent page="weeks" />
+					<div className="container-fluid">
+						<h2 style={titleStyle}>
+							<FormattedMessage id="weeks" />
+							<div style={tooltipBaseStyle}>
+								<TooltipMarkerComponent page="weeks" helpTextId="help.admin.weekview" />
+							</div>
+						</h2>
+						<div className="edit-btn">
+							<CreateWeekModalComponent />
 						</div>
-					</h2>
-					<div className="edit-btn">
-						<CreateWeekModalComponent />
-					</div>
-					<div className="card-container">
-						{/* TODO (evan-carey): sort weeks? */}
-						{weeks.map(week => <WeekViewComponent week={week} key={week.id} />)}
+						<div className="card-container">
+							{sortedWeeks?.map(week => <WeekViewComponent week={week} key={week.id} />)}
+						</div>
 					</div>
 				</div>
-			</div>
+			)}
 		</div>
 	);
 }

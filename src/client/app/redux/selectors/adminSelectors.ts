@@ -339,20 +339,19 @@ export const selectDefaultCreateConversionValues = createAppSelector(
 	}
 );
 
-// TODO (evan-carey): if Day ID is a number instead of a string, fix this.
 export const selectDefaultCreateWeekValues = createAppSelector(
 	[],
 	() => ({
 		id: -99,
-		name: '',
+		weekName: '',
 		note: '',
-		sunday: '-999',
-		monday: '-999',
-		tuesday: '-999',
-		wednesday: '-999',
-		thursday: '-999',
-		friday: '-999',
-		saturday: '-999'
+		sunday: -999,
+		monday: -999,
+		tuesday: -999,
+		wednesday: -999,
+		thursday: -999,
+		friday: -999,
+		saturday: -999
 	})
 );
 
