@@ -226,10 +226,6 @@ export default function CreateConversionModalComponent() {
 			pattern: conversionState.initialConversion.pattern,
 			initialNote: conversionState.initialConversion.note
 		};
-		console.log(
-			'sourceId:', conversionState.overallConversion.sourceId, typeof conversionState.overallConversion.sourceId,
-			'destinationId:', conversionState.overallConversion.destinationId, typeof conversionState.overallConversion.destinationId
-		);
 		addConversionMutation(payload);
 		resetState();
 	};
@@ -474,7 +470,7 @@ export default function CreateConversionModalComponent() {
 								{defaultValues.weeklyPatterns?.map(p => (
 									<option key={p} value={p}>{p}</option>
 								))} */}
-								<option value='No Pattern'>No Pattern</option>
+								<option value='No Pattern'>{translate('conversion.pattern.no')}</option>
 								<option value='Pattern 1'>Pattern 1</option>
 								<option value='Pattern 2'>Pattern 2</option>
 							</Input>

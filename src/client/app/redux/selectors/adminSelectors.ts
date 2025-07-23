@@ -408,3 +408,14 @@ export const isValidCreateMeter = createAppSelector(
 	}
 );
 
+export const selectIsValidCreateDailyPattern = createAppSelector(
+	[
+		(_state, dailyPattern: { name: string }) => dailyPattern
+	],
+	(dailyPattern): [boolean, string] => {
+		if (!dailyPattern.name || dailyPattern.name.trim() === '') {
+			return [false, translate('daily.patterns.create.name.required')];
+		}
+		return [true, 'Daily Pattern is Valid'];
+	}
+);

@@ -15,21 +15,21 @@ import CreateDailyPatternModalComponent from './CreateDailyPatternModalComponent
  */
 const hardcodedDays: Day[] = [
 	{
-		id: '1',
+		id: 1,
 		name: 'Weekday',
 		note: 'Standard weekday pattern',
 		segments: [
-			{ id: '1-1', dayId: '1', hour: 0, slope: 0.5, intercept: 1, note: 'Midnight to morning' },
-			{ id: '1-2', dayId: '1', hour: 8, slope: 0.7, intercept: 1.2, note: 'Morning to evening' },
-			{ id: '1-3', dayId: '1', hour: 18, slope: 0.4, intercept: 0.8, note: 'Evening to midnight' }
+			{ id: 1, dayId: 1, hour: 0, slope: 0.5, intercept: 1, note: 'Midnight to morning' },
+			{ id: 2, dayId: 1, hour: 8, slope: 0.7, intercept: 1.2, note: 'Morning to evening' },
+			{ id: 3, dayId: 1, hour: 18, slope: 0.4, intercept: 0.8, note: 'Evening to midnight' }
 		]
 	},
 	{
-		id: '2',
+		id: 2,
 		name: 'Weekend',
 		note: 'Weekend pattern',
 		segments: [
-			{ id: '2-1', dayId: '2', hour: 0, slope: 0.3, intercept: 0.9, note: 'All day' }
+			{ id: 1, dayId: 2, hour: 0, slope: 0.3, intercept: 0.9, note: 'All day' }
 		]
 	}
 ];

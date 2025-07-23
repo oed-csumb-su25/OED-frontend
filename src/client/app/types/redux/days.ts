@@ -1,13 +1,13 @@
 export interface Day {
-	id: string;
+	id: number;
 	name: string;
 	note: string;
 	segments: DaySegment[];
 }
 
 export interface DaySegment {
-	id: string;
-	dayId: string;
+	id: number;
+	dayId: number;
 	hour: number;
 	slope: number;
 	intercept: number;

@@ -33,6 +33,8 @@ export const baseApi = createApi({
 		'Preferences',
 		'Users',
 		'ConversionDetails',
+		'DailyPattern',
+		'DailyPatternSegment',
 		'Units',
 		'Cik',
 		'Readings'

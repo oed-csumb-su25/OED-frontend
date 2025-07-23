@@ -6,23 +6,24 @@
 import * as React from 'react';
 import { useState } from 'react';
 import { FormattedMessage } from 'react-intl';
-import { Button, Col, Container, FormGroup, Input, Label, Modal, ModalBody, ModalFooter, ModalHeader, Row } from 'reactstrap';
+import { Button, Col, Container, FormFeedback, FormGroup, Input, Label, Modal, ModalBody, ModalFooter, ModalHeader, Row } from 'reactstrap';
 import TooltipHelpComponent from '../TooltipHelpComponent';
 import { useAppSelector } from '../../redux/reduxHooks';
-import { selectDefaultCreateDailyPatternValues } from '../../redux/selectors/adminSelectors';
+import { selectDefaultCreateDailyPatternValues, selectIsValidCreateDailyPattern } from '../../redux/selectors/adminSelectors';
 import '../../styles/modal.css';
 import { tooltipBaseStyle } from '../../styles/modalStyle';
 import { useTranslate } from '../../redux/componentHooks';
 import TooltipMarkerComponent from '../TooltipMarkerComponent';
 import ConfirmActionModalComponent from '../ConfirmActionModalComponent';
+import { daysApi } from '../../redux/api/daysApi';
+
 /**
  * Defines the create conversion modal form
  * @returns Conversion create element
  */
 export default function CreateDailyPatternModalComponent() {
 	const translate = useTranslate();
-	//const [addConversionMutation] = conversionsApi.useAddConversionMutation();
-	// Want units in sorted order by identifier regardless of case.
+	const [addDailyPatternMutation] = daysApi.useAddDailyPatternMutation();
 
 	const defaultValues = useAppSelector(selectDefaultCreateDailyPatternValues);
 
@@ -55,18 +56,13 @@ export default function CreateDailyPatternModalComponent() {
   }
 });
 
-	// TODO: Add a check for the fields in daily pattern
-	// const [validConversion, reason] = useAppSelector(state =>
-	// 	selectIsValidConversion(state, {
-	// 		sourceId: conversionState.initialConversion.sourceId,
-	// 		destinationId: conversionState.initialConversion.destinationId,
-	// 		bidirectional: conversionState.initialConversion.bidirectional,
-	// 		slope: conversionState.initialConversion.slope,
-	// 		intercept: conversionState.initialConversion.intercept,
-	// 		//pattern: conversionState.initialConversion.pattern,
-	// 		note: conversionState.initialConversion.note
-	// 	})
-	// );
+	// Check if the daily pattern is valid
+	const [isValidDailyPattern, reason] = useAppSelector(state =>
+		selectIsValidCreateDailyPattern(state, {
+			name: patternState.dailyPattern.name
+			// You can add more fields if your selector uses them
+		})
+	);
 
 	const handleStringChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -86,74 +82,51 @@ export default function CreateDailyPatternModalComponent() {
                 note: value
             }
         }));
-    }
+    } else {
+				setPatternState(prev => ({
+						...prev,
+						dailyPattern: {
+								...prev.dailyPattern,
+								name: value
+						}
+				}));
+		}
 	};
 
   const handleNumberChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     const newValue = Number(value);
-		console.log(`handleNumberChange: ${name} = ${newValue}`);
-
-    // setConversionState(prev => {
-    //     if (name === 'sourceId') {
-    //         return {
-    //             ...prev,
-    //             dailyPattern: {
-    //                 ...prev.dailyPattern,
-    //                 sourceId: newValue
-    //             },
-    //             initialPattern: {
-    //                 ...prev.initialPattern,
-    //                 sourceId: newValue
-    //             }
-    //         };
-    //     } else if (name === 'destinationId') {
-    //         return {
-    //             ...prev,
-    //             overallConversion: {
-    //                 ...prev.overallConversion,
-    //                 destinationId: newValue
-    //             },
-    //             initialConversion: {
-    //                 ...prev.initialConversion,
-    //                 destinationId: newValue
-    //             },
-    //             sourceOptions: defaultValues.sourceOptions.filter(source => source.id !== newValue)
-    //         };
-    //     } else {
-    //         return {
-    //             ...prev,
-    //             initialConversion: {
-    //                 ...prev.initialConversion,
-    //                 [name]: newValue
-    //             }
-    //         };
-    //     }
-    // });
+		if (name === 'slope') {
+			setPatternState(prev => ({
+				...prev,
+				initialPattern: {
+					...prev.initialPattern,
+					slope: newValue
+				}
+			}));
+		} else if (name === 'intercept') {
+			setPatternState(prev => ({
+				...prev,
+				initialPattern: {
+					...prev.initialPattern,
+					intercept: newValue
+				}
+			}));
+		}
 	};
 
 	/* Warning Modal */
 	const handleWarningConfirm = () => {
 		//Close the warning modal
 		setShowWarningModal(false);
-
-		// TODO: Replace this with a proper overall and initial conversion creation logic once the backend is ready
-		// Create a placeholder payload for the conversion creation until backend is ready
-		// const payload = {
-		// 	sourceId: conversionState.overallConversion.sourceId,
-		// 	destinationId: conversionState.overallConversion.destinationId,
-		// 	bidirectional: (isMeterSource() || isSuffixUsed()) ? false : conversionState.overallConversion.bidirectional,
-		// 	note: conversionState.overallConversion.note,
-		// 	slope: conversionState.initialConversion.slope,
-		// 	intercept: conversionState.initialConversion.intercept,
-		// 	pattern: conversionState.initialConversion.pattern,
-		// 	initialNote: conversionState.initialConversion.note
-		// };
-		// console.log(
-		// 	'sourceId:', conversionState.overallConversion.sourceId, typeof conversionState.overallConversion.sourceId,
-		// 	'destinationId:', conversionState.overallConversion.destinationId, typeof conversionState.overallConversion.destinationId
-		// );
-		// addConversionMutation(payload);
+		// Add the new pattern and update the store
+		addDailyPatternMutation({
+			dayName: patternState.dailyPattern.name,
+			slope: patternState.initialPattern.slope,
+			intercept: patternState.initialPattern.intercept,
+			note: patternState.dailyPattern.note
+		});
+		// Reset the state to default values
 		resetState();
 	};
 
@@ -184,38 +157,19 @@ export default function CreateDailyPatternModalComponent() {
 	const handleSubmit = () => {
 		// Show warning modal if slope and intercept are both 0
 		if (patternState.initialPattern.slope === 0 && patternState.initialPattern.intercept === 0) {
-			setWarningMessage(translate('conversion.slope.intercept.zero'));
+			setWarningMessage(translate('daily.patterns.slope.intercept.zero'));
 			setShowWarningModal(true);
 		} else {
 			// Close modal first to avoid repeat clicks
 			setShowModal(false);
-			// Add the new conversion and update the store
-			// Omit the source options , do not need to send in request so remove here.
-			// If source is a meter, make bidirectional false
-			// If source or destination is a suffix unit, make bidirectional false
-
-			// TODO: Replace this with a proper overall and initial conversion creation logic once the backend is ready
-			// Example updated logic for creating a conversion:
-			// 1. Create overall conversion
-			//const overallResult = await addConversionMutation(conversionState.overallConversion).unwrap();
-			// 2. Create initial conversion with foreign key
-			// await addConversionMutation({
-			// 	...conversionState.initialConversion,
-			// 	overallConversionId: overallResult.id
-			// });
-
-			// Create a placeholder payload for the conversion creation until backend is ready
-			// const payload = {
-      //   sourceId: conversionState.overallConversion.sourceId,
-      //   destinationId: conversionState.overallConversion.destinationId,
-      //   bidirectional: (isMeterSource() || isSuffixUsed()) ? false : conversionState.overallConversion.bidirectional,
-      //   note: conversionState.overallConversion.note,
-      //   slope: conversionState.initialConversion.slope,
-      //   intercept: conversionState.initialConversion.intercept,
-      //   pattern: conversionState.initialConversion.pattern,
-      //   initialNote: conversionState.initialConversion.note
-			// };
-			// addConversionMutation(payload);
+			// Add the new pattern and update the store
+			addDailyPatternMutation({
+				dayName: patternState.dailyPattern.name,
+				slope: patternState.initialPattern.slope,
+				intercept: patternState.initialPattern.intercept,
+				note: patternState.dailyPattern.note
+			});
+			// Reset the state to default values
 			resetState();
 		}
 	};
@@ -259,7 +213,13 @@ export default function CreateDailyPatternModalComponent() {
 								name='dailyPatternName'
 								type='text'
 								onChange={e => handleStringChange(e)}
-								value={patternState.dailyPattern.note} />
+								value={patternState.dailyPattern.name}
+								invalid={!patternState.dailyPattern.name || patternState.dailyPattern.name.trim() === ''}
+								required
+							/>
+							<FormFeedback>
+								<FormattedMessage id="error.required" />
+							</FormFeedback>
 						</FormGroup>
 						{/* Note input for overall conversion*/}
 						<FormGroup>
@@ -311,7 +271,9 @@ export default function CreateDailyPatternModalComponent() {
 										name='startHour'
 										type='number'
 										value={patternState.initialPattern.startHour}
-										onChange={e => handleNumberChange(e)} />
+										disabled
+										readOnly
+									/>
 								</FormGroup>
 							</Col>
 							<Col>
@@ -323,7 +285,9 @@ export default function CreateDailyPatternModalComponent() {
 										name='endHour'
 										type='number'
 										value={patternState.initialPattern.endHour}
-										onChange={e => handleNumberChange(e)} />
+										disabled
+										readOnly
+									/>
 								</FormGroup>
 							</Col>
 						</Row>
@@ -342,15 +306,14 @@ export default function CreateDailyPatternModalComponent() {
 				<ModalFooter>
 					{
 						// Todo looks kind of bad make a better visible notification
-						// !validConversion && <p>{reason}</p>
+						!isValidDailyPattern && <p>{reason}</p>
 					}
-
 					{/* Hides the modal */}
 					<Button color='secondary' onClick={handleClose}>
 						<FormattedMessage id="discard.changes" />
 					</Button>
 					{/* On click calls the function handleSaveChanges in this component */}
-					<Button color='primary' onClick={handleSubmit} >
+					<Button color='primary' onClick={handleSubmit} disabled={!isValidDailyPattern}>
 						<FormattedMessage id="save.all" />
 					</Button>
 				</ModalFooter>
