@@ -19,6 +19,7 @@ import { useTranslate } from '../../redux/componentHooks';
 import TooltipMarkerComponent from '../TooltipMarkerComponent';
 import ConfirmActionModalComponent from '../ConfirmActionModalComponent';
 import { UnitType } from '../../types/redux/units';
+import { weeksApi } from '../../redux/api/weeksApi';
 
 /**
  * Defines the create conversion modal form
@@ -30,6 +31,9 @@ export default function CreateConversionModalComponent() {
 	// Want units in sorted order by identifier regardless of case.
 
 	const defaultValues = useAppSelector(selectDefaultCreateConversionValues);
+
+	// Fetch all weeks from API
+	const { data: weeks = [], isFetching: isFetchingWeeks } = weeksApi.useGetWeeksQuery();
 
 	/* State */
 	// Modal show
@@ -101,28 +105,6 @@ export default function CreateConversionModalComponent() {
         }));
     }
 	};
-	// const handleBooleanChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-	// 	setConversionState({ ...conversionState, [e.target.name]: JSON.parse(e.target.value) });
-	// };
-
-	// const handleNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-	// 	// once a source or destination is selected, it will be removed from the other options.
-	// 	if (e.target.name === 'sourceId') {
-	// 		setConversionState(state => ({
-	// 			...state,
-	// 			sourceId: Number(e.target.value),
-	// 			destinationOptions: defaultValues.destinationOptions.filter(destination => destination.id !== Number(e.target.value))
-	// 		}));
-	// 	} else if (e.target.name === 'destinationId') {
-	// 		setConversionState(state => ({
-	// 			...state,
-	// 			destinationId: Number(e.target.value),
-	// 			sourceOptions: defaultValues.sourceOptions.filter(source => source.id !== Number(e.target.value))
-	// 		}));
-	// 	} else {
-	// 		setConversionState(state => ({ ...state, [e.target.name]: Number(e.target.value) }));
-	// 	}
-	// };
 
   const handleNumberChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -183,14 +165,14 @@ export default function CreateConversionModalComponent() {
 	};
 
 	const handleInitialPatternChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-		const selectedPattern = e.target.value;
+		const selectedValue = e.target.value;
 		setConversionState(prev => ({
 			...prev,
 			initialConversion: {
 				...prev.initialConversion,
-				pattern: selectedPattern,
-				slope: selectedPattern === 'No Pattern' ? prev.initialConversion.slope : 0,
-				intercept: selectedPattern === 'No Pattern' ? prev.initialConversion.intercept : 0
+				pattern: selectedValue, // week ID as string or "No Pattern"
+				slope: selectedValue === 'No Pattern' ? prev.initialConversion.slope : 0,
+				intercept: selectedValue === 'No Pattern' ? prev.initialConversion.intercept : 0
 			}
 		}));
 	};
@@ -213,9 +195,10 @@ export default function CreateConversionModalComponent() {
 	const handleWarningConfirm = () => {
 		//Close the warning modal
 		setShowWarningModal(false);
-
-		// TODO: Replace this with a proper overall and initial conversion creation logic once the backend is ready
-		// Create a placeholder payload for the conversion creation until backend is ready
+		const weekPatternsId =
+			conversionState.initialConversion.pattern === 'No Pattern'
+				? undefined
+				: Number(conversionState.initialConversion.pattern);
 		const payload = {
 			sourceId: conversionState.overallConversion.sourceId,
 			destinationId: conversionState.overallConversion.destinationId,
@@ -223,7 +206,7 @@ export default function CreateConversionModalComponent() {
 			note: conversionState.overallConversion.note,
 			slope: conversionState.initialConversion.slope,
 			intercept: conversionState.initialConversion.intercept,
-			pattern: conversionState.initialConversion.pattern,
+			weekPatternsId,
 			segmentNote: conversionState.initialConversion.note
 		};
 		addConversionMutation(payload);
@@ -269,30 +252,19 @@ export default function CreateConversionModalComponent() {
 		} else if (validConversion) {
 			// Close modal first to avoid repeat clicks
 			setShowModal(false);
-			// Add the new conversion and update the store
-			// Omit the source options , do not need to send in request so remove here.
-			// If source is a meter, make bidirectional false
-			// If source or destination is a suffix unit, make bidirectional false
-
-			// TODO: Replace this with a proper overall and initial conversion creation logic once the backend is ready
-			// Example updated logic for creating a conversion:
-			// 1. Create overall conversion
-			//const overallResult = await addConversionMutation(conversionState.overallConversion).unwrap();
-			// 2. Create initial conversion with foreign key
-			// await addConversionMutation({
-			// 	...conversionState.initialConversion,
-			// 	overallConversionId: overallResult.id
-			// });
-
-			// Create a placeholder payload for the conversion creation until backend is ready
+			const weekPatternsId =
+				conversionState.initialConversion.pattern === 'No Pattern'
+					? undefined
+					: Number(conversionState.initialConversion.pattern);
 			const payload = {
-        sourceId: conversionState.overallConversion.sourceId,
-        destinationId: conversionState.overallConversion.destinationId,
-        bidirectional: (isMeterSource() || isSuffixUsed()) ? false : conversionState.overallConversion.bidirectional,
-        note: conversionState.overallConversion.note,
-        slope: conversionState.initialConversion.slope,
-        intercept: conversionState.initialConversion.intercept,
-        segmentNote: conversionState.initialConversion.note
+				sourceId: conversionState.overallConversion.sourceId,
+				destinationId: conversionState.overallConversion.destinationId,
+				bidirectional: (isMeterSource() || isSuffixUsed()) ? false : conversionState.overallConversion.bidirectional,
+				note: conversionState.overallConversion.note,
+				slope: conversionState.initialConversion.slope,
+				intercept: conversionState.initialConversion.intercept,
+				weekPatternsId,
+				segmentNote: conversionState.initialConversion.note
 			};
 			addConversionMutation(payload);
 			resetState();
@@ -343,6 +315,7 @@ export default function CreateConversionModalComponent() {
 										type='select'
 										value={conversionState.overallConversion.sourceId}
 										onChange={e => handleNumberChange(e)}
+										disabled={isFetchingWeeks}
 										invalid={conversionState.overallConversion.sourceId === -999}>
 										{<option
 											value={-999}
@@ -463,15 +436,12 @@ export default function CreateConversionModalComponent() {
 								name='pattern'
 								type='select'
 								value={conversionState.initialConversion.pattern}
-								onChange={handleInitialPatternChange}>
-								{/* TODO: Replace with actual patterns from the backend
-									<option value='No Pattern'>No Pattern</option>
-								{defaultValues.weeklyPatterns?.map(p => (
-									<option key={p} value={p}>{p}</option>
-								))} */}
-								<option value='No Pattern'>{translate('conversion.pattern.no')}</option>
-								<option value='Pattern 1'>Pattern 1</option>
-								<option value='Pattern 2'>Pattern 2</option>
+								onChange={handleInitialPatternChange}
+							>
+								<option value="No Pattern">{translate('conversion.pattern.no')}</option>
+								{weeks.map(week => (
+									<option key={week.id} value={week.id}>{week.weekName}</option>
+								))}
 							</Input>
 						</FormGroup>
 						{/* Note input for initial conversion*/}
