@@ -37,7 +37,9 @@ export const baseApi = createApi({
 		'DailyPatternSegment',
 		'Units',
 		'Cik',
-		'Readings'
+		'Readings',
+		'Weeks',
+		'DayDetails'
 	],
 	// Initially no defined endpoints, Use rtk query's injectEndpoints
 	endpoints: () => ({})

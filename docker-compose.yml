@@ -15,14 +15,14 @@ services:
             - PGDATA=/var/lib/postgresql/data/pgdata
             - POSTGRES_PASSWORD=pleaseChange # default postgres password that should be changed for security.
         volumes:
-            - pgdata:/var/lib/postgresql/data/pgdata
+            - ./postgres-data:/var/lib/postgresql/data/pgdata
         healthcheck:
             test: ["CMD-SHELL", "pg_isready -U postgres"]
             interval: 10s
             timeout: 10s
             retries: 3
-       # ports:
-        #   - "5432:5432"
+        # ports:
+        #    - "5432:5432"
         # Uncomment the above lines to enable access to the PostgreSQL server
         # from the host machine.
         # Web service runs Node
@@ -111,5 +111,4 @@ services:
         /bin/sh -c "
         rm -f /tmp/.X99-lock &&
         Xvfb :99 -screen 0 1024x768x16"
-volumes:
-    pgdata:       
+    

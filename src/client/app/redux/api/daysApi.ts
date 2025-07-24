@@ -1,6 +1,6 @@
 import { createSelector } from '@reduxjs/toolkit';
-import { baseApi } from './baseApi';
 import { Day } from '../../types/redux/days';
+import { baseApi } from './baseApi';
 
 // Tag type for cache invalidation
 export const daysApi = baseApi.injectEndpoints({

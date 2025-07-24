@@ -1,15 +1,43 @@
 import * as React from 'react';
 import { FormattedMessage } from 'react-intl';
-import SpinnerComponent from '../SpinnerComponent';
-import TooltipHelpComponent from '../TooltipHelpComponent';
-import TooltipMarkerComponent from '../TooltipMarkerComponent';
+import { Button } from 'reactstrap';
 import { useAppSelector } from '../../redux/reduxHooks';
 import { selectSelectedLanguage } from '../../redux/slices/appStateSlice';
 import { titleStyle, tooltipBaseStyle } from '../../styles/modalStyle';
 import { Day } from '../../types/redux/days';
+import SpinnerComponent from '../SpinnerComponent';
+import TooltipHelpComponent from '../TooltipHelpComponent';
+import TooltipMarkerComponent from '../TooltipMarkerComponent';
 import DayViewComponent from './DayViewComponent';
+<<<<<<< HEAD:src/client/app/components/day/DayDetailComponent.tsx
 import CreateDailyPatternModalComponent from './CreateDailyPatternModalComponent';
 import { daysApi, stableEmptyDays } from '../../redux/api/daysApi';
+=======
+
+/**
+ * Hardcoded day data for demonstration.
+ */
+const hardcodedDays: Day[] = [
+	{
+		id: 1,
+		dayName: 'Weekday',
+		note: 'Standard weekday pattern',
+		segments: [
+			{ id: '1-1', dayId: '1', hour: 0, slope: 0.5, intercept: 1, note: 'Midnight to morning' },
+			{ id: '1-2', dayId: '1', hour: 8, slope: 0.7, intercept: 1.2, note: 'Morning to evening' },
+			{ id: '1-3', dayId: '1', hour: 18, slope: 0.4, intercept: 0.8, note: 'Evening to midnight' }
+		]
+	},
+	{
+		id: 2,
+		dayName: 'Weekend',
+		note: 'Weekend pattern',
+		segments: [
+			{ id: '2-1', dayId: '2', hour: 0, slope: 0.3, intercept: 0.9, note: 'All day' }
+		]
+	}
+];
+>>>>>>> origin/evan-carey/weeks-api:src/client/app/components/daily-pattern/DayDetailComponent.tsx
 
 /**
  * Defines the daily pattern info page
@@ -50,8 +78,13 @@ export default function DayDetailComponent() {
 							<CreateDailyPatternModalComponent />
 						</div>
 						<div className="card-container">
+<<<<<<< HEAD:src/client/app/components/day/DayDetailComponent.tsx
 							{Object.values(dayState)
 								.sort((a: Day, b: Day) => (a.dayName || '').toLowerCase().localeCompare((b.dayName || '').toLowerCase(), locale, { sensitivity: 'accent' }))
+=======
+							{hardcodedDays
+								.sort((a, b) => (a.dayName || '').toLowerCase().localeCompare((b.dayName || '').toLowerCase(), locale, { sensitivity: 'accent' }))
+>>>>>>> origin/evan-carey/weeks-api:src/client/app/components/daily-pattern/DayDetailComponent.tsx
 								.map(day => (
 									<DayViewComponent key={day.id} day={day} />
 								))}
