@@ -224,7 +224,7 @@ export default function CreateConversionModalComponent() {
 			slope: conversionState.initialConversion.slope,
 			intercept: conversionState.initialConversion.intercept,
 			pattern: conversionState.initialConversion.pattern,
-			initialNote: conversionState.initialConversion.note
+			segmentNote: conversionState.initialConversion.note
 		};
 		addConversionMutation(payload);
 		resetState();
@@ -292,8 +292,7 @@ export default function CreateConversionModalComponent() {
         note: conversionState.overallConversion.note,
         slope: conversionState.initialConversion.slope,
         intercept: conversionState.initialConversion.intercept,
-        pattern: conversionState.initialConversion.pattern,
-        initialNote: conversionState.initialConversion.note
+        segmentNote: conversionState.initialConversion.note
 			};
 			addConversionMutation(payload);
 			resetState();

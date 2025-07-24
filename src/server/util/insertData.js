@@ -207,14 +207,12 @@ async function insertConversions(conversionsToInsert, conn) {
 						sourceName,
 						destinationName,
 						conversionData.bidirectional,
-						conversionData.slope,
-						conversionData.intercept,
 						conversionData.note
 					).insert(
 						conversionData.weekPatternsId,
 						conversionData.slope,
 						conversionData.intercept,
-						conversionData.note,
+						conversionData.note, //this should be segment note
 						conn
 					);
 				}
