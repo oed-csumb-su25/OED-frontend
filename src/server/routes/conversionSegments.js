@@ -8,6 +8,7 @@ const { getConnection } = require('../db');
 const ConversionSegment = require('../models/ConversionSegment');
 const { success, failure } = require('./response');
 const validate = require('jsonschema').validate;
+const { adminAuthMiddleware } = require('./authenticator');
 
 const router = express.Router();
 const validConversionSegment = {
@@ -68,7 +69,7 @@ function formatConversionSegmentForResponse(item) {
 /**
  * Route for getting all conversion segments.
  */
-router.get('/', async (req, res) => {
+router.get('/', adminAuthMiddleware('get all conversion segments'), async (req, res) => {
     const conn = getConnection();
     try {
         const rows = await ConversionSegment.getAll(conn);
@@ -83,7 +84,7 @@ router.get('/', async (req, res) => {
  * @param {int} sourceId
  * @param {int} destinationId
  */
-router.get('/:sourceId/:destinationId', async (req, res) => {
+router.get('/:sourceId/:destinationId', adminAuthMiddleware('get conversion segment by source and destination id'), async (req, res) => {
     const validParams = {
         type: 'object',
         maxProperties: 2,
@@ -127,7 +128,7 @@ router.get('/:sourceId/:destinationId', async (req, res) => {
  * @param {int} destinationId
  * @param {time} startTime
  */
-router.get('/:sourceId/:destinationId/:startTime', async (req, res) => {
+router.get('/:sourceId/:destinationId/:startTime', adminAuthMiddleware('get conversion segment by source id, destination id, and start time'), async (req, res) => {
     const validParams = {
         type: 'object',
         maxProperties: 3,
@@ -171,39 +172,9 @@ router.get('/:sourceId/:destinationId/:startTime', async (req, res) => {
 });
 
 /**
- * Route for POST, edit conversion segment.
- */
-router.post('/edit', async (req, res) => {
-    const validatorResult = validate(req.body, validConversionSegment);
-    if (!validatorResult.valid) {
-		log.warn(`Got request to edit conversion segments with invalid conversion segment data, errors: ${validatorResult.errors}`);
-		failure(res, 400, `Got request to edit conversion segments with invalid conversion segment data, errors: ${validatorResult.errors}`);
-	} else {
-		const conn = getConnection();
-		try {
-			const updatedConversionSegment = new ConversionSegment(
-                req.body.sourceId, 
-                req.body.destinationId, 
-                req.body.weekPatternsId, 
-                req.body.slope, 
-                req.body.intercept, 
-                req.body.startTime, 
-                req.body.endTime, 
-                req.body.note
-            );
-			await updatedConversionSegment.update(conn);
-		} catch (err) {
-			log.error(`Error while editing conversion segment with error(s): ${err}`);
-			failure(res, 500, `Error while editing conversion segment with error(s): ${err}`);
-		}
-		success(res);
-	}
-});
-
-/**
  * Route for POST add conversion segment.
  */
-router.post('/add', async (req, res) => {
+router.post('/add', adminAuthMiddleware('add conversion segment'), async (req, res) => {
     const validatorResult = validate(req.body, validConversionSegment);
     if (!validatorResult.valid) {
 		log.warn(`Got request to add conversion segments with invalid conversion segment data, errors: ${validatorResult.errors}`);
@@ -233,9 +204,39 @@ router.post('/add', async (req, res) => {
 });
 
 /**
+ * Route for POST, edit conversion segment.
+ */
+router.post('/edit', adminAuthMiddleware('edit conversion segment'), async (req, res) => {
+    const validatorResult = validate(req.body, validConversionSegment);
+    if (!validatorResult.valid) {
+		log.warn(`Got request to edit conversion segments with invalid conversion segment data, errors: ${validatorResult.errors}`);
+		failure(res, 400, `Got request to edit conversion segments with invalid conversion segment data, errors: ${validatorResult.errors}`);
+	} else {
+		const conn = getConnection();
+		try {
+			const updatedConversionSegment = new ConversionSegment(
+                req.body.sourceId, 
+                req.body.destinationId, 
+                req.body.weekPatternsId, 
+                req.body.slope, 
+                req.body.intercept, 
+                req.body.startTime, 
+                req.body.endTime, 
+                req.body.note
+            );
+			await updatedConversionSegment.update(conn);
+		} catch (err) {
+			log.error(`Error while editing conversion segment with error(s): ${err}`);
+			failure(res, 500, `Error while editing conversion segment with error(s): ${err}`);
+		}
+		success(res);
+	}
+});
+
+/**
  * Route for POST, delete conversion segment
  */
-router.post('/delete', async (req, res) => {
+router.post('/delete', adminAuthMiddleware('delete conversion segment'), async (req, res) => {
     // Ensure conversion segment object is valid
 	const validatorResult = validate(req.body, validConversionSegment);
 	if (!validatorResult.valid) {

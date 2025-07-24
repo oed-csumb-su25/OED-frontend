@@ -8,6 +8,7 @@ const { getConnection } = require('../db');
 const DaySegment = require('../models/DaySegment');
 const { success, failure } = require('./response');
 const validate = require('jsonschema').validate;
+const { adminAuthMiddle } = require('./authenticator');
 
 const router = express.Router();
 
@@ -26,7 +27,7 @@ function formatDaySegmentForResponse(item) {
 /**
  * Route for getting all day segments.
  */
-router.get('/', async (req, res) => {
+router.get('/', adminAuthMiddle('get all day segments'), async (req, res) => {
 	const conn = getConnection();
 	try {
 		const rows = await DaySegment.getAll(conn);
@@ -39,7 +40,7 @@ router.get('/', async (req, res) => {
 /**
  * Route for getting a day segment by id
  */
-router.get('/:id', async(req, res) => {
+router.get('/:id', adminAuthMiddle('get day segment by id'), async(req, res) => {
 	const validParams = {
 		type: 'object',
 		maxProperties: 1,
@@ -67,7 +68,7 @@ router.get('/:id', async(req, res) => {
 /**
  * Route for getting all day segments with the same day id
  */
-router.get('/dayId/:dayId', async(req, res) => {
+router.get('/dayId/:dayId', adminAuthMiddle('get day segments by day id'), async(req, res) => {
 	const validParams = {
 		type: 'object',
 		maxProperties: 1,
@@ -93,75 +94,9 @@ router.get('/dayId/:dayId', async(req, res) => {
 });
 
 /**
- * Route for POST, edit day segment.
- */
-router.post('/edit', async (req, res) => {
-	const validDaySegment = {
-		type: 'object',
-		maxProperties: 7,
-		required: ['id'],
-		properties: {
-			id: {
-				type: 'number'
-			},
-			dayId: {
-				type: 'number',
-                minimum: 0
-			},
-            startHour: {
-                type: 'number',
-				minimum: 0,
-				maximum: 23
-            },
-            endHour: {
-                type: 'number',
-				minimum: 1,
-				maximum: 24
-            },
-            slope: {
-                type: 'number'
-            },
-            intercept: {
-                type: 'number'
-            },
-			note: {
-				oneOf: [
-					{ type: 'string' },
-					{ type: 'null' }
-				]
-			}
-		}
-	};
-
-	const validatorResult = validate(req.body, validDaySegment);
-	if (!validatorResult.valid) {
-		log.warn(`Got request to edit day segments with invalid day segment data, errors: ${validatorResult.errors}`);
-		failure(res, 400, `Got request to edit day segments with invalid day segment data, errors: ${validatorResult.errors}`);
-	} else {
-		const conn = getConnection();
-		try {
-			const updatedDaySegment = new DaySegment(
-                req.body.id, 
-                req.body.dayId,
-                req.body.startHour,
-                req.body.endHour,
-                req.body.slope,
-                req.body.intercept, 
-                req.body.note
-            );
-			await updatedDaySegment.update(conn);
-		} catch (err) {
-			log.error(`Error while editing day segment with error(s): ${err}`);
-			failure(res, 500, `Error while editing day segment with error(s): ${err}`);
-		}
-		success(res);
-	}
-});
-
-/**
  * Route for POST add day segment.
  */
-router.post('/add', async (req, res) => {
+router.post('/add', adminAuthMiddle('add day segment'), async (req, res) => {
 	const validDaySegment = {
 		type: 'object',
 		maxProperties: 6,
@@ -230,9 +165,75 @@ router.post('/add', async (req, res) => {
 });
 
 /**
+ * Route for POST, edit day segment.
+ */
+router.post('/edit', adminAuthMiddle('edit day segment'), async (req, res) => {
+	const validDaySegment = {
+		type: 'object',
+		maxProperties: 7,
+		required: ['id'],
+		properties: {
+			id: {
+				type: 'number'
+			},
+			dayId: {
+				type: 'number',
+                minimum: 0
+			},
+            startHour: {
+                type: 'number',
+				minimum: 0,
+				maximum: 23
+            },
+            endHour: {
+                type: 'number',
+				minimum: 1,
+				maximum: 24
+            },
+            slope: {
+                type: 'number'
+            },
+            intercept: {
+                type: 'number'
+            },
+			note: {
+				oneOf: [
+					{ type: 'string' },
+					{ type: 'null' }
+				]
+			}
+		}
+	};
+
+	const validatorResult = validate(req.body, validDaySegment);
+	if (!validatorResult.valid) {
+		log.warn(`Got request to edit day segments with invalid day segment data, errors: ${validatorResult.errors}`);
+		failure(res, 400, `Got request to edit day segments with invalid day segment data, errors: ${validatorResult.errors}`);
+	} else {
+		const conn = getConnection();
+		try {
+			const updatedDaySegment = new DaySegment(
+                req.body.id, 
+                req.body.dayId,
+                req.body.startHour,
+                req.body.endHour,
+                req.body.slope,
+                req.body.intercept, 
+                req.body.note
+            );
+			await updatedDaySegment.update(conn);
+		} catch (err) {
+			log.error(`Error while editing day segment with error(s): ${err}`);
+			failure(res, 500, `Error while editing day segment with error(s): ${err}`);
+		}
+		success(res);
+	}
+});
+
+/**
  * Route for POST, delete day segment.
  */
-router.post('/delete', async (req, res) => {
+router.post('/delete', adminAuthMiddle('delete day segment'), async (req, res) => {
 	const validDaySegment = {
 		type: 'object',
 		maxProperties: 7,

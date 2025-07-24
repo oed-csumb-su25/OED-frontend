@@ -8,6 +8,7 @@ const { getConnection } = require('../db');
 const Week = require('../models/Week');
 const { success, failure } = require('./response');
 const validate = require('jsonschema').validate;
+const { adminAuthMiddleware } = require('./authenticator');
 
 const router = express.Router();
 
@@ -29,7 +30,7 @@ function formatWeekForResponse(item) {
 /**
  * Route for getting all weeks.
  */
-router.get('/', async (req, res) => {
+router.get('/', adminAuthMiddleware('get all weeks'), async (req, res) => {
 	const conn = getConnection();
 	try {
 		const rows = await Week.getAll(conn);
@@ -40,9 +41,81 @@ router.get('/', async (req, res) => {
 });
 
 /**
+ * Route for POST add week.
+ */
+router.post('/add', adminAuthMiddleware('add week'), async (req, res) => {
+	const validWeek= {
+		type: 'object',
+		maxProperties: 9,
+		required: ['weekName', 'sunday','monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'],
+		properties: {
+			weekName: {
+				type: 'string',
+			},
+			note: {
+				oneOf: [
+					{ type: 'string' },
+					{ type: 'null' }
+				]
+			},
+            sunday: {
+                type: 'number'
+            },
+            monday: {
+                type: 'number'
+            },
+            tuesday: {
+                type: 'number'
+            },
+            wednesday: {
+                type: 'number'
+            },
+            thursday: {
+                type: 'number'
+            },
+            friday: {
+                type: 'number'
+            },
+            saturday: {
+                type: 'number'
+            }
+		}
+	};
+
+	const validatorResult = validate(req.body, validWeek);
+	if (!validatorResult.valid) {
+		log.error(`Got request to insert week with invalid week data, errors: ${validatorResult.errors}`);
+		failure(res, 400, `Got request to insert week with invalid week data. Error(s): ${validatorResult.errors}`);
+	} else {
+		const conn = getConnection();
+		try {
+			await conn.tx(async t => {
+				const newWeek = new Week(
+					undefined,
+					req.body.weekName,
+					req.body.note,
+					req.body.sunday,
+                    req.body.monday,
+                    req.body.tuesday,
+                    req.body.wednesday,
+                    req.body.thursday,
+                    req.body.friday,
+                    req.body.saturday
+				);
+				await newWeek.insert(t);
+			});
+			res.sendStatus(200);
+		} catch (err) {
+			log.error(`Error while inserting new week with error(s): ${err}`);
+			failure(res, 500, `Error while inserting new week with errors(s): ${err}`);
+		}
+	}
+});
+
+/**
  * Route for POST, edit week.
  */
-router.post('/edit', async (req, res) => {
+router.post('/edit', adminAuthMiddleware('edit week'), async (req, res) => {
 	const validWeek = {
 		type: 'object',
 		maxProperties: 10,
@@ -113,81 +186,9 @@ router.post('/edit', async (req, res) => {
 });
 
 /**
- * Route for POST add week.
- */
-router.post('/add', async (req, res) => {
-	const validWeek= {
-		type: 'object',
-		maxProperties: 9,
-		required: ['weekName', 'sunday','monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'],
-		properties: {
-			weekName: {
-				type: 'string',
-			},
-			note: {
-				oneOf: [
-					{ type: 'string' },
-					{ type: 'null' }
-				]
-			},
-            sunday: {
-                type: 'number'
-            },
-            monday: {
-                type: 'number'
-            },
-            tuesday: {
-                type: 'number'
-            },
-            wednesday: {
-                type: 'number'
-            },
-            thursday: {
-                type: 'number'
-            },
-            friday: {
-                type: 'number'
-            },
-            saturday: {
-                type: 'number'
-            }
-		}
-	};
-
-	const validatorResult = validate(req.body, validWeek);
-	if (!validatorResult.valid) {
-		log.error(`Got request to insert week with invalid week data, errors: ${validatorResult.errors}`);
-		failure(res, 400, `Got request to insert week with invalid week data. Error(s): ${validatorResult.errors}`);
-	} else {
-		const conn = getConnection();
-		try {
-			await conn.tx(async t => {
-				const newWeek = new Week(
-					undefined,
-					req.body.weekName,
-					req.body.note,
-					req.body.sunday,
-                    req.body.monday,
-                    req.body.tuesday,
-                    req.body.wednesday,
-                    req.body.thursday,
-                    req.body.friday,
-                    req.body.saturday
-				);
-				await newWeek.insert(t);
-			});
-			res.sendStatus(200);
-		} catch (err) {
-			log.error(`Error while inserting new week with error(s): ${err}`);
-			failure(res, 500, `Error while inserting new week with errors(s): ${err}`);
-		}
-	}
-});
-
-/**
  * Route for POST, delete week.
  */
-router.post('/delete', async (req, res) => {
+router.post('/delete', adminAuthMiddleware('delete week'), async (req, res) => {
 	const validWeek = {
 		type: 'object',
 		maxProperties: 1,

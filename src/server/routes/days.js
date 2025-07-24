@@ -8,6 +8,7 @@ const { getConnection } = require('../db');
 const Day = require('../models/Day');
 const { success, failure } = require('./response');
 const validate = require('jsonschema').validate;
+const { adminAuthMiddleware } = require('./authenticator');
 
 const router = express.Router();
 
@@ -22,7 +23,7 @@ function formatDayForResponse(item) {
 /**
  * Route for getting all days.
  */
-router.get('/', async (req, res) => {
+router.get('/', adminAuthMiddleware('get all days'), async (req, res) => {
 	const conn = getConnection();
 	try {
 		const rows = await Day.getAll(conn);
@@ -35,7 +36,7 @@ router.get('/', async (req, res) => {
 /**
  * Route for getting day by id.
  */
-router.get('/:id', async (req, res) => {
+router.get('/:id', adminAuthMiddleware('get day by id'), async (req, res) => {
 	const dayId = parseInt(req.params.id);
 
 	const conn = getConnection();
@@ -48,51 +49,10 @@ router.get('/:id', async (req, res) => {
 });
 
 /**
- * Route for POST, edit day.
- */
-router.post('/edit', async (req, res) => {
-	const validDay = {
-		type: 'object',
-		maxProperties: 3,
-		required: ['id'],
-		properties: {
-			id: {
-				type: 'number'
-			},
-			dayName: {
-				type: 'string',
-			},
-			note: {
-				oneOf: [
-					{ type: 'string' },
-					{ type: 'null' }
-				]
-			}
-		}
-	};
-
-	const validatorResult = validate(req.body, validDay);
-	if (!validatorResult.valid) {
-		log.warn(`Got request to edit days with invalid day data, errors: ${validatorResult.errors}`);
-		failure(res, 400, `Got request to edit days with invalid day data, errors: ${validatorResult.errors}`);
-	} else {
-		const conn = getConnection();
-		try {
-			const updatedDay = new Day(req.body.id, req.body.dayName, req.body.note);
-			await updatedDay.update(conn);
-		} catch (err) {
-			log.error(`Error while editing day with error(s): ${err}`);
-			failure(res, 500, `Error while editing day with error(s): ${err}`);
-		}
-		success(res);
-	}
-});
-
-/**
  * Route for POST add day.
  * The slope and intercept are included to create a new day segment spanning from 0 to 24.
  */
-router.post('/add', async (req, res) => {
+router.post('/add', adminAuthMiddleware('add day'), async (req, res) => {
 	const validDay = {
 		type: 'object',
 		maxProperties: 5,
@@ -154,9 +114,50 @@ router.post('/add', async (req, res) => {
 });
 
 /**
+ * Route for POST, edit day.
+ */
+router.post('/edit', adminAuthMiddleware('edit day'), async (req, res) => {
+	const validDay = {
+		type: 'object',
+		maxProperties: 3,
+		required: ['id'],
+		properties: {
+			id: {
+				type: 'number'
+			},
+			dayName: {
+				type: 'string',
+			},
+			note: {
+				oneOf: [
+					{ type: 'string' },
+					{ type: 'null' }
+				]
+			}
+		}
+	};
+
+	const validatorResult = validate(req.body, validDay);
+	if (!validatorResult.valid) {
+		log.warn(`Got request to edit days with invalid day data, errors: ${validatorResult.errors}`);
+		failure(res, 400, `Got request to edit days with invalid day data, errors: ${validatorResult.errors}`);
+	} else {
+		const conn = getConnection();
+		try {
+			const updatedDay = new Day(req.body.id, req.body.dayName, req.body.note);
+			await updatedDay.update(conn);
+		} catch (err) {
+			log.error(`Error while editing day with error(s): ${err}`);
+			failure(res, 500, `Error while editing day with error(s): ${err}`);
+		}
+		success(res);
+	}
+});
+
+/**
  * Route for POST, delete day.
  */
-router.post('/delete', async (req, res) => {
+router.post('/delete', adminAuthMiddleware('delete day'), async (req, res) => {
 	const validDay = {
 		type: 'object',
 		maxProperties: 1,
