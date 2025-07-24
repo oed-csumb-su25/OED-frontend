@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/indent */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -7,19 +8,19 @@ import { selectCik, selectConversionsDetails } from '../../redux/api/conversions
 import { selectAllGroups } from '../../redux/api/groupsApi';
 import { selectAllMeters, selectMeterById } from '../../redux/api/metersApi';
 import { selectAdminPreferences } from '../../redux/slices/adminSlice';
+import { selectSelectedLanguage } from '../../redux/slices/appStateSlice';
 import { ConversionData } from '../../types/redux/conversions';
 import { MeterData, MeterTimeSortType } from '../../types/redux/meters';
-import { UnitData, UnitType } from '../../types/redux/units';
+import { DisableChecksType, UnitData, UnitType } from '../../types/redux/units';
+import { Week } from '../../types/redux/weeks';
 import { unitsCompatibleWithUnit } from '../../utils/determineCompatibleUnits';
 import { AreaUnitType } from '../../utils/getAreaUnitConversion';
-import { noUnitTranslated, potentialGraphicUnits } from '../../utils/input';
+import { MAX_VAL, MIN_VAL, noUnitTranslated, potentialGraphicUnits } from '../../utils/input';
 import translate from '../../utils/translate';
 import { selectAllUnits, selectUnitDataById } from '../api/unitsApi';
+import { selectAllDays } from '../api/daysApi';
 import { selectVisibleMetersAndGroups } from './authVisibilitySelectors';
 import { createAppSelector } from './selectors';
-import { selectSelectedLanguage } from '../../redux/slices/appStateSlice';
-import { DisableChecksType } from '../../types/redux/units';
-import { MAX_VAL, MIN_VAL } from '../../utils/input';
 
 export const MIN_DATE_MOMENT = moment(0).utc();
 export const MAX_DATE_MOMENT = moment(0).utc().add(5000, 'years');
@@ -331,12 +332,46 @@ export const selectDefaultCreateConversionValues = createAppSelector(
 			destinationId: -999,
 			destinationOptions: sortedUnitData.filter(unit => unit.typeOfUnit !== 'meter'),
 			bidirectional: true,
+			overallConversionNote: '',
+			initialConversionNote: '',
 			slope: 0,
 			intercept: 0,
-			note: ''
+			weeklyPattern: 'No Pattern'
 		};
 		return defaultValues;
 	}
+);
+
+export const selectDefaultCreateDailyPatternValues = createAppSelector(
+	[selectAllUnits],
+	() => {
+		const defaultValues = {
+			dayName: '',
+			dailyPatternNote: '',
+			slope: 0,
+			intercept: 0,
+			startHour:0,
+			endHour: 24,
+			initialPatternNote: ''
+		};
+		return defaultValues;
+	}
+);
+
+
+export const selectDefaultCreateWeekValues = createAppSelector<[], Omit<Week, 'id'>>(
+	[],
+	() => ({
+		weekName: '',
+		note: '',
+		sunday: -999,
+		monday: -999,
+		tuesday: -999,
+		wednesday: -999,
+		thursday: -999,
+		friday: -999,
+		saturday: -999
+	})
 );
 
 /* Create Meter Validation:
@@ -389,3 +424,32 @@ export const isValidCreateMeter = createAppSelector(
 	}
 );
 
+/**
+ * Validates the creation of a new daily pattern.
+ * - Ensures the day name is not blank.
+ * - Ensures the day name does not already exist (case-insensitive) in the list of days.
+ * Returns a tuple: [isValid, message].
+ * @param _state The Redux state (unused in this selector).
+ * @param dailyPattern The daily pattern object containing the day name.
+ * @param dailyPattern.dayName The name of the day to validate for uniqueness and non-blank value.
+ * @returns A tuple where the first element is a boolean indicating validity, and the second is a message string.
+ */
+export const selectIsValidCreateDailyPattern = createAppSelector(
+    [
+        selectAllDays,
+        (_state, dailyPattern: { dayName: string }) => dailyPattern
+    ],
+    (days, dailyPattern): [boolean, string] => {
+        if (!dailyPattern.dayName || dailyPattern.dayName.trim() === '') {
+            return [false, translate('daily.patterns.create.name.required')];
+        }
+        // Check if dayName already exists (case-insensitive)
+        const exists = days.some(day =>
+            day.dayName?.toLowerCase() === dailyPattern.dayName.trim().toLowerCase()
+        );
+        if (exists) {
+            return [false, translate('daily.patterns.create.name.exists')];
+        }
+        return [true, 'Daily Pattern is Valid'];
+    }
+);

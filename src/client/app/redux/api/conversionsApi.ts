@@ -18,9 +18,18 @@ export const conversionsApi = baseApi.injectEndpoints({
 			query: () => 'api/ciks',
 			providesTags: ['Cik']
 		}),
-		addConversion: builder.mutation<void, ConversionData>({
+		addConversion: builder.mutation<void, {
+			sourceId: number;
+			destinationId: number;
+			bidirectional: boolean;
+			note: string;
+			weekPatternsId?: number;
+			slope: number;
+			intercept: number;
+			segmentNote: string;
+		}>({
 			query: conversion => ({
-				url: 'api/conversions/addConversion',
+				url: 'api/conversions/add',
 				method: 'POST',
 				body: conversion
 			}),

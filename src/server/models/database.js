@@ -97,11 +97,11 @@ async function createSchema(conn) {
 	await Unit.createDisableChecksTypesEnum(conn);
 	await Unit.createUnitRepresentTypesEnum(conn);
 	await Unit.createTable(conn);
-	await Conversion.createTable(conn);
-	await ConversionSegment.createTable(conn);
 	await Day.createTable(conn);
 	await DaySegment.createTable(conn);
 	await Week.createTable(conn);
+	await Conversion.createTable(conn);
+	await ConversionSegment.createTable(conn);
 	await Cik.createTable(conn);
 	await Meter.createMeterTypesEnum(conn);
 	// This sql code creates a function to check meter's timezone.
