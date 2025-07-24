@@ -26,7 +26,7 @@ export default function CreateWeekModalComponent(): React.ReactElement {
 	const [showModal, setShowModal] = React.useState(false);
 
 	// Fetch days data
-	const { data: days, isFetching: isFetchingDays } = daysApi.useGetDaysDetailsQuery();
+	const { data: days, isFetching: isFetchingDays } = daysApi.useGetDailyPatternsQuery();
 
 	// Sort days by day name to make the dropdown more user-friendly
 	const sortedDays = React.useMemo(() => {
