@@ -1,8 +1,7 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
- 
-const { start } = require('repl');
+
 const database = require('./database');
 const sqlFile = database.sqlFile;
 
@@ -52,17 +51,6 @@ class DaySegment {
     }
 
     /**
-     * Delete the day segment associated with the id
-     * @param {*} id The day segment id.
-     * @param {*} conn The connection to use.
-     */
-    static async delete(id, conn) {
-        await conn.none(sqlFile('daySegment/delete_day_segment.sql'), {
-            id: id
-        });
-    }
-
-    /**
      * Get all DaySegment objects
      * @param {*} conn The database connection to use.
      * @returns all DaySegment objects.
@@ -71,20 +59,6 @@ class DaySegment {
         const rows = await conn.any(sqlFile('daySegment/get_all.sql'));
         return rows.map(DaySegment.mapRow);
     }
-
-    // /**
-    //  * Get day segments by day name
-    //  * @param {*} day_name The day name.
-    //  * @param {*} conn The database connection to use.
-    //  * @returns all DaySegment objects.
-    //  */
-    // static async getByDayName(day_name, conn) {
-    //     const rows = await conn.any(sqlFile('daySegment/get_by_day_name.sql'), {
-    //         day_name: day_name
-    //     });
-
-    //     return rows.map(DaySegment.mapRow);
-    // }
 
     /** 
      * Returns the day segment associated the id. If the day segment doesn't exist then return null.
@@ -203,6 +177,17 @@ class DaySegment {
             throw new Error('Attempted to update a daySegment with no ID');
         }
         await conn.none(sqlFile('daySegment/update_day_segment.sql'), daySegment);
+    }
+
+    /**
+     * Delete the day segment associated with the id
+     * @param {*} id The day segment id.
+     * @param {*} conn The connection to use.
+     */
+    static async delete(id, conn) {
+        await conn.none(sqlFile('daySegment/delete_day_segment.sql'), {
+            id: id
+        });
     }
 }
 

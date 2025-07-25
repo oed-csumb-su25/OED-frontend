@@ -3,4 +3,4 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
  
 SELECT * FROM day_patterns
-WHERE day_name = ${dayName};
+WHERE name = ${name};

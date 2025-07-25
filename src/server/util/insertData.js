@@ -204,15 +204,15 @@ async function insertConversions(conversionsToInsert, conn) {
 				const destinationName = (await Unit.getByName(conversionData.destinationName, conn)).id;
 				if (await Conversion.getBySourceDestination(sourceName, destinationName, conn) === null) {
 					await new Conversion(
-						sourceName,
-						destinationName,
-						conversionData.bidirectional,
+						sourceName, 
+						destinationName, 
+						conversionData.bidirectional,  
 						conversionData.note
 					).insert(
 						conversionData.weekPatternsId,
 						conversionData.slope,
 						conversionData.intercept,
-						conversionData.note, //this should be segment note
+						conversionData.note,
 						conn
 					);
 				}

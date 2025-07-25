@@ -61,17 +61,6 @@ class Week {
     }
 
     /**
-     * Delete the WeekPattern associated with the id
-     * @param {*} id The week id.
-     * @param {*} conn The connection to use.
-     */
-    static async delete(id, conn) {
-        await conn.none(sqlFile('week/delete_week_pattern.sql'), {
-            id: id
-        });
-    }
-
-    /**
      * Get all Week objects
      * @param {*} conn The database connection to use.
      * @returns all Week objects.
@@ -122,6 +111,16 @@ class Week {
         await conn.none(sqlFile('week/update_week_pattern.sql'), week);
     }
 
+    /**
+     * Delete the WeekPattern associated with the id
+     * @param {*} id The week id.
+     * @param {*} conn The connection to use.
+     */
+    static async delete(id, conn) {
+        await conn.none(sqlFile('week/delete_week_pattern.sql'), {
+            id: id
+        });
+    }
 } 
 
 module.exports = Week;

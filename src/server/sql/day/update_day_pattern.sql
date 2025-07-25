@@ -4,6 +4,6 @@
 -- Does not return a value
 
 UPDATE day_patterns
-    SET day_name = ${dayName},
+    SET name = ${name},
         note = ${note}
     WHERE id = ${id};

@@ -86,11 +86,11 @@ class ConversionSegment {
 	 * @param {*} conn The connection to use.
 	 * @returns {Promise.<ConversionSegment>}
 	 */
-	static async getBySourceDestinationStart(sourceId, destinationId, start, conn) {
+	static async getBySourceDestinationStart(sourceId, destinationId, startTime, conn) {
 		const row = await conn.one(sqlFile('conversionSegment/get_by_source_destination_start.sql'), {
 			sourceId: sourceId,
 			destinationId: destinationId,
-			startTime: start
+			startTime: startTime
 		});
 		return row === null ? null : ConversionSegment.mapRow(row);
 	}
