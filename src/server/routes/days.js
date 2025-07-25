@@ -120,7 +120,7 @@ router.post('/edit', adminAuthMiddleware('edit day'), async (req, res) => {
 	const validDay = {
 		type: 'object',
 		maxProperties: 3,
-		required: ['id'],
+		required: ['id', 'name'],
 		properties: {
 			id: {
 				type: 'integer', 
