@@ -4,13 +4,13 @@
 -- Does not return a value
 
 UPDATE week_patterns
-    SET week_name = ${weekName},
-        note = ${note},
-        sunday = ${sunday},
-        monday = ${monday},
-        tuesday = ${tuesday},
-        wednesday = ${wednesday},
-        thursday = ${thursday},
-        friday = ${friday},
-        saturday = ${saturday}
-    WHERE  id = ${id};
+	SET week_name = ${weekName},
+		note = ${note},
+		sunday = ${sunday},
+		monday = ${monday},
+		tuesday = ${tuesday},
+		wednesday = ${wednesday},
+		thursday = ${thursday},
+		friday = ${friday},
+		saturday = ${saturday}
+	WHERE  id = ${id};

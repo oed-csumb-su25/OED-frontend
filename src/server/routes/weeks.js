@@ -15,15 +15,15 @@ const router = express.Router();
 function formatWeekForResponse(item) {
 	return {
 		id: item.id, 
-        weekName: item.weekName, 
-        note: item.note,
-        sunday: item.sunday,
-        monday: item.monday,
-        tuesday: item.tuesday,
-        wednesday: item.wednesday,
-        thursday: item.thursday,
-        friday: item.friday,
-        saturday: item.saturday
+		weekName: item.weekName, 
+		note: item.note,
+		sunday: item.sunday,
+		monday: item.monday,
+		tuesday: item.tuesday,
+		wednesday: item.wednesday,
+		thursday: item.thursday,
+		friday: item.friday,
+		saturday: item.saturday
 	};
 }
 
@@ -58,27 +58,27 @@ router.post('/add', adminAuthMiddleware('add week'), async (req, res) => {
 					{ type: 'null' }
 				]
 			},
-            sunday: {
-                type: 'number'
-            },
-            monday: {
-                type: 'number'
-            },
-            tuesday: {
-                type: 'number'
-            },
-            wednesday: {
-                type: 'number'
-            },
-            thursday: {
-                type: 'number'
-            },
-            friday: {
-                type: 'number'
-            },
-            saturday: {
-                type: 'number'
-            }
+			sunday: {
+				type: 'number'
+			},
+			monday: {
+				type: 'number'
+			},
+			tuesday: {
+				type: 'number'
+			},
+			wednesday: {
+				type: 'number'
+			},
+			thursday: {
+				type: 'number'
+			},
+			friday: {
+				type: 'number'
+			},
+			saturday: {
+				type: 'number'
+			}
 		}
 	};
 
@@ -95,12 +95,12 @@ router.post('/add', adminAuthMiddleware('add week'), async (req, res) => {
 					req.body.weekName,
 					req.body.note,
 					req.body.sunday,
-                    req.body.monday,
-                    req.body.tuesday,
-                    req.body.wednesday,
-                    req.body.thursday,
-                    req.body.friday,
-                    req.body.saturday
+					req.body.monday,
+					req.body.tuesday,
+					req.body.wednesday,
+					req.body.thursday,
+					req.body.friday,
+					req.body.saturday
 				);
 				await newWeek.insert(t);
 			});
@@ -119,11 +119,11 @@ router.post('/edit', adminAuthMiddleware('edit week'), async (req, res) => {
 	const validWeek = {
 		type: 'object',
 		maxProperties: 10,
-		required: ['id'],
+		required: ['id', 'weekName', 'sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'],
 		properties: {
 			id: {
-                type: 'integer', 
-                minimum: 0
+				type: 'integer', 
+				minimum: 0
 			},
 			weekName: {
 				type: 'string',
@@ -134,27 +134,27 @@ router.post('/edit', adminAuthMiddleware('edit week'), async (req, res) => {
 					{ type: 'null' }
 				]
 			},
-            sunday: {
-                type: 'number'
-            },
-            monday: {
-                type: 'number'
-            },
-            tuesday: {
-                type: 'number'
-            },
-            wednesday: {
-                type: 'number'
-            },
-            thursday: {
-                type: 'number'
-            },
-            friday: {
-                type: 'number'
-            },
-            saturday: {
-                type: 'number'
-            }
+			sunday: {
+				type: 'number'
+			},
+			monday: {
+				type: 'number'
+			},
+			tuesday: {
+				type: 'number'
+			},
+			wednesday: {
+				type: 'number'
+			},
+			thursday: {
+				type: 'number'
+			},
+			friday: {
+				type: 'number'
+			},
+			saturday: {
+				type: 'number'
+			}
 		}
 	};
 
@@ -166,17 +166,17 @@ router.post('/edit', adminAuthMiddleware('edit week'), async (req, res) => {
 		const conn = getConnection();
 		try {
 			const updatedWeek = new Week(
-                req.body.id, 
-                req.body.weekName,
-			    req.body.note,
-                req.body.sunday,
-                req.body.monday,
-                req.body.tuesday,
-                req.body.wednesday,
-                req.body.thursday,
-                req.body.friday,
-                req.body.saturday
-            );
+				req.body.id, 
+				req.body.weekName,
+				req.body.note,
+				req.body.sunday,
+				req.body.monday,
+				req.body.tuesday,
+				req.body.wednesday,
+				req.body.thursday,
+				req.body.friday,
+				req.body.saturday
+			);
 			await updatedWeek.update(conn);
 			success(res, `Successfully updated week`);
 		} catch (err) {
@@ -196,8 +196,8 @@ router.post('/delete', adminAuthMiddleware('delete week'), async (req, res) => {
 		required: ['id'],
 		properties: {
 			id: {
-                type: 'integer', 
-                minimum: 0
+				type: 'integer', 
+				minimum: 0
 			}
 		}
 	};
@@ -213,9 +213,9 @@ router.post('/delete', adminAuthMiddleware('delete week'), async (req, res) => {
 			// Don't worry about checking if the week already exists
 			// Just try to delete it to save the extra database call, since the database will return an error anyway if the row does not exist
 			await Week.delete(
-                req.body.id, 
+				req.body.id, 
 				conn
-            );
+			);
 			success(res, 'Successfully deleted week');
 		} catch (err) {
 			log.error(`Error while deleting week with error(s): ${err}`);

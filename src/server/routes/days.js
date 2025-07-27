@@ -15,8 +15,8 @@ const router = express.Router();
 function formatDayForResponse(item) {
 	return {
 		id: item.id, 
-        name: item.name, 
-        note: item.note, 
+		name: item.name, 
+		note: item.note, 
 	};
 }
 
@@ -120,11 +120,11 @@ router.post('/edit', adminAuthMiddleware('edit day'), async (req, res) => {
 	const validDay = {
 		type: 'object',
 		maxProperties: 3,
-		required: ['id'],
+		required: ['id', 'name'],
 		properties: {
 			id: {
-                type: 'integer', 
-                minimum: 0
+				type: 'integer', 
+				minimum: 0
 			},
 			name: {
 				type: 'string',
@@ -165,8 +165,8 @@ router.post('/delete', adminAuthMiddleware('delete day'), async (req, res) => {
 		required: ['id'],
 		properties: {
 			id: {
-                type: 'integer', 
-                minimum: 0
+				type: 'integer', 
+				minimum: 0
 			}
 		}
 	};

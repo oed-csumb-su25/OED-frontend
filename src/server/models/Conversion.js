@@ -68,12 +68,6 @@ class Conversion {
 	 * @param {*} conn The connection to use.
 	 */
 	async insert(weekPatternsId, slope, intercept, segmentNote, conn) {
-		const conversion = this;
-
-		if (conversion.id !== undefined) {
-			throw new Error(`Attempted to insert a conversion that already has an ID ${conversion.id}`);
-		}
-
 		// insert new conversion
 		const conversionData = {
 			sourceId: this.sourceId,

@@ -4,4 +4,5 @@
  
 SELECT *
 FROM conversion_segments
-WHERE source_id = ${sourceId} AND destination_id = ${destinationId};
+WHERE source_id = ${sourceId} AND destination_id = ${destinationId}
+ORDER BY start_time ASC;
