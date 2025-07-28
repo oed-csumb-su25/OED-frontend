@@ -82,16 +82,17 @@ router.post('/segments', adminAuthMiddleware('get conversion segment(s) by sourc
 });
 
 /**
- * GET information for a specific conversion segment by source, destination, and start time
+ * GET information for a specific conversion segment by source, destination, start time, and end time
  * @param {int} sourceId
  * @param {int} destinationId
  * @param {time} startTime
+ * @param {time} endTime
  */
-router.post('/segment', adminAuthMiddleware('get conversion segment by source id, destination id, start time'), async (req, res) => {
+router.post('/segment', adminAuthMiddleware('get conversion segment by source id, destination id, start time, and end time'), async (req, res) => {
 	const validConversionSegment = {
 		type: 'object',
-		maxProperties: 3,
-		required: ['sourceId', 'destinationId', 'startTime'],
+		maxProperties: 4,
+		required: ['sourceId', 'destinationId', 'startTime', 'endTime'],
 		properties: {
 			sourceId: { 
 				type: 'integer', 
@@ -103,6 +104,9 @@ router.post('/segment', adminAuthMiddleware('get conversion segment by source id
 			},
 			startTime: { 
 				type: 'string' 
+			},
+			endTime: {
+				type: 'string'
 			}
 		}
 	};
@@ -115,16 +119,17 @@ router.post('/segment', adminAuthMiddleware('get conversion segment by source id
 	} else {
 		const conn = getConnection();
 		try {
-			const row = await ConversionSegment.getBySourceDestinationStart(
+			const row = await ConversionSegment.getBySourceDestinationStartEnd(
 				req.body.sourceId, 
 				req.body.destinationId, 
 				req.body.startTime, 
+				req.body.endTime,
 				conn
 			);
 			if (!row || row.length === 0) {
 				return res.sendStatus(404);
 			}
-			res.json(rows);
+			res.json(row);
 		} catch (err) {
 			log.error(`Error while preforming GET on conversion segment : ${err}`, err);
 			res.sendStatus(500);
@@ -150,8 +155,10 @@ router.post('/add', adminAuthMiddleware('add conversion segment'), async (req, r
 				minimum: 0
 			},
 			weekPatternsId: {
-				type: 'integer',
-				minimum: 0
+				oneOf: [
+					{type: 'integer', minimum: 0},
+					{type: 'null'}
+				]
 			},
 			slope: {
 				type: 'number'
@@ -208,8 +215,8 @@ router.post('/add', adminAuthMiddleware('add conversion segment'), async (req, r
 router.post('/edit', adminAuthMiddleware('edit conversion segment'), async (req, res) => {
 	const validConversionSegment = {
 		type: 'object',
-		maxProperties: 8,
-		required: ['sourceId', 'destinationId', 'slope', 'intercept', 'startTime', 'endTime'],
+		maxProperties: 10,
+		required: ['sourceId', 'destinationId', 'slope', 'intercept', 'startTime', 'endTime', 'originalStartTime', 'originalEndTime'],
 		properties: {
 			sourceId: {
 				type: 'integer',
@@ -220,8 +227,10 @@ router.post('/edit', adminAuthMiddleware('edit conversion segment'), async (req,
 				minimum: 0
 			},
 			weekPatternsId: {
-				type: 'integer',
-				minimum: 0
+				oneOf: [
+					{type: 'integer', minimum: 0},
+					{type: 'null'}
+				]
 			},
 			slope: {
 				type: 'number'
@@ -236,6 +245,18 @@ router.post('/edit', adminAuthMiddleware('edit conversion segment'), async (req,
 				type: 'string'
 			},
 			note: {
+				oneOf: [
+					{type: 'string'},
+					{type: 'null'}
+				]
+			},
+			originalStartTime: {
+				oneOf: [
+					{type: 'string'},
+					{type: 'null'}
+				]
+			},
+			originalEndTime: {
 				oneOf: [
 					{type: 'string'},
 					{type: 'null'}
@@ -261,7 +282,10 @@ router.post('/edit', adminAuthMiddleware('edit conversion segment'), async (req,
 				req.body.endTime, 
 				req.body.note
 			);
-			await updatedConversionSegment.update(conn);
+			await updatedConversionSegment.update(
+				req.body.originalStartTime, 
+				req.body.originalEndTime, 
+				conn);
 			success(res, `Successfully updated Conversion segment`);
 		} catch (err) {
 			log.error(`Error while editing conversion segment with error(s): ${err}`);
@@ -276,7 +300,7 @@ router.post('/edit', adminAuthMiddleware('edit conversion segment'), async (req,
 router.post('/delete', adminAuthMiddleware('delete conversion segment'), async (req, res) => {
 	const validConversionSegment = {
 		type: 'object',
-		maxProperties: 3,
+		maxProperties: 4,
 		required: ['sourceId', 'destinationId', 'startTime', 'endTime'],
 		properties: {
 			sourceId: {

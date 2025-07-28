@@ -101,6 +101,7 @@ class DaySegment {
 		const resp =  await conn.none(sqlFile('daySegment/insert_new_day_segment.sql'), daySegment);
 	}
 
+	//  Commenting out to potentially use at a later time
 	//  /**
 	//  * Inserts a new day segment. Rebuilds surrounding segments to ensure full 00:00 - 24:00 coverage.
 	//  * 
@@ -117,43 +118,46 @@ class DaySegment {
 	//     const deleteOverlapping = sqlFile('daySegment/delete_overlapping_segments.sql');
 	//     const insertSegment = sqlFile('daySegment/insert_new_day_segment.sql');
 
-	//     // Fetch overlapping segments
+	//     // Check for overlapping segments
 	//     const overlapping = await conn.any(getOverlapping, {
 	//         dayId: day_pattern_id,
 	//         startHour: startHour,
 	//         endHour: endHour
 	//     });
+	// 	if (overlapping.length > 0) {
+	// 		// Delete overlapping segments
+	// 		await conn.none(deleteOverlapping, {
+	// 			dayId: day_pattern_id,
+	// 			startHour: startHour,
+	// 			endHour: endHour
+	// 		});
 
-	//     // Delete overlapping segments
-	//     await conn.none(deleteOverlapping, {
-	//         dayId: day_pattern_id,
-	//         startHour: startHour,
-	//         endHour: endHour
-	//     });
-
-	//     // Reinsert trimmed segments
-	//     for (const seg of overlapping) {
-	//         if (seg.startHour < startHour) {
-	//             await conn.none(insertSegment, {
-	//                 day_pattern_id: day_pattern_id,
-	//                 startHour: seg.startHour,
-	//                 endHour: startHour,
-	//                 slope: seg.slope,
-	//                 intercept: seg.intercept,
-	//                 note: seg.note
-	//             });
-	//         }
-	//         if (seg.endHour > endHour) {
-	//             await conn.none(insertSegment, {
-	//                 day_pattern_id: day_pattern_id,
-	//                 startHour: endHour,
-	//                 endHour: seg.endHour,
-	//                 slope: seg.slope,
-	//                 intercept: seg.intercept,
-	//                 note: seg.note
-	//             });
-	//         }
-	//     }
+	// 		// Reinsert trimmed segments
+	// 		for (const seg of overlapping) {
+	// 			// If the existing segment starts before the new segment, keep it's left portion
+	// 			if (seg.startHour < startHour) {
+	// 				await conn.none(insertSegment, {
+	// 					day_pattern_id: seg.day_pattern_id,
+	// 					startHour: seg.startHour,
+	// 					endHour: startHour,
+	// 					slope: seg.slope,
+	// 					intercept: seg.intercept,
+	// 					note: seg.note
+	// 				});
+	// 			} 
+	// 			// If the existing segment ends after the new segment, keep it's right portion
+	// 			if (seg.endHour > endHour) {
+	// 				await conn.none(insertSegment, {
+	// 					day_pattern_id: seg.day_pattern_id,
+	// 					startHour: endHour,
+	// 					endHour: seg.endHour,
+	// 					slope: seg.slope,
+	// 					intercept: seg.intercept,
+	// 					note: seg.note
+	// 				});
+	// 			}
+	// 		}
+	// 	}
 
 	//     // insert the new segment
 	//     await conn.none(insertSegment, {

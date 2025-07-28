@@ -86,11 +86,12 @@ class ConversionSegment {
 	 * @param {*} conn The connection to use.
 	 * @returns {Promise.<ConversionSegment>}
 	 */
-	static async getBySourceDestinationStart(sourceId, destinationId, startTime, conn) {
-		const row = await conn.oneOrNone(sqlFile('conversionSegment/get_by_source_destination_start.sql'), {
+	static async getBySourceDestinationStartEnd(sourceId, destinationId, startTime, endTime, conn) {
+		const row = await conn.oneOrNone(sqlFile('conversionSegment/get_by_source_destination_start_end.sql'), {
 			sourceId: sourceId,
 			destinationId: destinationId,
-			startTime: startTime
+			startTime: startTime,
+			endTime: endTime
 		});
 		return row === null ? null : ConversionSegment.mapRow(row);
 	}
@@ -113,8 +114,12 @@ class ConversionSegment {
 	 * Updates an existed conversion segment in the database.
 	 * @param {*} conn The connection to use.
 	 */
-	async update(conn) {
-		const conversionSegment = this;
+	async update(originalStartTime, originalEndTime, conn) {
+		const conversionSegment = {
+			...this,
+			originalStartTime,
+			originalEndTime
+		};
 		await conn.none(sqlFile('conversionSegment/update_conversion_segment.sql'), conversionSegment);
 	}
 

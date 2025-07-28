@@ -11,4 +11,5 @@ SELECT
     start_time::TEXT AS start_time,
     end_time::TEXT AS end_time,
     note
-FROM conversion_segments;
+FROM conversion_segments
+WHERE source_id = ${sourceId} AND destination_id = ${destinationId} AND start_time::TEXT = ${startTime} AND end_time::TEXT = ${endTime};

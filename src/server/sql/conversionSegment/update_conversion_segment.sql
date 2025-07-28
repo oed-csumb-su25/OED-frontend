@@ -10,4 +10,4 @@ UPDATE conversion_segments
 		start_time = ${startTime},
 		end_time = ${endTime},
 		note = ${note}
-	WHERE source_id = ${sourceId} AND destination_id = ${destinationId} AND start_time = ${startTime};
+	WHERE source_id = ${sourceId} AND destination_id = ${destinationId} AND start_time::TEXT = ${originalStartTime} AND end_time::TEXT = ${originalEndTime};
