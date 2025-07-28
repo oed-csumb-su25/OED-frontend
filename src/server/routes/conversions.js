@@ -70,11 +70,11 @@ router.post('/edit', async (req, res) => {
 			const updatedConversion = new Conversion(req.body.sourceId, req.body.destinationId, req.body.bidirectional,
 			req.body.note);
 			await updatedConversion.update(conn);
+			success(res);
 		} catch (err) {
 			log.error(`Error while editing conversion with error(s): ${err}`);
 			failure(res, 500, `Error while editing conversion with error(s): ${err}`);
 		}
-		success(res);
 	}
 });
 
