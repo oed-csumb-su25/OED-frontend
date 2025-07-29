@@ -1,3 +1,4 @@
+// DayDetailComponent.tsx
 import * as React from 'react';
 import { FormattedMessage } from 'react-intl';
 import { useAppSelector } from '../../redux/reduxHooks';
@@ -51,7 +52,7 @@ export default function DayDetailComponent() {
 						</div>
 						<div className="card-container">
 							{Object.values(dayState)
-								.sort((a: Day, b: Day) => (a.dayName || '').toLowerCase().localeCompare((b.dayName || '').toLowerCase(), locale, { sensitivity: 'accent' }))
+								.sort((a, b) => (a.dayName || '').toLowerCase().localeCompare((b.dayName || '').toLowerCase(), locale, { sensitivity: 'accent' }))
 								.map(day => (
 									<DayViewComponent key={day.id} day={day} />
 								))}
