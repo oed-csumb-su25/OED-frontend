@@ -5,18 +5,20 @@ import * as React from 'react';
 import * as moment from 'moment-timezone';
 // Realize that * is already imported from react
 import { useState } from 'react';
-import { FormattedMessage, useIntl } from 'react-intl';
+import { FormattedMessage } from 'react-intl';
 import { Button, Col, Container, FormGroup, FormFeedback, Input, Label, Modal, ModalBody, ModalFooter, ModalHeader, Row, Table,
 	PaginationItem, PaginationLink, Pagination} from 'reactstrap';
 import TooltipHelpComponent from '../TooltipHelpComponent';
 import { conversionsApi, selectConversionsDetails } from '../../redux/api/conversionsApi';
+import { conversionSegmentsApi } from '../../redux/api/conversionSegmentsApi';
+import { weeksApi } from '../../redux/api/weeksApi';
 import { selectMeterDataById } from '../../redux/api/metersApi';
 import { selectUnitDataById } from '../../redux/api/unitsApi';
 import { useAppSelector } from '../../redux/reduxHooks';
 import '../../styles/modal.css';
 import { tooltipBaseStyle } from '../../styles/modalStyle';
 import { TrueFalseType } from '../../types/items';
-import { ConversionData } from '../../types/redux/conversions';
+import { ConversionData, ConversionSegmentData } from '../../types/redux/conversions';
 import { UnitData, UnitType } from '../../types/redux/units';
 import { useTranslate } from '../../redux/componentHooks';
 import ConfirmActionModalComponent from '../ConfirmActionModalComponent';
@@ -32,6 +34,11 @@ interface EditConversionModalComponentProps {
 	handleClose: () => void;
 }
 
+type EditableSegment = ConversionSegmentData & {
+	originalStartTime: string;
+	originalEndTime: string;
+};
+
 const PER_TABLE = 10;
 
 /**
@@ -43,10 +50,17 @@ export default function EditConversionModalComponent(props: EditConversionModalC
 	const translate = useTranslate();
 	const [editConversion] = conversionsApi.useEditConversionMutation();
 	const [deleteConversion] = conversionsApi.useDeleteConversionMutation();
+	const [editSegment] = conversionSegmentsApi.useEditConversionSegmentMutation();
+	const [addSegment] = conversionSegmentsApi.useAddConversionSegmentMutation();
+	const [deleteSegment] = conversionSegmentsApi.useDeleteConversionSegmentMutation();
 	const unitDataById = useAppSelector(selectUnitDataById);
 	const meterDataById = useAppSelector(selectMeterDataById);
 	const conversionDetails = useAppSelector(selectConversionsDetails);
-	const intl = useIntl();
+	const { data: segments = [], refetch: refetchSegments } = conversionSegmentsApi.useGetConversionSegmentByConversionQuery ({
+		sourceId: props.conversion.sourceId,
+		destinationId: props.conversion.destinationId
+	});
+	const { data: weekPatterns = [] } = weeksApi.useGetWeeksQuery();
 
 	// Set existing conversion values
 	const values = { ...props.conversion };
@@ -54,30 +68,15 @@ export default function EditConversionModalComponent(props: EditConversionModalC
 	/* State */
 	// Handlers for each type of input change
 	const [state, setState] = useState(values);
-
-	// FOR TESTING PURPOSES, REMOVE AFTER
-	const dummySegments = Array.from({ length: 35 }, (_, index) => ({
-		id: index + 1,
-		start: `2025-01-${(index + 1).toString().padStart(2, '0')}`,
-		end: `2025-01-${(index + 2).toString().padStart(2, '0')}`,
-		slope: index * 2,
-		intercept: index * 0.5,
-		pattern: 'No Pattern',
-		note: `This is a sample note i created  that should be over one hundred characters long for testing purposes onlyyyyyyyyyyyyy. ${index + 1}`
-	}));
-
-	// Place holder data for now
-	// const [segments, setSegments] = useState(props.conversion.segments);
-	const [segments, setSegments] = useState( dummySegments);
-	const [editingSegment, setEditingSegment] = useState<any | null>(null);
+	const [editingSegment, setEditingSegment] = useState<EditableSegment | null>(null);
 	const [showEditSegmentModal, setShowEditSegmentModal] = useState(false);
 	const [modalOpen, setModalOpen] = useState(false);
 	const [modalHeader, setModalHeader] = useState('');
 	const [modalNote, setModalNote] = useState('');
 	const [showSplitModal, setShowSplitModal] = useState(false);
-	const [splitDirection, setSplitDirection] = useState<'earlier' | 'later' | null>(null);
-	const [segmentToSplit, setSegmentToSplit] = useState<any | null>(null);
-	const [splitDatetime, setSplitDatetime] = useState('');
+	const [actionDirection, setActionDirection] = useState<'earlier' | 'later' | null>(null);
+	const [selectedSegment, setSelectedSegment] = useState<ConversionSegmentData | null>(null);
+	const [actionDatetime, setActionDatetime] = useState('');
 	const [datetimeError, setDatetimeError] = useState('');
 	const [currentPage, setCurrentPage] = React.useState(1);
 	const [showAllSegments, setShowAllSegments] = React.useState(false);
@@ -91,35 +90,166 @@ export default function EditConversionModalComponent(props: EditConversionModalC
 		setState({...state, [e.target.name]: JSON.parse(e.target.value) });
 	};
 
-	// const handleNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-	// 	setState({ ...state, [e.target.name]: Number(e.target.value) });
-	// };
-
-	const handlePatternChange = (e: React.ChangeEvent<any>) => {
-		const selectedPattern = (e.target as HTMLSelectElement).value;
-		setEditingSegment((prev: { slope: any; intercept: any; }) => ({
-			...prev,
-			pattern: selectedPattern,
-			slope: selectedPattern === 'No Pattern' ? 0 : prev?.slope ?? 0,
-			intercept: selectedPattern === 'No Pattern' ? 0 : prev?.intercept ?? 0
-		}));
+	const handleNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+		setEditingSegment(prev => {
+			if (!prev) return prev;
+			return {
+				...prev,
+				[e.target.name]: Number(e.target.value), // dynamically sets either slope or intercept
+				weekPatternsId: null // reset pattern if editing slope/intercept
+			};
+		});
 	};
 
+	// Updates the pattern and resets slope/intercept if "No Pattern" is selected
+	const handlePatternChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+		const selectedPattern = e.target.value;
+		setEditingSegment(prev => {
+			if (!prev) return prev;
+
+			const slope = selectedPattern === 'No Pattern' ? 0 : prev.slope;
+			const intercept = selectedPattern === 'No Pattern' ? 0 : prev.intercept;
+			return {
+				...prev,
+				weekPatternsId: selectedPattern === 'No Pattern' ? null : Number(selectedPattern),
+				slope,
+				intercept
+			};
+		});
+	};
+
+	// Updates the note field for the currently edited segment
+	const handleSegmentNoteChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+		setEditingSegment(prev => {
+			if (!prev) return prev;
+			return {...prev, note: e.target.value};
+		});
+	};
+
+	// Opens a modal showing the full segment note
 	const handleNoteModal = (start: string, end: string, note: string) => {
 		setModalHeader(`${moment.parseZone(start).format('LL LTS [(and ]SSS[ms)]')} to ${moment.parseZone(end).format('LL LTS [(and ]SSS[ms)]')}`);
 		setModalNote(note);
 		setModalOpen(true);
 	};
 
-	const handleSplitDatetimeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-		setSplitDatetime(e.target.value);
+	// Handles and validates changes to datetime fields (start, end, or split)
+	const handleDatetimeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+		// Validate datetime format
 		const validFormat = /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/;
-		if (!validFormat.test(splitDatetime.trim())) {
-			setDatetimeError('Invalid format. Use YYYY-MM-DD HH:mm:ss');
-			return;
+		if (!validFormat.test(e.target.value.trim())) {
+			setDatetimeError(`Invalid ${e.target.name} format. Use YYYY-MM-DD HH:mm:ss`);
 		} else {
 			setDatetimeError('');
 		}
+		// Prevent editing of startTime or endTime if the current value is -infinity or infinity,
+		// since these represent unbounded segments and should not be user-editable
+		if (
+			editingSegment &&
+			(e.target.name === 'startTime' || e.target.name === 'endTime') &&
+			(editingSegment[e.target.name] === '-infinity' || editingSegment[e.target.name] === 'infinity')
+		) {
+			return;
+		}
+
+		// Handle if editing a segment
+		if (editingSegment && (e.target.name === 'startTime' || e.target.name === 'endTime')) {
+			setEditingSegment(prev => {
+				if (!prev) return prev;
+				return {
+					...prev,
+					[e.target.name]: e.target.value
+				};
+			});
+		}
+		// Handle if splitting segment
+		if (e.target.name === 'splitDatetime') {
+			setActionDatetime(e.target.value);
+		}
+	};
+
+	// Splits a selected segment into two based on the chosen datetime and direction
+	const handleSplitSegment = async () => {
+		if (!selectedSegment || !actionDirection || !actionDatetime) return;
+
+		const splitMoment = moment(actionDatetime);
+		const startMoment = moment(selectedSegment.startTime);
+		const endMoment = moment(selectedSegment.endTime);
+
+		if (!splitMoment.isAfter(startMoment) || !splitMoment.isBefore(endMoment)) {
+			setDatetimeError('Split time must be strictly between the segment start and end.');
+			return;
+		}
+
+		// Common fields for both segments
+		const segmentFields = {
+			sourceId: selectedSegment.sourceId,
+			destinationId: selectedSegment.destinationId,
+			slope: selectedSegment.slope,
+			intercept: selectedSegment.intercept,
+			weekPatternsId: selectedSegment.weekPatternsId ?? null,
+			note: selectedSegment.note
+		};
+
+		try {
+			// Delete the original segment
+			await deleteSegment({
+				sourceId: selectedSegment.sourceId,
+				destinationId: selectedSegment.destinationId,
+				startTime: selectedSegment.startTime,
+				endTime: selectedSegment.endTime
+			});
+			if (actionDirection === 'earlier') {
+				// Earlier segment is new
+				await addSegment({
+					...segmentFields,
+					startTime: selectedSegment.startTime,
+					endTime: actionDatetime,
+					slope: 0,
+					intercept: 0,
+					note: ''
+				});
+				// Later segment keeps original values
+				await addSegment({
+					...segmentFields,
+					startTime: actionDatetime,
+					endTime: selectedSegment.endTime
+				});
+			} else if (actionDirection === 'later') {
+				// Earlier segment keeps original values
+				await addSegment({
+					...segmentFields,
+					startTime: selectedSegment.startTime,
+					endTime: actionDatetime
+				});
+				// Later segment is new
+				await addSegment({
+					...segmentFields,
+					startTime: actionDatetime,
+					endTime: selectedSegment.endTime,
+					slope: 0,
+					intercept: 0,
+					note: ''
+				});
+			}
+			setShowSplitModal(false);
+			setSelectedSegment(null);
+			setActionDirection(null);
+			setActionDatetime('');
+			await refetchSegments();
+		} catch (error) {
+			console.error(error);
+		}
+	};
+
+	// TODO: Verify deleteSegment range logic works correctly for both 'earlier' and 'later' actions
+	const handleDeleteSegment = async (segment: ConversionSegmentData) => {
+		await deleteSegment({
+			sourceId: segment.sourceId,
+			destinationId: segment.destinationId,
+			startTime: segment.startTime,
+			endTime: segment.endTime
+		});
 	};
 	/* End State */
 
@@ -343,32 +473,39 @@ export default function EditConversionModalComponent(props: EditConversionModalC
 	// If there is a difference between props and state, then a change was made
 	// Side note, we could probably just set a boolean when any input i
 	// Edit Conversion Validation: is not needed as no breaking edits can be made
-	const handleSaveChanges = () => {
-		const allZero = segments.every(seg =>seg.pattern === 'No Pattern' && seg.slope === 0 && seg.intercept === 0);
-
-		if (allZero) {
+	const handleSaveChanges = async () => {
+		// If the editing segment has no slope, no intercept, and no pattern applied,
+		// show a warning modal to confirm saving a "neutral" segment with no effect.
+		if (editingSegment && editingSegment.slope === 0 && editingSegment.intercept === 0 && editingSegment.weekPatternsId === null) {
 			setWarningMessage('All segments have 0 slope and intercept. Are you sure?');
 			setShowWarningModal(true);
-		} else {
-			// Close the modal first to avoid repeat clicks
-			props.handleClose();
-
-			// Need to redo Cik if slope, intercept, or bidirectional changes.
-			const shouldRedoCik = props.conversion.slope !== state.slope
-				|| props.conversion.intercept !== state.intercept
-				|| props.conversion.bidirectional !== state.bidirectional;
-			// Check for changes by comparing state to props
-			const conversionHasChanges = shouldRedoCik || props.conversion.note != state.note;
-			// Only do work if there are changes
-			if (conversionHasChanges) {
-				// Save our changes
-				editConversion({
-					conversionData: {
-						...state,
-						bidirectional: (isMeterSource() || isSuffixUsed()) ? false : state.bidirectional }, shouldRedoCik });
+			return;
+		}
+		// If a segment is being edited, send the updated data to the backend
+		// and close the edit segment modal if the request succeeds.
+		if (editingSegment) {
+			try {
+				await editSegment(editingSegment);
+				setShowEditSegmentModal(false);
+			} catch (error) {
+				console.error('Failed to edit segment:', error);
 			}
 		}
-		// TODO: call API to save state and segments
+
+		// Need to redo Cik if slope, intercept, or bidirectional changes.
+		const shouldRedoCik = props.conversion.slope !== state.slope
+			|| props.conversion.intercept !== state.intercept
+			|| props.conversion.bidirectional !== state.bidirectional;
+		// Check for changes by comparing state to props
+		const conversionHasChanges = shouldRedoCik || props.conversion.note != state.note;
+		// Only do work if there are changes
+		if (conversionHasChanges) {
+			// Save our changes
+			editConversion({
+				conversionData: {
+					...state,
+					bidirectional: (isMeterSource() || isSuffixUsed()) ? false : state.bidirectional }, shouldRedoCik });
+		}
 	};
 
 	const tooltipStyle = {
@@ -415,23 +552,46 @@ export default function EditConversionModalComponent(props: EditConversionModalC
 						<FormattedMessage id='conversion.edit.conversion' />
 					</ModalHeader>
 					<ModalBody>
-						<p>
-							<strong>Date Range: </strong>{moment.parseZone(editingSegment.start).format('LL LTS')} to {moment.parseZone(editingSegment.end).format('LL LTS')}
-						</p>
+						<FormGroup>
+							<Label for='startTime'>{translate('conversion.time.start')}</Label>
+							<Input
+								type="text"
+								name="startTime"
+								placeholder='YYYY-MM-DD HH:MM:SS'
+								value={editingSegment?.startTime ?? ''}
+								onChange={handleDatetimeChange}
+								invalid={datetimeError !== ''}
+								disabled={editingSegment?.startTime === '-infinity'}
+							/>
+							{datetimeError && <FormFeedback className='d-block'>{datetimeError}</FormFeedback>}
+							<Label for='endTime'>{translate('conversion.time.end')}</Label>
+							<Input
+								type="text"
+								name="endTime"
+								placeholder='YYYY-MM-DD HH:MM:SS'
+								value={editingSegment?.endTime ?? ''}
+								onChange={handleDatetimeChange}
+								invalid={datetimeError !== ''}
+								disabled={editingSegment?.endTime === 'infinity'}
+							/>
+							{datetimeError && <FormFeedback className='d-block'>{datetimeError}</FormFeedback>}
+						</FormGroup>
 						<FormGroup>
 							<Label for='slope'>{translate('conversion.slope')}</Label>
 							<Input
+								name='slope'
 								type='number'
 								value={editingSegment?.slope ?? ''}
-								onChange={e => setEditingSegment({ ...editingSegment, slope: parseFloat(e.target.value) })}
+								onChange={handleNumberChange}
 							/>
 						</FormGroup>
 						<FormGroup>
 							<Label for='intercept'>{translate('conversion.intercept')}</Label>
 							<Input
+								name='intercept'
 								type='number'
 								value={editingSegment?.intercept ?? ''}
-								onChange={e => setEditingSegment({ ...editingSegment, intercept: parseFloat(e.target.value) })}
+								onChange={handleNumberChange}
 							/>
 						</FormGroup>
 						<FormGroup>
@@ -440,11 +600,12 @@ export default function EditConversionModalComponent(props: EditConversionModalC
 								id='pattern'
 								name='pattern'
 								type='select'
-								value={editingSegment?.pattern}
+								value={editingSegment?.weekPatternsId ?? ''}
 								onChange={handlePatternChange}>
 								<option value='No Pattern'>No Pattern</option>
-								<option value='Pattern 1'>Pattern 1</option>
-								<option value='Pattern 2'>Pattern 2</option>
+								{weekPatterns.map(pattern => (
+									<option key={pattern.id} value={pattern.id}>{pattern.weekName}</option>
+								))}
 							</Input>
 						</FormGroup>
 						<FormGroup>
@@ -452,14 +613,14 @@ export default function EditConversionModalComponent(props: EditConversionModalC
 							<Input
 								type='textarea'
 								value={editingSegment?.note ?? ''}
-								onChange={e => setEditingSegment({ ...editingSegment, note: e.target.value })}
+								onChange={handleSegmentNoteChange}
 							/>
 						</FormGroup>
 					</ModalBody>
 					<ModalFooter>
 						<Button color='secondary' onClick={() => setShowEditSegmentModal(false)}><FormattedMessage id='cancel' /></Button>
 						<Button color='primary' onClick={() => {
-							setSegments(prev => prev.map(seg => seg.id === editingSegment.id ? editingSegment : seg));
+							handleSaveChanges();
 							setShowEditSegmentModal(false);
 						}}>
 							<FormattedMessage id='save.all' />
@@ -470,39 +631,31 @@ export default function EditConversionModalComponent(props: EditConversionModalC
 			{showSplitModal && (
 				<Modal isOpen={showSplitModal} toggle={() => setShowSplitModal(false)}>
 					<ModalHeader>
-						<FormattedMessage id={`conversion.table.split.${splitDirection}`}/>
+						<FormattedMessage id={`conversion.table.split.${actionDirection}`}/>
 					</ModalHeader>
 					<ModalBody>
 						<p>
-							<FormattedMessage id="conversion.split.datetime.prompt" defaultMessage="Enter the datetime (YYYY-MM-DD HH:mm:ss) to split the segment:" />
+							<FormattedMessage id='conversion.split.datetime.prompt' />
 						</p>
 						<Input
 							type='text'
-							value={splitDatetime}
+							name='splitDatetime'
+							value={actionDatetime}
 							placeholder='YYYY-MM-DD HH:MM:SS'
-							onChange={handleSplitDatetimeChange}
+							onChange={handleDatetimeChange}
 							invalid={datetimeError !== ''}
 						/>
-						{datetimeError && <FormFeedback className="d-block">{datetimeError}</FormFeedback>}
+						{datetimeError && <FormFeedback className='d-block'>{datetimeError}</FormFeedback>}
 					</ModalBody>
 					<ModalFooter>
-						<Button color="secondary" onClick={() => setShowSplitModal(false)}>
-							<FormattedMessage id="cancel" />
+						<Button color='secondary' onClick={() => setShowSplitModal(false)}>
+							<FormattedMessage id='cancel' />
 						</Button>
 						<Button
-							color="primary"
-							onClick={() => {
-								console.log('Split confirmed:', {
-									direction: splitDirection,
-									segment: segmentToSplit,
-									datetime: splitDatetime
-								});
-								// TODO: Call future API/update segment list
-								setShowSplitModal(false);
-								setDatetimeError('');
-							}}
+							color='primary'
+							onClick={handleSplitSegment}
 						>
-							<FormattedMessage id="save.all" />
+							<FormattedMessage id='save.all' />
 						</Button>
 					</ModalFooter>
 				</Modal>
@@ -510,11 +663,14 @@ export default function EditConversionModalComponent(props: EditConversionModalC
 
 			<Modal isOpen={props.show} toggle={props.handleClose} size='xl'>
 				<ModalHeader>
-					<FormattedMessage id="conversion.edit.conversion" />
+					<FormattedMessage id='conversion.overall' />
 					<TooltipHelpComponent page='conversions-edit' />
 					<div style={tooltipStyle}>
 						<TooltipMarkerComponent page='conversions-edit' helpTextId={tooltipStyle.tooltipEditConversionView} />
 					</div>
+					<p style={{ marginBottom: '0', fontSize: '1rem', color: 'gray' }}>
+						<FormattedMessage id="conversion.overall.subtitle" />
+					</p>
 				</ModalHeader>
 				{/* when any of the conversion are changed call one of the functions. */}
 				<ModalBody>
@@ -565,12 +721,12 @@ export default function EditConversionModalComponent(props: EditConversionModalC
 							</Input>
 							{isMeterSource() && state.bidirectional === true && (
 								<FormFeedback className='d-block'>
-									<FormattedMessage id="conversion.bidirectional.disabled.meter"/>
+									<FormattedMessage id='conversion.bidirectional.disabled.meter'/>
 								</FormFeedback>
 							)}
 							{isSuffixUsed() && state.bidirectional === true && (
 								<FormFeedback className='d-block'>
-									<FormattedMessage id="conversion.bidirectional.disabled.suffix"/>
+									<FormattedMessage id='conversion.bidirectional.disabled.suffix'/>
 								</FormFeedback>
 							)}
 						</FormGroup>
@@ -585,7 +741,11 @@ export default function EditConversionModalComponent(props: EditConversionModalC
 								placeholder='Note'
 								onChange={e => handleStringChange(e)} />
 						</FormGroup>
-						<h5 className='mt-4'><FormattedMessage id='conversion.table' /></h5>
+						<hr style={{ borderTop: '1px solid gray', left: '-2rem', width: '100vw', position: 'relative' }} />
+						<h5 className='mt-4'><FormattedMessage id='conversion.segments.table' /></h5>
+						<p style={{ fontSize: '1rem', color: 'gray', fontWeight: '500' }}>
+							<FormattedMessage id="conversion.segments.table.subtitle" />
+						</p>
 						<Table striped bordered>
 							<thead>
 								<tr>
@@ -604,20 +764,24 @@ export default function EditConversionModalComponent(props: EditConversionModalC
 							<tbody>
 								{(showAllSegments ? segments : segments.slice((currentPage - 1) * PER_TABLE, currentPage * PER_TABLE))
 									.map(segment => (
-										<tr key={segment.id}>
-											<td>{moment.parseZone(segment.start).format('LL LTS')} to {moment.parseZone(segment.end).format('LL LTS')}</td>
-											<td>{segment.pattern === intl.formatMessage({ id: 'conversion.noPattern' }) ? segment.slope : ''}</td>
-											<td>{segment.pattern === intl.formatMessage({ id: 'conversion.noPattern' }) ? segment.intercept : ''}</td>
-											<td>{segment.pattern}</td>
+										<tr key={`${segment.sourceId}-${segment.destinationId}-${segment.startTime}`}>
+											<td>{segment.startTime} to {segment.endTime}</td>
+											<td>{segment.weekPatternsId === null ? segment.slope : ''}</td>
+											<td>{segment.weekPatternsId === null ? segment.intercept : ''}</td>
+											<td>{weekPatterns.find(wp => wp.id === segment.weekPatternsId)?.weekName ?? ''}</td>
 											<td
 												style={{ cursor: 'pointer' }}
-												onClick={() => handleNoteModal(segment.start, segment.end, segment.note)}
+												onClick={() => handleNoteModal(segment.startTime, segment.endTime, segment.note)}
 											>
-												{segment.note.length > 100 ? `${segment.note.slice(0, 100)} ...` : segment.note}
+												{(segment.note ?? '').length > 100 ? `${segment.note.slice(0, 100)} ...` : segment.note || ''}
 											</td>
 											<td>
 												<Button size='sm' color='secondary' onClick={() => {
-													setEditingSegment(segment);
+													setEditingSegment({
+														...segment,
+														originalStartTime: segment.startTime,
+														originalEndTime: segment.endTime
+													});
 													setShowEditSegmentModal(true);
 												}}>
 													<FormattedMessage id='edit'/>
@@ -626,9 +790,9 @@ export default function EditConversionModalComponent(props: EditConversionModalC
 											<td><Button
 												size='sm'
 												onClick={() => {
-													setSplitDirection('earlier');
-													setSegmentToSplit(segment);
-													setSplitDatetime('');
+													setActionDirection('earlier');
+													setSelectedSegment(segment);
+													setActionDatetime('');
 													setShowSplitModal(true);
 												}}
 											>
@@ -636,21 +800,39 @@ export default function EditConversionModalComponent(props: EditConversionModalC
 											<td><Button
 												size='sm'
 												onClick={() => {
-													setSplitDirection('later');
-													setSegmentToSplit(segment);
-													setSplitDatetime('');
+													setActionDirection('later');
+													setSelectedSegment(segment);
+													setActionDatetime('');
 													setShowSplitModal(true);
 												}}
 											>
 												<FormattedMessage id='split.later' /></Button></td>
-											<td><Button size='sm' color='danger'><FormattedMessage id='delete.earlier' /></Button></td>
-											<td><Button size='sm' color='danger'><FormattedMessage id='delete.later' /></Button></td>
+											<td><Button
+												size='sm'
+												color='danger'
+												onClick={() => {
+													setActionDirection('earlier');
+													setSelectedSegment(segment);
+													handleDeleteSegment(segment);
+												}}
+											>
+												<FormattedMessage id='delete.earlier' /></Button></td>
+											<td><Button
+												size='sm'
+												color='danger'
+												onClick={() => {
+													setActionDirection('later');
+													setSelectedSegment(segment);
+													handleDeleteSegment(segment);
+												}}
+											>
+												<FormattedMessage id='delete.later' /></Button></td>
 										</tr>
 									))}
 							</tbody>
 						</Table>
 						{!showAllSegments && segments.length !== 0 && (
-							<Pagination aria-label="Segments Pagination" style={{ justifyContent: 'center', margin: '1% auto' }}>
+							<Pagination aria-label='Segments Pagination' style={{ justifyContent: 'center', margin: '1% auto' }}>
 								<>
 									<PaginationItem disabled={currentPage === 1}>
 										<PaginationLink first onClick={() => setCurrentPage(1)} />
@@ -675,25 +857,26 @@ export default function EditConversionModalComponent(props: EditConversionModalC
 								</>
 							</Pagination>
 						)}
-						{/* Show all logs or in pages button */}
-						{segments.length > 0 &&
-							<Button color='primary' style={{ margin: '0% 40% 1%'}} onClick={() => setShowAllSegments(!showAllSegments)}>
-								{!showAllSegments ? `${translate('show.all.segments')} (${segments.length})` : translate('show.in.pages')}
-							</Button>}
-
+						<div style={{ display: 'flex', justifyContent: 'center', marginTop: '1% auto' }}>
+							{/* Show all logs or in pages button */}
+							{segments.length > 0 &&
+								<Button color='primary' onClick={() => setShowAllSegments(!showAllSegments)}>
+									{!showAllSegments ? `${translate('show.all.segments')} (${segments.length})` : translate('show.in.pages')}
+								</Button>}
+						</div>
 					</Container>
 				</ModalBody>
 				<ModalFooter>
 					<Button color='danger' onClick={checkState}>
-						<FormattedMessage id="conversion.delete.conversion" />
+						<FormattedMessage id='conversion.overall.delete' />
 					</Button>
 					{/* Hides the modal */}
 					<Button color='secondary' onClick={handleClose}>
-						<FormattedMessage id="discard.changes" />
+						<FormattedMessage id='conversion.overall.discard' />
 					</Button>
 					{/* On click calls the function handleSaveChanges in this component */}
 					<Button color='primary' onClick={handleSaveChanges}>
-						<FormattedMessage id="save.all" />
+						<FormattedMessage id='conversion.overall.save' />
 					</Button>
 				</ModalFooter>
 			</Modal>
