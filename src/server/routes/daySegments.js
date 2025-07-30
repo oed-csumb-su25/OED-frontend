@@ -8,25 +8,26 @@ const { getConnection } = require('../db');
 const DaySegment = require('../models/DaySegment');
 const { success, failure } = require('./response');
 const validate = require('jsonschema').validate;
+const { adminAuthMiddleware } = require('./authenticator');
 
 const router = express.Router();
 
 function formatDaySegmentForResponse(item) {
 	return {
 		id: item.id, 
-        dayId: item.dayId,
-        startHour: item.startHour,
-        endHour: item.endHour,
-        slope: item.slope,
-        intercept: item.intercept,
-        note: item.note, 
+		dayId: item.dayId,
+		startHour: item.startHour,
+		endHour: item.endHour,
+		slope: item.slope,
+		intercept: item.intercept,
+		note: item.note, 
 	};
 }
 
 /**
  * Route for getting all day segments.
  */
-router.get('/', async (req, res) => {
+router.get('/', adminAuthMiddleware('get all day segments'), async (req, res) => {
 	const conn = getConnection();
 	try {
 		const rows = await DaySegment.getAll(conn);
@@ -39,15 +40,15 @@ router.get('/', async (req, res) => {
 /**
  * Route for getting a day segment by id
  */
-router.get('/:id', async(req, res) => {
+router.get('/:id', adminAuthMiddleware('get day segment by id'), async(req, res) => {
 	const validParams = {
 		type: 'object',
 		maxProperties: 1,
 		required: ['id'],
 		properties: {
 			id: {
-				type: 'string',
-				pattern: '^\\d+$'
+				type: 'integer', 
+				minimum: 0
 			}
 		}
 	};
@@ -67,24 +68,24 @@ router.get('/:id', async(req, res) => {
 /**
  * Route for getting all day segments with the same day id
  */
-router.get('/dayId/:dayId', async(req, res) => {
-	const validParams = {
+router.post('/segments', adminAuthMiddleware('get day segments by day id'), async(req, res) => {
+	const validDaySegment = {
 		type: 'object',
 		maxProperties: 1,
 		required: ['dayId'],
 		properties: {
 			dayId: {
-				type: 'string',
-				pattern: '^\\d+$'
+				type: 'integer', 
+				minimum: 0
 			}
 		}
 	};
-	if (!validate(req.params, validParams).valid) {
+	if (!validate(req.body, validDaySegment).valid) {
 		return res.status(400).json({error: 'Invalid dayId'});
 	} else {
 		const conn = getConnection();
 		try {
-			const rows = await DaySegment.getByDayId(req.params.dayId, conn);
+			const rows = await DaySegment.getByDayId(req.body.dayId, conn);
 			res.json(rows.map(formatDaySegmentForResponse));
 		} catch (err) {
 			log.error(`Error while performing GET day segments by dayId: ${err}`);
@@ -93,75 +94,9 @@ router.get('/dayId/:dayId', async(req, res) => {
 });
 
 /**
- * Route for POST, edit day segment.
- */
-router.post('/edit', async (req, res) => {
-	const validDaySegment = {
-		type: 'object',
-		maxProperties: 7,
-		required: ['id'],
-		properties: {
-			id: {
-				type: 'number'
-			},
-			dayId: {
-				type: 'number',
-                minimum: 0
-			},
-            startHour: {
-                type: 'number',
-				minimum: 0,
-				maximum: 23
-            },
-            endHour: {
-                type: 'number',
-				minimum: 1,
-				maximum: 24
-            },
-            slope: {
-                type: 'number'
-            },
-            intercept: {
-                type: 'number'
-            },
-			note: {
-				oneOf: [
-					{ type: 'string' },
-					{ type: 'null' }
-				]
-			}
-		}
-	};
-
-	const validatorResult = validate(req.body, validDaySegment);
-	if (!validatorResult.valid) {
-		log.warn(`Got request to edit day segments with invalid day segment data, errors: ${validatorResult.errors}`);
-		failure(res, 400, `Got request to edit day segments with invalid day segment data, errors: ${validatorResult.errors}`);
-	} else {
-		const conn = getConnection();
-		try {
-			const updatedDaySegment = new DaySegment(
-                req.body.id, 
-                req.body.dayId,
-                req.body.startHour,
-                req.body.endHour,
-                req.body.slope,
-                req.body.intercept, 
-                req.body.note
-            );
-			await updatedDaySegment.update(conn);
-		} catch (err) {
-			log.error(`Error while editing day segment with error(s): ${err}`);
-			failure(res, 500, `Error while editing day segment with error(s): ${err}`);
-		}
-		success(res);
-	}
-});
-
-/**
  * Route for POST add day segment.
  */
-router.post('/add', async (req, res) => {
+router.post('/add', adminAuthMiddleware('add day segment'), async (req, res) => {
 	const validDaySegment = {
 		type: 'object',
 		maxProperties: 6,
@@ -169,25 +104,25 @@ router.post('/add', async (req, res) => {
 		additionalProperties: false,
 		properties: {
 			dayId: {
-				type: 'number',
-                minimum: 0
+				type: 'integer', 
+				minimum: 0
 			},
-            startHour: {
-                type: 'number',
+			startHour: {
+				type: 'number',
 				minimum: 0,
 				maximum: 23
-            },
-            endHour: {
-                type: 'number',
+			},
+			endHour: {
+				type: 'number',
 				minimum: 1,
 				maximum: 24
-            },
-            slope: {
-                type: 'number'
-            },
-            intercept: {
-                type: 'number'
-            },
+			},
+			slope: {
+				type: 'number'
+			},
+			intercept: {
+				type: 'number'
+			},
 			note: {
 				oneOf: [
 					{ type: 'string' },
@@ -220,7 +155,7 @@ router.post('/add', async (req, res) => {
 					);
 					await newDaySegment.insert(t);
 				});
-				res.sendStatus(200);
+				success(res, `Successfully inserted day segment`);
 			} catch (err) {
 				log.error(`Error while inserting new day segment with error(s): ${err}`);
 				failure(res, 500, `Error while inserting new day segment with errors(s): ${err}`);
@@ -230,42 +165,84 @@ router.post('/add', async (req, res) => {
 });
 
 /**
- * Route for POST, delete day segment.
+ * Route for POST, edit day segment.
  */
-router.post('/delete', async (req, res) => {
+router.post('/edit', adminAuthMiddleware('edit day segment'), async (req, res) => {
 	const validDaySegment = {
 		type: 'object',
 		maxProperties: 7,
-		required: ['id'],
+		required: ['id', 'dayId', 'startHour', 'endHour', 'slope', 'intercept'],
 		properties: {
 			id: {
-				type: 'number'
+				type: 'integer', 
+				minimum: 0
 			},
 			dayId: {
-				type: 'number',
-                minimum: 0
+				type: 'integer', 
+				minimum: 0
 			},
-            startHour: {
-                type: 'number',
+			startHour: {
+				type: 'number',
 				minimum: 0,
 				maximum: 23
-            },
-            endHour: {
-                type: 'number',
+			},
+			endHour: {
+				type: 'number',
 				minimum: 1,
 				maximum: 24
-            },
-            slope: {
-                type: 'number'
-            },
-            intercept: {
-                type: 'number'
-            },
+			},
+			slope: {
+				type: 'number'
+			},
+			intercept: {
+				type: 'number'
+			},
 			note: {
 				oneOf: [
 					{ type: 'string' },
 					{ type: 'null' }
 				]
+			}
+		}
+	};
+
+	const validatorResult = validate(req.body, validDaySegment);
+	if (!validatorResult.valid) {
+		log.warn(`Got request to edit day segments with invalid day segment data, errors: ${validatorResult.errors}`);
+		failure(res, 400, `Got request to edit day segments with invalid day segment data, errors: ${validatorResult.errors}`);
+	} else {
+		const conn = getConnection();
+		try {
+			const updatedDaySegment = new DaySegment(
+				req.body.id, 
+				req.body.dayId,
+				req.body.startHour,
+				req.body.endHour,
+				req.body.slope,
+				req.body.intercept, 
+				req.body.note
+			);
+			await updatedDaySegment.update(conn);
+			success(res, `Successfully updated day segment`);
+		} catch (err) {
+			log.error(`Error while updating day segment with error(s): ${err}`);
+			failure(res, 500, `Error while updating day segment with error(s): ${err}`);
+		}
+	}
+});
+
+/**
+ * Route for POST, delete day segment.
+ */
+router.post('/delete', adminAuthMiddleware('delete day segment'), async (req, res) => {
+	const validDaySegment = {
+		type: 'object',
+		maxProperties: 1,
+		required: ['id'],
+		properties: {
+			id: {
+				type: 'integer', 
+				minimum: 0
 			}
 		}
 	};
@@ -281,11 +258,11 @@ router.post('/delete', async (req, res) => {
 			// Don't worry about checking if the day segment already exists
 			// Just try to delete it to save the extra database call, since the database will return an error anyway if the row does not exist
 			await DaySegment.delete(req.body.id, conn);
+			success(res, 'Successfully deleted day segment');
 		} catch (err) {
 			log.error(`Error while deleting day segment with error(s): ${err}`);
 			failure(res, 500, `Error while deleting day segment with errors(s): ${err}`);
 		}
-		success(res, 'Successfully deleted day segment');
 	}
 });
 

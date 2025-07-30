@@ -8,12 +8,12 @@ const sqlFile = database.sqlFile;
 class Day {
     /**
      * @param {*} id This day patterns' id.
-     * @param {*} dayName This day pattern's name.
+     * @param {*} name This day pattern's name.
      * @param {*} note Comments by the admin.
      */
-    constructor(id, dayName, note) {
+    constructor(id, name, note) {
         this.id = id;
-        this.dayName = dayName;
+        this.name = name;
         this.note = note;
     }
 
@@ -37,17 +37,6 @@ class Day {
             row.day_name,
             row.note
         );
-    }
-
-    /**
-     * Delete the day associated with the id
-     * @param {*} id The day id.
-     * @param {*} conn The connection to use.
-     */
-    static async delete(id, conn) {
-        await conn.none(sqlFile('day/delete_day.sql'), {
-            id: id
-        });
     }
 
     /**
@@ -90,7 +79,7 @@ class Day {
         
         // insert new day
         const dayData = {
-            dayName: day.dayName,
+            name: day.name,
             note: day.note
         };
 
@@ -121,6 +110,17 @@ class Day {
             throw new Error('Attempted to update a day with no ID');
         }
         await conn.none(sqlFile('day/update_day_pattern.sql'), day);
+    }
+
+    /**
+     * Delete the day associated with the id
+     * @param {*} id The day id.
+     * @param {*} conn The connection to use.
+     */
+    static async delete(id, conn) {
+        await conn.none(sqlFile('day/delete_day.sql'), {
+            id: id
+        });
     }
 }
 

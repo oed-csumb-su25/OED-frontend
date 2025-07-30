@@ -4,10 +4,10 @@
 -- Does not return a value
 
 UPDATE day_segments
-    SET day_id = ${dayId},
-        start_hour = ${startHour},
-        end_hour = ${endHour},
-        slope = ${slope},
-        intercept = ${intercept},
-        note = ${note}
-    WHERE id = ${id};
+	SET day_id = ${dayId},
+		start_hour = ${startHour},
+		end_hour = ${endHour},
+		slope = ${slope},
+		intercept = ${intercept},
+		note = ${note}
+	WHERE id = ${id};
