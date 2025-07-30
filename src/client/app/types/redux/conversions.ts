@@ -19,14 +19,3 @@ export interface ConversionsState {
 	submitting: ConversionData[];
 	conversions: ConversionData[];
 }
-
-export interface ConversionSegmentData {
-	sourceId: number;
-	destinationId: number;
-	startTime: string;
-	endTime: string;
-	slope: number;
-	intercept: number;
-	weekPatternsId: number | null;
-	note: string;
-}
