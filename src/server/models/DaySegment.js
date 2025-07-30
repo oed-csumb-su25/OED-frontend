@@ -94,13 +94,13 @@ class DaySegment {
 	 */
 	async insert(conn) {
 		const daySegment = this;
-		if (daySegment.id !== undefined) {
-			throw new Error('Attempted to insert a day segment that already has an ID');
+		try {
+			const resp =  await conn.none(sqlFile('daySegment/insert_new_day_segment.sql'), daySegment);
+		} catch {
+			log.error(`Error while inserting day segment with error(s): ${err}`);
+			failure(res, 500, `Error while inserting day segment with error(s): ${err}`);
 		}
-
-		const resp =  await conn.none(sqlFile('daySegment/insert_new_day_segment.sql'), daySegment);
 	}
-
 	//  Commenting out to potentially use at a later time
 	//  /**
 	//  * Inserts a new day segment. Rebuilds surrounding segments to ensure full 00:00 - 24:00 coverage.
@@ -177,10 +177,12 @@ class DaySegment {
 	 */
 	async update(conn) {
 		const daySegment = this;
-		if (daySegment.id === undefined) {
-			throw new Error('Attempted to update a daySegment with no ID');
+		try {
+			await conn.none(sqlFile('daySegment/update_day_segment.sql'), daySegment);
+		} catch {
+			log.error(`Error while updating day segment with error(s): ${err}`);
+			failure(res, 500, `Error while updating day segment with error(s): ${err}`);
 		}
-		await conn.none(sqlFile('daySegment/update_day_segment.sql'), daySegment);
 	}
 
 	/**

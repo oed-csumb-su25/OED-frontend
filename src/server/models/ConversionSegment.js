@@ -103,11 +103,12 @@ class ConversionSegment {
 	async insert(conn) {
 		const conversionSegment = this;
 
-		if (conversionSegment.id !== undefined) {
-			throw new Error(`Attempted to insert a conversion segment that already has an ID ${conversionSegment.id}`);
+		try {
+			await conn.none(sqlFile('conversionSegment/insert_new_conversion_segment.sql'), conversionSegment);
+		} catch {
+			log.error(`Error while inserting conversion segment with error(s): ${err}`);
+			failure(res, 500, `Error while inserting conversion segment with error(s): ${err}`);
 		}
-		
-		await conn.none(sqlFile('conversionSegment/insert_new_conversion_segment.sql'), conversionSegment);
 	}
 
 	/**

@@ -90,12 +90,13 @@ class Week {
 	 */
 	async insert(conn) {
 		const week = this;
-		if (week.id !== undefined) {
-			throw new Error('Attempted to insert a week that already has an ID');
+		try {
+			const resp = await conn.one(sqlFile('week/insert_new_week_pattern.sql'), week);
+			this.id = resp.id;
+		} catch {
+			log.error(`Error while inserting week with error(s): ${err}`);
+			failure(res, 500, `Error while inserting week with error(s): ${err}`);
 		}
-		
-		const resp = await conn.one(sqlFile('week/insert_new_week_pattern.sql'), week);
-		this.id = resp.id;
 	}
 
 	/**
@@ -105,10 +106,12 @@ class Week {
 	 */
 	async update(conn) {
 		const week = this;
-		if (week.id === undefined) {
-			throw new Error('Attempted to update a week with no ID');
+		try {
+			await conn.none(sqlFile('week/update_week_pattern.sql'), week);
+		} catch {
+			log.error(`Error while updating week with error(s): ${err}`);
+			failure(res, 500, `Error while updating week with error(s): ${err}`);
 		}
-		await conn.none(sqlFile('week/update_week_pattern.sql'), week);
 	}
 
 	/**
