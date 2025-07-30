@@ -51,7 +51,7 @@ export default function EditWeekModalComponent(props: EditWeekModalComponentProp
 		if (!days) {
 			return [];
 		}
-		return [...days].sort((a, b) => a.dayName.toLocaleLowerCase().localeCompare(b.dayName.toLocaleLowerCase()));
+		return [...days].sort((a, b) => a.name.toLocaleLowerCase().localeCompare(b.name.toLocaleLowerCase()));
 	}, [days]);
 
 	// Fetch weeks data (used to check if week name already exists)
@@ -193,7 +193,7 @@ export default function EditWeekModalComponent(props: EditWeekModalComponentProp
 													>
 														{sortedDays?.map(day => (
 															<option key={day.id} value={day.id} title={day.note}>
-																{day.dayName}
+																{day.name}
 															</option>
 														))}
 													</Input>

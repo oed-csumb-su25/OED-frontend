@@ -18,7 +18,7 @@ class DaySegment {
 	constructor(id, dayId, startHour, endHour, slope, intercept, note) {
 		this.id = id;
 		this.dayId = dayId;
-		this.startHour = startHour; 
+		this.startHour = startHour;
 		this.endHour = endHour;
 		this.slope = slope;
 		this.intercept = intercept;
@@ -60,7 +60,7 @@ class DaySegment {
 		return rows.map(DaySegment.mapRow);
 	}
 
-	/** 
+	/**
 	 * Returns the day segment associated the id. If the day segment doesn't exist then return null.
 	 * @param {*} id The day segment id.
 	 * @param {*} conn The connection to use.
@@ -73,14 +73,14 @@ class DaySegment {
 		return row === null ? null : DaySegment.mapRow(row);
 	}
 
-	/** 
+	/**
 	 * Returns the day segments associated with the day id.
 	 * @param {*} dayId The day pattern id.
 	 * @param {*} conn The connection to use.
 	 * @returns {Promise.<DaySegment>}
 	 */
 	static async getByDayId(dayId, conn) {
-		const rows = await conn.any(sqlFile('daySegment/get_by_dayId.sql'), {
+		const rows = await conn.any(sqlFile('daySegment/get_by_day_id.sql'), {
 			dayId: dayId
 		});
 		return rows.map(DaySegment.mapRow)
@@ -88,7 +88,7 @@ class DaySegment {
 
 	/**
 	 * Returns a promise to insert the day segment.
-	 * 
+	 *
 	 * @param {*} conn The connection to be used
 	 * @returns {Promise.<void>}
 	 */
@@ -104,7 +104,7 @@ class DaySegment {
 	//  Commenting out to potentially use at a later time
 	//  /**
 	//  * Inserts a new day segment. Rebuilds surrounding segments to ensure full 00:00 - 24:00 coverage.
-	//  * 
+	//  *
 	//  * @param {*} day_pattern_id The day pattern id the segment belongs to.
 	//  * @param {*} startHour The start hour of the segment (inclusive).
 	//  * @param {*} endHour The end hour of the segment (exclusive).
@@ -144,7 +144,7 @@ class DaySegment {
 	// 					intercept: seg.intercept,
 	// 					note: seg.note
 	// 				});
-	// 			} 
+	// 			}
 	// 			// If the existing segment ends after the new segment, keep it's right portion
 	// 			if (seg.endHour > endHour) {
 	// 				await conn.none(insertSegment, {
@@ -169,7 +169,7 @@ class DaySegment {
 	//         note: note
 	//     });
 	// }
-	
+
 	/**
 	 * Returns a promise to update an existing daySegment in the database.
 	 * @param conn the connection to use.

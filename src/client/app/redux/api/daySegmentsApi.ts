@@ -1,7 +1,8 @@
 import { createSelector } from '@reduxjs/toolkit';
-import { baseApi } from './baseApi';
 import { DaySegment } from '../../types/redux/days'; // Adjust path as needed
+import { baseApi } from './baseApi';
 
+// TODO: fix tags and invalidation
 export const daySegmentsApi = baseApi.injectEndpoints({
 	endpoints: builder => ({
 		getDailyPatternSegments: builder.query<DaySegment[], void>({
@@ -13,7 +14,11 @@ export const daySegmentsApi = baseApi.injectEndpoints({
 			providesTags: (result, error, id) => [{ type: 'DailyPatternSegment', id }]
 		}),
 		getDailyPatternSegmentsByDayId: builder.query<DaySegment[], number>({
-			query: dayId => `api/daySegments/dayId/${dayId}`,
+			query: dayId => ({
+				url: 'api/daySegments/segments',
+				method: 'POST',
+				body: { dayId }
+			}),
 			providesTags: (result, error, dayId) => [{ type: 'DailyPatternSegment', dayId }]
 		}),
 		addDailyPatternSegment: builder.mutation<void, Omit<DaySegment, 'id'>>({
@@ -30,7 +35,7 @@ export const daySegmentsApi = baseApi.injectEndpoints({
 				method: 'POST',
 				body: daySegment
 			}),
-			invalidatesTags: (result, error, arg) => [{ type: 'DailyPatternSegment', id: arg.id }]
+			invalidatesTags: (result, error, arg) => [{ type: 'DailyPatternSegment', dayId: arg.dayId }]
 		}),
 		deleteDailyPatternSegment: builder.mutation<void, { id: number }>({
 			query: ({ id }) => ({

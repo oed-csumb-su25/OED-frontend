@@ -1,16 +1,15 @@
 // DayDetailComponent.tsx
 import * as React from 'react';
 import { FormattedMessage } from 'react-intl';
+import { daysApi, stableEmptyDays } from '../../redux/api/daysApi';
 import { useAppSelector } from '../../redux/reduxHooks';
 import { selectSelectedLanguage } from '../../redux/slices/appStateSlice';
 import { titleStyle, tooltipBaseStyle } from '../../styles/modalStyle';
-import { Day } from '../../types/redux/days';
 import SpinnerComponent from '../SpinnerComponent';
 import TooltipHelpComponent from '../TooltipHelpComponent';
 import TooltipMarkerComponent from '../TooltipMarkerComponent';
-import DayViewComponent from './DayViewComponent';
 import CreateDailyPatternModalComponent from './CreateDailyPatternModalComponent';
-import { daysApi, stableEmptyDays } from '../../redux/api/daysApi';
+import DayViewComponent from './DayViewComponent';
 
 /**
  * Defines the daily pattern info page
@@ -27,6 +26,11 @@ export default function DayDetailComponent() {
 		...tooltipBaseStyle,
 		tooltipDayView: 'help.admin.dailypatternview'
 	};
+
+	const sortedDays = React.useMemo(() => {
+		return Object.values(dayState)
+			.sort((a, b) => (a.name || '').toLowerCase().localeCompare((b.name || '').toLowerCase(), locale, { sensitivity: 'accent' }));
+	}, [dayState, locale]);
 
 	return (
 		<div className='flexGrowOne'>
@@ -51,8 +55,7 @@ export default function DayDetailComponent() {
 							<CreateDailyPatternModalComponent />
 						</div>
 						<div className="card-container">
-							{Object.values(dayState)
-								.sort((a, b) => (a.dayName || '').toLowerCase().localeCompare((b.dayName || '').toLowerCase(), locale, { sensitivity: 'accent' }))
+							{sortedDays
 								.map(day => (
 									<DayViewComponent key={day.id} day={day} />
 								))}

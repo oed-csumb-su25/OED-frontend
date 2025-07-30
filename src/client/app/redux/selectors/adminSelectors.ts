@@ -17,8 +17,8 @@ import { unitsCompatibleWithUnit } from '../../utils/determineCompatibleUnits';
 import { AreaUnitType } from '../../utils/getAreaUnitConversion';
 import { MAX_VAL, MIN_VAL, noUnitTranslated, potentialGraphicUnits } from '../../utils/input';
 import translate from '../../utils/translate';
-import { selectAllUnits, selectUnitDataById } from '../api/unitsApi';
 import { selectAllDays } from '../api/daysApi';
+import { selectAllUnits, selectUnitDataById } from '../api/unitsApi';
 import { selectVisibleMetersAndGroups } from './authVisibilitySelectors';
 import { createAppSelector } from './selectors';
 
@@ -350,7 +350,7 @@ export const selectDefaultCreateDailyPatternValues = createAppSelector(
 			dailyPatternNote: '',
 			slope: 0,
 			intercept: 0,
-			startHour:0,
+			startHour: 0,
 			endHour: 24,
 			initialPatternNote: ''
 		};
@@ -435,21 +435,21 @@ export const isValidCreateMeter = createAppSelector(
  * @returns A tuple where the first element is a boolean indicating validity, and the second is a message string.
  */
 export const selectIsValidCreateDailyPattern = createAppSelector(
-    [
-        selectAllDays,
-        (_state, dailyPattern: { dayName: string }) => dailyPattern
-    ],
-    (days, dailyPattern): [boolean, string] => {
-        if (!dailyPattern.dayName || dailyPattern.dayName.trim() === '') {
-            return [false, translate('daily.patterns.create.name.required')];
-        }
-        // Check if dayName already exists (case-insensitive)
-        const exists = days.some(day =>
-            day.dayName?.toLowerCase() === dailyPattern.dayName.trim().toLowerCase()
-        );
-        if (exists) {
-            return [false, translate('daily.patterns.create.name.exists')];
-        }
-        return [true, 'Daily Pattern is Valid'];
-    }
+	[
+		selectAllDays,
+		(_state, dailyPattern: { dayName: string }) => dailyPattern
+	],
+	(days, dailyPattern): [boolean, string] => {
+		if (!dailyPattern.dayName || dailyPattern.dayName.trim() === '') {
+			return [false, translate('daily.patterns.create.name.required')];
+		}
+		// Check if dayName already exists (case-insensitive)
+		const exists = days.some(day =>
+			day.name?.toLowerCase() === dailyPattern.dayName.trim().toLowerCase()
+		);
+		if (exists) {
+			return [false, translate('daily.patterns.create.name.exists')];
+		}
+		return [true, 'Daily Pattern is Valid'];
+	}
 );

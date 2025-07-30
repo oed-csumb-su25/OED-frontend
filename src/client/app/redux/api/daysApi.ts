@@ -27,6 +27,7 @@ export const daysApi = baseApi.injectEndpoints({
 				method: 'POST',
 				body: dailyPattern
 			}),
+			transformErrorResponse: res => res.data,
 			invalidatesTags: (result, error, arg) => [{ type: 'DailyPattern', id: arg.id }]
 		}),
 		deleteDailyPattern: builder.mutation<void, { id: number }>({

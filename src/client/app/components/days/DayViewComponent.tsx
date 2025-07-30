@@ -31,18 +31,15 @@ export default function DayViewComponent(props: DayViewComponentProps) {
 		setShowEditModal(true);
 	};
 
-	// const handleClose = () => {
-	// 	setShowEditModal(false);
-	// };
+	const handleClose = () => {
+		setShowEditModal(false);
+	};
 
 	// Create header from sourceId, destinationId identifiers
 	//const conversionIdentifier = String(unitDataById[props.conversion.sourceId]?.identifier + conversionArrow(props.conversion.bidirectional) +
 	//  unitDataById[props.conversion.destinationId]?.identifier);
-	const dayIdentifier = props.day.dayName || 'Unnamed Day';
+	const dayIdentifier = props.day.name || 'Unnamed Day';
 
-  function handleClose(): void {
-    throw new Error('Function not implemented.');
-  }
 
 	// Unlike the details component, we don't check if units are loaded since must come through that page.
 
@@ -60,11 +57,11 @@ export default function DayViewComponent(props: DayViewComponentProps) {
 					<FormattedMessage id="daily.patterns.edit" />
 				</Button>
 				{/* Creates a child DayModalEditComponent */}
-				 <EditDailyPatternModalComponent
+				<EditDailyPatternModalComponent
 					show={showEditModal}
-        day={props.day}
-        handleClose={handleClose} 
-        /> 
+					day={props.day}
+					handleClose={handleClose}
+				/>
 			</div>
 		</div>
 	);
