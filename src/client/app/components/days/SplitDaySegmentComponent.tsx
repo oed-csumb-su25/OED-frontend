@@ -10,37 +10,25 @@ import { DaySegment } from '../../types/redux/days';
 import { showErrorNotification } from '../../utils/notifications';
 import translate from '../../utils/translate';
 
-/**
- * Convert an integer [0, 24] to standard time value format to be used by the time input.
- * @see https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/input/time#time_value_format
- * @param hour The integer hour to convert
- * @returns a time string in the format "HH:mm"
- */
-// function hourToTimeFormat(hour: number) {
-// 	const clamped = Math.max(0, Math.min(24, hour));
-// 	const hh = clamped.toString().padStart(2, '0');
-// 	return `${hh}:00`;
-// }
-
-/**
- * Converts a time string in the format "HH:mm" to an integer hour.
- * @param timeStr The time string to convert (e.g., "09:00")
- * @returns The integer hour (e.g., 9)
- */
-// function timeFormatToHour(timeStr: string): number {
-// 	const [hh] = timeStr.split(':').map(Number);
-// 	// Only supports full hours (mm === 0)
-// 	return hh;
-// }
-
 interface SplitDaySegmentComponentProps {
+	/**
+	 * The direction to split the segment
+	 */
 	direction: 'earlier' | 'later';
+
+	/**
+	 * The day segment to split
+	 */
 	daySegment: DaySegment;
 }
 
+/**
+ * Defines a button that opens a modal to split a day segment into two segments.
+ * The split can be done earlier or later based on the direction prop.
+ * @param props The properties for the component
+ * @returns A button element
+ */
 export default function SplitDaySegmentComponent(props: SplitDaySegmentComponentProps): React.ReactElement {
-
-	// const [daySegment, setDaySegment] = React.useState({ ...props.daySegment });
 
 	const [splitHour, setSplitHour] = React.useState<number>(props.daySegment.startHour + 1);
 
