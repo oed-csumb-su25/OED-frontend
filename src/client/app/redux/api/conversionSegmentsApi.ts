@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import { baseApi } from './baseApi';
-import { ConversionSegmentData } from '../../types/redux/conversions';
+import { ConversionSegmentData } from '../../types/redux/conversionSegments';
 
 /**
  * This file defines the segmentsApi using RTK Query.
@@ -29,23 +29,34 @@ export const conversionSegmentsApi = baseApi.injectEndpoints({
 			transformResponse: (response: ConversionSegmentData[]) =>
 				Array.isArray(response) ? response : response ? [response] : []
 		}),
-		getConversionSegmentByKey: builder.query<ConversionSegmentData, { sourceId: number; destinationId: number; startTime: string }>({
-			query: ({ sourceId, destinationId, startTime }) => ({
+		getConversionSegmentByKey: builder.query<ConversionSegmentData, { sourceId: number; destinationId: number; startTime: string; endTime: string }>({
+			query: ({ sourceId, destinationId, startTime, endTime }) => ({
 				url: '/api/conversionSegments/segment',
 				method: 'POST',
-				body: { sourceId, destinationId, startTime }
+				body: { sourceId, destinationId, startTime, endTime }
 			}),
-			providesTags: (result, error, segment) => [{ type: 'ConversionSegments', id: `${segment.sourceId}-${segment.destinationId}-${segment.startTime}` }]
+			providesTags: (result, error, segment) => [{
+				type: 'ConversionSegments',
+				id: `${segment.sourceId}-${segment.destinationId}-${segment.startTime}-${segment.endTime}`
+			}]
 		}),
-		editConversionSegment: builder.mutation<void, ConversionSegmentData>({
-			query: segment => ({
+		editConversionSegment: builder.mutation<void, {
+			segment: ConversionSegmentData;
+			originalStartTime: string;
+			originalEndTime: string;
+		}>({
+			query: ({ segment, originalStartTime, originalEndTime }) => ({
 				url: '/api/conversionSegments/edit',
 				method: 'POST',
-				body: segment
+				body: {
+					...segment,
+					originalStartTime,
+					originalEndTime
+				}
 			}),
-			invalidatesTags: (result, error, segment) => [
+			invalidatesTags: (result, error, { segment, originalStartTime }) => [
 				{ type: 'ConversionSegments', id: `${segment.sourceId}-${segment.destinationId}` },
-				{ type: 'ConversionSegments', id: `${segment.sourceId}-${segment.destinationId}-${segment.startTime}` }
+				{ type: 'ConversionSegments', id: `${segment.sourceId}-${segment.destinationId}-${originalStartTime}` }
 			]
 		}),
 		addConversionSegment: builder.mutation<void, ConversionSegmentData>({
