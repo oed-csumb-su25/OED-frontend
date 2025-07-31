@@ -4,6 +4,7 @@
 
 const database = require('./database');
 const sqlFile = database.sqlFile;
+const { log } = require('../log');
 
 class ConversionSegment {
 	/**
@@ -115,14 +116,53 @@ class ConversionSegment {
 	 * Updates an existed conversion segment in the database.
 	 * @param {*} conn The connection to use.
 	 */
-	async update(originalStartTime, originalEndTime, conn) {
+	async update(originalStartTime, originalEndTime, conn, res) {
 		const conversionSegment = {
 			...this,
 			originalStartTime,
 			originalEndTime
 		};
-		await conn.none(sqlFile('conversionSegment/update_conversion_segment.sql'), conversionSegment);
-	}
+
+		// check that -infinity and infinity aren't being updated
+		if ((this.startTime !== originalStartTime && originalStartTime === '-infinity') || (this.endTime !== originalEndTime && originalEndTime === 'infinity')) {
+			log.error(`Cannot update starting time of -infinity or ending time of infinity`);
+			failure(res, 500, `Cannot update staring time of -infinity or ending time of infinity`);
+			return;
+		}
+
+		// Check and update previous segment's end time to updated start time
+		if (this.startTime !== originalStartTime) {
+			try {
+				await conn.none(sqlFile('conversionSegment/update_prev_seg_end_to_new_start.sql'), conversionSegment);
+			} catch(err) {
+				log.error(`Error while updating conversion segment with error(s): ${err}`);
+				failure(res, 500, `Error while updating prior conversion segment end time with error(s): ${err}`);
+				throw new Error(`Cannot update segment starting at -infinity`);
+				return;
+			}
+		}
+
+		// Check and update next segment's start time to updated end time
+		if (this.endTime !== originalEndTime) {
+			try {
+				await conn.none(sqlFile('conversionSegment/update_next_seg_start_to_new_end.sql'), conversionSegment);
+			} catch(err) {
+				log.error(`Error while updating startTime of next conversion segment with error(s): ${err}`);
+				failure(res, 500, `Error while updating startTime of next conversion segment with error(s): ${err}`);
+				throw new Error(`Error while updating updating startTime of next segment`);
+				return;
+			}
+		}
+
+		// Update the current segment
+		try {
+			await conn.none(sqlFile('conversionSegment/update_conversion_segment.sql'), conversionSegment);
+		} catch(err) {
+			log.error(`Error while updating current conversion segment with error(s): ${err}`);
+			failure(res, 500, `Error while updating current conversion segment with error(s): ${err}`);
+			throw new Error(`Error while updating current conversion segment`);
+		}
+}
 
 	/**
 	 * Deletes the conversion associated with source, destination, and startTime from the database.

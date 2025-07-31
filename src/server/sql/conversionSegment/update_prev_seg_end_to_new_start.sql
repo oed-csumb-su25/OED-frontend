@@ -2,6 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
  
-SELECT * 
-FROM day_segments
-WHERE day_id = ${dayId} AND start_hour < ${endHour} AND end_hour > ${startHour};
+UPDATE conversion_segments
+	SET end_time = ${startTime}
+	WHERE source_id = ${sourceId} AND destination_id = ${destinationId} AND end_time::TEXT = ${originalStartTime};

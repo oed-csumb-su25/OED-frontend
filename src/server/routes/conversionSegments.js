@@ -273,21 +273,25 @@ router.post('/edit', adminAuthMiddleware('edit conversion segment'), async (req,
 	} else {
 		const conn = getConnection();
 		try {
-			const updatedConversionSegment = new ConversionSegment(
-				req.body.sourceId, 
-				req.body.destinationId, 
-				req.body.weekPatternsId, 
-				req.body.slope, 
-				req.body.intercept, 
-				req.body.startTime, 	
-				req.body.endTime, 
-				req.body.note
-			);
-			await updatedConversionSegment.update(
-				req.body.originalStartTime, 
-				req.body.originalEndTime, 
-				conn
-			);
+			await conn.tx(async t => {
+				const updatedConversionSegment = new ConversionSegment(
+					req.body.sourceId, 
+					req.body.destinationId, 
+					req.body.weekPatternsId, 
+					req.body.slope, 
+					req.body.intercept, 
+					req.body.startTime, 	
+					req.body.endTime, 
+					req.body.note
+				);
+				await updatedConversionSegment.update(
+					req.body.originalStartTime, 
+					req.body.originalEndTime, 
+					t,
+					res
+				);
+			});
+
 			success(res, `Successfully updated Conversion segment`);
 		} catch (err) {
 			log.error(`Error while editing conversion segment with error(s): ${err}`);

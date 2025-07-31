@@ -170,8 +170,8 @@ router.post('/add', adminAuthMiddleware('add day segment'), async (req, res) => 
 router.post('/edit', adminAuthMiddleware('edit day segment'), async (req, res) => {
 	const validDaySegment = {
 		type: 'object',
-		maxProperties: 7,
-		required: ['id', 'dayId', 'startHour', 'endHour', 'slope', 'intercept'],
+		maxProperties: 9,
+		required: ['id', 'dayId', 'startHour', 'endHour', 'slope', 'intercept', 'originalStartHour', 'originalEndHour'],
 		properties: {
 			id: {
 				type: 'integer', 
@@ -202,6 +202,16 @@ router.post('/edit', adminAuthMiddleware('edit day segment'), async (req, res) =
 					{ type: 'string' },
 					{ type: 'null' }
 				]
+			},
+			originalStartHour: {
+				type: 'number',
+				minimum: 0,
+				maximum: 23
+			},
+			originalEndHour: {
+				type: 'number',
+				minimum: 1,
+				maximum: 24		
 			}
 		}
 	};
@@ -213,16 +223,24 @@ router.post('/edit', adminAuthMiddleware('edit day segment'), async (req, res) =
 	} else {
 		const conn = getConnection();
 		try {
-			const updatedDaySegment = new DaySegment(
-				req.body.id, 
-				req.body.dayId,
-				req.body.startHour,
-				req.body.endHour,
-				req.body.slope,
-				req.body.intercept, 
-				req.body.note
-			);
-			await updatedDaySegment.update(conn);
+			await conn.tx(async t => {
+				const updatedDaySegment = new DaySegment(
+					req.body.id, 
+					req.body.dayId,
+					req.body.startHour,
+					req.body.endHour,
+					req.body.slope,
+					req.body.intercept, 
+					req.body.note
+				);
+				await updatedDaySegment.update(
+					req.body.originalStartHour,
+					req.body.originalEndHour,
+					t,
+					res
+				);
+			});
+
 			success(res, `Successfully updated day segment`);
 		} catch (err) {
 			log.error(`Error while updating day segment with error(s): ${err}`);
