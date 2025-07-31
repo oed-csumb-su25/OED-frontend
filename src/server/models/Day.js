@@ -34,7 +34,7 @@ class Day {
     static mapRow(row) {
         return new Day(
             row.id,
-            row.day_name,
+            row.name,
             row.note
         );
     }

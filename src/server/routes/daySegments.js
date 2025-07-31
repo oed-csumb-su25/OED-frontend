@@ -52,6 +52,9 @@ router.get('/:id', adminAuthMiddleware('get day segment by id'), async(req, res)
 			}
 		}
 	};
+
+	req.params.id = parseInt(req.params.id);
+	
 	if (!validate(req.params, validParams).valid) {
 		return res.status(400).json({error: 'Invalid id'});
 	} else {

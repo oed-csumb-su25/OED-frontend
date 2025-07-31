@@ -41,6 +41,37 @@ router.get('/', adminAuthMiddleware('get all weeks'), async (req, res) => {
 });
 
 /**
+ * Route for getting a week by id
+ */
+router.get('/:id', adminAuthMiddleware('get week by id'), async(req, res) => {
+	const validParams = {
+		type: 'object',
+		maxProperties: 1,
+		required: ['id'],
+		properties: {
+			id: {
+				type: 'integer', 
+				minimum: 0
+			}
+		}
+	};
+
+	req.params.id = parseInt(req.params.id);
+	
+	if (!validate(req.params, validParams).valid) {
+		return res.status(400).json({error: 'Invalid id'});
+	} else {
+		const conn = getConnection();
+		try {
+			const rows = await Week.getById(req.params.id, conn);
+			res.json(rows);
+		} catch (err) {
+			log.error(`Error while performing GET week by id: ${err}`);
+		}
+	}
+});
+
+/**
  * Route for POST add week.
  */
 router.post('/add', adminAuthMiddleware('add week'), async (req, res) => {
