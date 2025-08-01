@@ -4,7 +4,6 @@
 
 const database = require('./database');
 const sqlFile = database.sqlFile;
-const { failure } = require('./response');
 
 class DaySegment {
 	/**

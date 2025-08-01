@@ -23,5 +23,4 @@ INSERT INTO week_patterns (
 	${thursday}, 
 	${friday}, 
 	${saturday}
-)
-RETURNING id;
+);

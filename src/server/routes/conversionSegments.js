@@ -10,6 +10,7 @@ const { success, failure } = require('./response');
 const validate = require('jsonschema').validate;
 const { adminAuthMiddleware } = require('./authenticator');
 const moment = require('moment');
+const { format } = require('path');
 
 const router = express.Router();
 
@@ -124,8 +125,8 @@ router.post('/sourceDestinationStartEnd', adminAuthMiddleware('get conversion se
 			const row = await ConversionSegment.getBySourceDestinationStartEnd(
 				req.body.sourceId, 
 				req.body.destinationId, 
-				moment(req.body.startTime), 
-				moment(req.body.endTime),
+				formatTimestampValue(req.body.startTime),
+				formatTimestampValue(req.body.endTime),
 				conn
 			);
 			res.json(formatConversionSegmentForResponse(row));
@@ -204,8 +205,8 @@ router.post('/add', adminAuthMiddleware('add conversion segment'), async (req, r
 					req.body.weekPatternsId, 
 					req.body.slope, 
 					req.body.intercept, 
-					moment(req.body.startTime), 
-					moment(req.body.endTime), 
+					formatTimestampValue(req.body.startTime),
+					formatTimestampValue(req.body.endTime),
 					req.body.note
 				);
 				await newConversionSegment.insert(t);
@@ -300,13 +301,13 @@ router.post('/edit', adminAuthMiddleware('edit conversion segment'), async (req,
 					req.body.weekPatternsId, 
 					req.body.slope, 
 					req.body.intercept, 
-					moment(req.body.startTime), 	
-					moment(req.body.endTime), 
+					formatTimestampValue(req.body.startTime),
+					formatTimestampValue(req.body.endTime),
 					req.body.note
 				);
 				await updatedConversionSegment.update(
-					moment(req.body.originalStartTime),
-					moment(req.body.originalEndTime), 
+					formatTimestampValue(req.body.originalStartTime),
+					formatTimestampValue(req.body.originalEndTime),
 					t
 				);
 			});
@@ -363,8 +364,8 @@ router.post('/delete', adminAuthMiddleware('delete conversion segment'), async (
 			await ConversionSegment.delete(
 				req.body.sourceId, 
 				req.body.destinationId, 
-				moment(req.body.startTime),
-				moment(req.body.endTime),
+				formatTimestampValue(req.body.startTime),
+				formatTimestampValue(req.body.endTime),
 				conn
 			);
 			success(res, 'Successfully deleted conversion segment');
@@ -375,5 +376,13 @@ router.post('/delete', adminAuthMiddleware('delete conversion segment'), async (
 		}
 	}
 });
+
+function formatTimestampValue(value) {
+	if (value === 'infinity' || value === '-infinity') {
+		return value;
+	} 
+
+	return moment(value).toISOString();
+}
 
 module.exports = router;

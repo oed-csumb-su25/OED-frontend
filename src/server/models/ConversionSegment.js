@@ -5,9 +5,7 @@
 const database = require('./database');
 const sqlFile = database.sqlFile;
 const { log } = require('../log');
-const { failure } = require('./response');
 const moment = require('moment');
-const { start } = require('repl');
 
 class ConversionSegment {
 	/**
@@ -26,8 +24,8 @@ class ConversionSegment {
 		this.weekPatternsId = weekPatternsId;
 		this.slope = slope;
 		this.intercept = intercept;
-		this.startTime = moment(startTime);
-		this.endTime = moment(endTime);
+		this.startTime = formatTimestampValue(startTime);
+		this.endTime = formatTimestampValue(endTime);
 		this.note = note;
 	}
 
@@ -92,6 +90,9 @@ class ConversionSegment {
 	 * @param {*} conn The connection to use.
 	 * @returns {Promise.<ConversionSegment>}
 	 */
+
+
+
 	static async getBySourceDestinationStartEnd(sourceId, destinationId, startTime, endTime, conn) {
 		const row = await conn.one(sqlFile('conversionSegment/get_by_source_destination_start_end.sql'), {
 			sourceId: sourceId,
@@ -123,12 +124,11 @@ class ConversionSegment {
 			originalStartTime,
 			originalEndTime
 		};
-
-		const startChanged = !moment(this.startTime).isSame(originalStartTime);
-		const endChanged = !moment(this.endTime).isSame(originalEndTime);
+		const startChanged = this.startTime !== originalStartTime
+		const endChanged = this.endTime !== originalEndTime;
 
 		// check that -infinity and infinity aren't being updated
-		if ((startChanged && (originalStartTime.isSame(moment('-infinity')))) || endChanged && (originalEndTime.isSame(moment('infinity')))) {
+		if ((startChanged && (originalStartTime === '-infinity')) || endChanged && (originalEndTime === 'infinity')) {
 			const errMsg = `Cannot update starting time of -infinity or ending time of infinity`;
 			log.error(errMsg);
 			throw new Error(errMsg);
@@ -164,6 +164,16 @@ class ConversionSegment {
 			endTime: endTime
 		});
 	}
+
+
+}
+
+function formatTimestampValue(value) {
+	if (value === 'infinity' || value === '-infinity') {
+		return value;
+	} 
+
+	return moment(value).toISOString();
 }
 
 module.exports = ConversionSegment;
