@@ -28,7 +28,7 @@ function formatWeekForResponse(item) {
 }
 
 /**
- * Route for getting all weeks.
+ * GET all weeks.
  */
 router.get('/', adminAuthMiddleware('get all weeks'), async (req, res) => {
 	const conn = getConnection();
@@ -41,7 +41,47 @@ router.get('/', adminAuthMiddleware('get all weeks'), async (req, res) => {
 });
 
 /**
- * Route for POST add week.
+ * GET week by id
+ */
+router.get('/:id', adminAuthMiddleware('get week by id'), async(req, res) => {
+	const validParams = {
+		type: 'object',
+		maxProperties: 1,
+		required: ['id'],
+		properties: {
+			id: {
+				type: 'integer', 
+				minimum: 0
+			}
+		}
+	};
+
+	req.params.id = parseInt(req.params.id);
+	
+	if (!validate(req.params, validParams).valid) {
+		return res.status(400).json({error: 'Invalid id'});
+	} else {
+		const conn = getConnection();
+		try {
+			const rows = await Week.getById(req.params.id, conn);
+			res.json(rows);
+		} catch (err) {
+			log.error(`Error while performing GET week by id: ${err}`);
+		}
+	}
+});
+
+/**
+ * POST add week.
+ * @param {string} weekName
+ * @param {string} note
+ * @param {number} sunday
+ * @param {number} monday
+ * @param {number} tuesday
+ * @param {number} wednesday
+ * @param {number} thursday
+ * @param {number} friday
+ * @param {number} saturday
  */
 router.post('/add', adminAuthMiddleware('add week'), async (req, res) => {
 	const validWeek= {
@@ -113,7 +153,17 @@ router.post('/add', adminAuthMiddleware('add week'), async (req, res) => {
 });
 
 /**
- * Route for POST, edit week.
+ * POST edit week.
+ * @param {integer} id
+ * @param {string} weekName
+ * @param {string} note
+ * @param {number} sunday
+ * @param {number} monday
+ * @param {number} tuesday
+ * @param {number} wednesday
+ * @param {number} thursday
+ * @param {number} friday
+ * @param {number} saturday
  */
 router.post('/edit', adminAuthMiddleware('edit week'), async (req, res) => {
 	const validWeek = {
@@ -187,7 +237,8 @@ router.post('/edit', adminAuthMiddleware('edit week'), async (req, res) => {
 });
 
 /**
- * Route for POST, delete week.
+ * POST delete week.
+ * @param {integer} id
  */
 router.post('/delete', adminAuthMiddleware('delete week'), async (req, res) => {
 	const validWeek = {

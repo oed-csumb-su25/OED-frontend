@@ -61,7 +61,8 @@ class DaySegment {
 	}
 
 	/** 
-	 * Returns the day segment associated the id. If the day segment doesn't exist then return null.
+	 * Returns the day segment associated the id. 
+	 * If the day segment doesn't exist then return null.
 	 * @param {*} id The day segment id.
 	 * @param {*} conn The connection to use.
 	 * @returns {Promise.<DaySegment>}
@@ -74,7 +75,7 @@ class DaySegment {
 	}
 
 	/** 
-	 * Returns the day segments associated with the day id.
+	 * Returns all day segments associated with the day id.
 	 * @param {*} dayId The day pattern id.
 	 * @param {*} conn The connection to use.
 	 * @returns {Promise.<DaySegment>}
@@ -88,99 +89,69 @@ class DaySegment {
 
 	/**
 	 * Returns a promise to insert the day segment.
-	 * 
 	 * @param {*} conn The connection to be used
 	 * @returns {Promise.<void>}
 	 */
 	async insert(conn) {
 		const daySegment = this;
-		if (daySegment.id !== undefined) {
-			throw new Error('Attempted to insert a day segment that already has an ID');
+		try {
+			const resp =  await conn.none(sqlFile('daySegment/insert_new_day_segment.sql'), daySegment);
+		} catch(err) {
+			log.error(`Error while inserting day segment with error(s): ${err}`);
+			failure(res, 500, `Error while inserting day segment with error(s): ${err}`);
 		}
-
-		const resp =  await conn.none(sqlFile('daySegment/insert_new_day_segment.sql'), daySegment);
 	}
-
-	//  Commenting out to potentially use at a later time
-	//  /**
-	//  * Inserts a new day segment. Rebuilds surrounding segments to ensure full 00:00 - 24:00 coverage.
-	//  * 
-	//  * @param {*} day_pattern_id The day pattern id the segment belongs to.
-	//  * @param {*} startHour The start hour of the segment (inclusive).
-	//  * @param {*} endHour The end hour of the segment (exclusive).
-	//  * @param {*} slope The conversion slope.
-	//  * @param {*} intercept The conversion intercept.
-	//  * @param {*} note Optional admin note.
-	//  * @param conn The database connection to use.
-	//  */
-	//  static async insert(day_pattern_id, startHour, endHour, slope, intercept, note, conn) {
-	//     const getOverlapping = sqlFile('daySegment/get_overlapping_segments.sql');
-	//     const deleteOverlapping = sqlFile('daySegment/delete_overlapping_segments.sql');
-	//     const insertSegment = sqlFile('daySegment/insert_new_day_segment.sql');
-
-	//     // Check for overlapping segments
-	//     const overlapping = await conn.any(getOverlapping, {
-	//         dayId: day_pattern_id,
-	//         startHour: startHour,
-	//         endHour: endHour
-	//     });
-	// 	if (overlapping.length > 0) {
-	// 		// Delete overlapping segments
-	// 		await conn.none(deleteOverlapping, {
-	// 			dayId: day_pattern_id,
-	// 			startHour: startHour,
-	// 			endHour: endHour
-	// 		});
-
-	// 		// Reinsert trimmed segments
-	// 		for (const seg of overlapping) {
-	// 			// If the existing segment starts before the new segment, keep it's left portion
-	// 			if (seg.startHour < startHour) {
-	// 				await conn.none(insertSegment, {
-	// 					day_pattern_id: seg.day_pattern_id,
-	// 					startHour: seg.startHour,
-	// 					endHour: startHour,
-	// 					slope: seg.slope,
-	// 					intercept: seg.intercept,
-	// 					note: seg.note
-	// 				});
-	// 			} 
-	// 			// If the existing segment ends after the new segment, keep it's right portion
-	// 			if (seg.endHour > endHour) {
-	// 				await conn.none(insertSegment, {
-	// 					day_pattern_id: seg.day_pattern_id,
-	// 					startHour: endHour,
-	// 					endHour: seg.endHour,
-	// 					slope: seg.slope,
-	// 					intercept: seg.intercept,
-	// 					note: seg.note
-	// 				});
-	// 			}
-	// 		}
-	// 	}
-
-	//     // insert the new segment
-	//     await conn.none(insertSegment, {
-	//         day_pattern_id: day_pattern_id,
-	//         startHour: startHour,
-	//         endHour: endHour,
-	//         slope: slope,
-	//         intercept: intercept,
-	//         note: note
-	//     });
-	// }
 	
 	/**
-	 * Returns a promise to update an existing daySegment in the database.
-	 * @param conn the connection to use.
+	 * Returns a promise to update a daySegment in the database.
+	 * @param {*} originalStartHour The original start hour of the segment being updated
+	 * @param {*} originalEndHour The original end hour of the segment being updated
+	 * @param {*} conn the connection to use.
 	 * @returns {Promise.<>}
 	 */
-	async update(conn) {
-		const daySegment = this;
-		if (daySegment.id === undefined) {
-			throw new Error('Attempted to update a daySegment with no ID');
+	async update(originalStartHour, originalEndHour, conn, res) {
+		const daySegment = {
+			...this,
+			originalStartHour,
+			originalEndHour
+		};
+
+		// check that 0 and 24 aren't being updated
+		if ((this.startHour !== originalStartHour && originalStartHour === 0) || (this.endHour !== originalEndHour && originalEndHour === 24)) {
+			log.error(`Cannot update starting hour of 0 or ending hour of 24`);
+			failure(res, 500, `Cannot update staring hour of 0 or ending hour of 24`);
+			return;
 		}
-		await conn.none(sqlFile('daySegment/update_day_segment.sql'), daySegment);
+
+		// Check and update previous segment's end time to updated start time
+		if (this.startHour !== originalStartHour) {
+			try {
+				await conn.none(sqlFile('daySegment/update_prev_seg_end_to_new_start.sql'), daySegment);
+			} catch(err) {
+				log.error(`Error while updating previous segment with error(s): ${err}`);
+				failure(res, 500, `Error while updating previous segment with error(s): ${err}`);
+				return;
+			}
+		}
+
+		// Check and update next segment's start time to updated end time
+		if (this.endHour !== originalEndHour) {
+			try {
+				await conn.none(sqlFile('daySegment/update_next_seg_start_to_new_end.sql'), daySegment);
+			} catch(err) {
+				log.error(`Error while updating the next segments start time with error(s) ${err}`);
+				failure(res, 500, `Error while updating the next segments start time with error(s) ${err}`);
+				return;
+			}
+		}
+
+		// update the current segment
+		try {
+			await conn.none(sqlFile('daySegment/update_day_segment.sql'), daySegment);
+		} catch(err) {
+			log.error(`Error while updating day segment with error(s): ${err}`);
+			failure(res, 500, `Error while updating day segment with error(s): ${err}`);
+		}
 	}
 
 	/**

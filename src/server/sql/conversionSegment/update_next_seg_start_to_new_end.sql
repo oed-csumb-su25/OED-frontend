@@ -2,5 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
  
-DELETE FROM day_segments
-WHERE day_id = ${dayId} AND start_hour < ${endHour} AND end_hour > ${startHour};
+UPDATE conversion_segments
+	SET start_time = ${endTime}
+	WHERE source_id = ${sourceId} AND destination_id = ${destinationId} AND start_time::TEXT = ${originalEndTime};

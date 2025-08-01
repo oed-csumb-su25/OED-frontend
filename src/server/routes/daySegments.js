@@ -25,7 +25,7 @@ function formatDaySegmentForResponse(item) {
 }
 
 /**
- * Route for getting all day segments.
+ * GET all day segments.
  */
 router.get('/', adminAuthMiddleware('get all day segments'), async (req, res) => {
 	const conn = getConnection();
@@ -38,7 +38,7 @@ router.get('/', adminAuthMiddleware('get all day segments'), async (req, res) =>
 });
 
 /**
- * Route for getting a day segment by id
+ * GET day segment by id
  */
 router.get('/:id', adminAuthMiddleware('get day segment by id'), async(req, res) => {
 	const validParams = {
@@ -52,6 +52,9 @@ router.get('/:id', adminAuthMiddleware('get day segment by id'), async(req, res)
 			}
 		}
 	};
+
+	req.params.id = parseInt(req.params.id);
+	
 	if (!validate(req.params, validParams).valid) {
 		return res.status(400).json({error: 'Invalid id'});
 	} else {
@@ -66,7 +69,8 @@ router.get('/:id', adminAuthMiddleware('get day segment by id'), async(req, res)
 });
 
 /**
- * Route for getting all day segments with the same day id
+ * POST get all day segments by dayId
+ * @param {integer} dayId
  */
 router.post('/segments', adminAuthMiddleware('get day segments by day id'), async(req, res) => {
 	const validDaySegment = {
@@ -94,7 +98,13 @@ router.post('/segments', adminAuthMiddleware('get day segments by day id'), asyn
 });
 
 /**
- * Route for POST add day segment.
+ * POST add day segment.
+ * @param {integer} dayId
+ * @param {number} startHour
+ * @param {number} endHour
+ * @param {number} slope
+ * @param {number} intercept
+ * @param {string} note
  */
 router.post('/add', adminAuthMiddleware('add day segment'), async (req, res) => {
 	const validDaySegment = {
@@ -165,13 +175,22 @@ router.post('/add', adminAuthMiddleware('add day segment'), async (req, res) => 
 });
 
 /**
- * Route for POST, edit day segment.
+ * POST edit day segment.
+ * @param {integer} id
+ * @param {integer} dayId
+ * @param {number} startHour
+ * @param {number} endHour
+ * @param {number} slope
+ * @param {number} intercept
+ * @param {string} note
+ * @param {number} originalStartHour
+ * @param {number} originalEndHour
  */
 router.post('/edit', adminAuthMiddleware('edit day segment'), async (req, res) => {
 	const validDaySegment = {
 		type: 'object',
-		maxProperties: 7,
-		required: ['id', 'dayId', 'startHour', 'endHour', 'slope', 'intercept'],
+		maxProperties: 9,
+		required: ['id', 'dayId', 'startHour', 'endHour', 'slope', 'intercept', 'originalStartHour', 'originalEndHour'],
 		properties: {
 			id: {
 				type: 'integer', 
@@ -202,6 +221,16 @@ router.post('/edit', adminAuthMiddleware('edit day segment'), async (req, res) =
 					{ type: 'string' },
 					{ type: 'null' }
 				]
+			},
+			originalStartHour: {
+				type: 'number',
+				minimum: 0,
+				maximum: 23
+			},
+			originalEndHour: {
+				type: 'number',
+				minimum: 1,
+				maximum: 24		
 			}
 		}
 	};
@@ -213,16 +242,24 @@ router.post('/edit', adminAuthMiddleware('edit day segment'), async (req, res) =
 	} else {
 		const conn = getConnection();
 		try {
-			const updatedDaySegment = new DaySegment(
-				req.body.id, 
-				req.body.dayId,
-				req.body.startHour,
-				req.body.endHour,
-				req.body.slope,
-				req.body.intercept, 
-				req.body.note
-			);
-			await updatedDaySegment.update(conn);
+			await conn.tx(async t => {
+				const updatedDaySegment = new DaySegment(
+					req.body.id, 
+					req.body.dayId,
+					req.body.startHour,
+					req.body.endHour,
+					req.body.slope,
+					req.body.intercept, 
+					req.body.note
+				);
+				await updatedDaySegment.update(
+					req.body.originalStartHour,
+					req.body.originalEndHour,
+					t,
+					res
+				);
+			});
+
 			success(res, `Successfully updated day segment`);
 		} catch (err) {
 			log.error(`Error while updating day segment with error(s): ${err}`);
@@ -232,7 +269,8 @@ router.post('/edit', adminAuthMiddleware('edit day segment'), async (req, res) =
 });
 
 /**
- * Route for POST, delete day segment.
+ * POST delete day segment.
+ * @param {integer} id
  */
 router.post('/delete', adminAuthMiddleware('delete day segment'), async (req, res) => {
 	const validDaySegment = {
