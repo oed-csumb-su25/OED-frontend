@@ -64,6 +64,7 @@ class ConversionSegment {
 	 */
 	static async getAll(conn) {
 		const rows = await conn.any(sqlFile('conversionSegment/get_all.sql'));
+
 		return rows.map(ConversionSegment.mapRow);
 	}
 
@@ -80,6 +81,7 @@ class ConversionSegment {
 			sourceId: sourceId,
 			destinationId: destinationId
 		});
+
 		return rows.map(ConversionSegment.mapRow);
 	}
 
@@ -99,6 +101,7 @@ class ConversionSegment {
 			startTime: startTime,
 			endTime: endTime
 		});
+
 		return ConversionSegment.mapRow(row);
 	}
 
@@ -108,13 +111,8 @@ class ConversionSegment {
 	 */
 	async insert(conn) {
 		const conversionSegment = this;
-
-		try {
-			await conn.none(sqlFile('conversionSegment/insert_new_conversion_segment.sql'), conversionSegment);
-		} catch {
-			log.error(`Error while inserting conversion segment`);
-			failure(res, 500, `Error while inserting conversion segment`);
-		}
+		
+		await conn.none(sqlFile('conversionSegment/insert_new_conversion_segment.sql'), conversionSegment);
 	}
 
 	/**
@@ -134,7 +132,7 @@ class ConversionSegment {
 		const endChanged = !moment(this.endTime).isSame(originalEndTime);
 
 		// check that -infinity and infinity aren't being updated
-		if ((startChanged && (originalStartTime === '-infinity')) || endChanged && (originalEndTime === 'infinity')) {
+		if ((startChanged && (originalStartTime.isSame(moment('-infinity')))) || endChanged && (originalEndTime.isSame(moment('infinity')))) {
 			const errMsg = `Cannot update starting time of -infinity or ending time of infinity`;
 			log.error(errMsg);
 			throw new Error(errMsg);
