@@ -158,6 +158,7 @@ router.post('/add', adminAuthMiddleware('add day segment'), async (req, res) => 
 		} else {
 			const conn = getConnection();
 			try {
+				// use transaction to ensure consistent state
 				await conn.tx(async t => {
 					const newDaySegment = new DaySegment(
 						undefined,
