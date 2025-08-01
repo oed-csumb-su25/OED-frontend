@@ -5,7 +5,7 @@ import * as React from 'react';
 import * as moment from 'moment-timezone';
 // Realize that * is already imported from react
 import { useState } from 'react';
-import { FormattedMessage } from 'react-intl';
+import { FormattedMessage, useIntl } from 'react-intl';
 import { Button, Col, Container, FormGroup, FormFeedback, Input, Label, Modal, ModalBody, ModalFooter, ModalHeader, Row, Table,
 	PaginationItem, PaginationLink, Pagination} from 'reactstrap';
 import TooltipHelpComponent from '../TooltipHelpComponent';
@@ -49,6 +49,7 @@ const PER_TABLE = 10;
  */
 export default function EditConversionModalComponent(props: EditConversionModalComponentProps) {
 	const translate = useTranslate();
+	const intl = useIntl();
 	const [editConversion] = conversionsApi.useEditConversionMutation();
 	const [deleteConversion] = conversionsApi.useDeleteConversionMutation();
 	const [editSegment] = conversionSegmentsApi.useEditConversionSegmentMutation();
@@ -142,7 +143,12 @@ export default function EditConversionModalComponent(props: EditConversionModalC
 		// Validate datetime format
 		const validFormat = /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/;
 		if (!validFormat.test(e.target.value.trim())) {
-			setFieldErrors(prev => ({ ...prev, dateTimeError: `Invalid ${e.target.name} format. Use YYYY-MM-DD HH:mm:ss` }));
+			setFieldErrors(prev => ({ ...prev,
+				dateTimeError: intl.formatMessage(
+					{ id: 'conversion.error.datetime.invalid' },
+					{field: e.target.name}
+				)
+			}));
 		} else {
 			setFieldErrors({});
 		}
@@ -174,6 +180,7 @@ export default function EditConversionModalComponent(props: EditConversionModalC
 
 	// Splits a selected segment into two based on the chosen datetime and direction
 	const handleSplitSegment = async () => {
+		// Ensure required state is set before proceeding
 		if (!selectedSegment || !actionDirection || !actionDatetime) return;
 
 		const splitTime = moment(actionDatetime);
@@ -182,7 +189,7 @@ export default function EditConversionModalComponent(props: EditConversionModalC
 
 
 		if (!isStartTimeValid || !isEndTimeValid) {
-			setFieldErrors(prev => ({ ...prev, splitTimeError: 'Split time must be strictly between the segment start and end.' }));
+			setFieldErrors(prev => ({ ...prev, splitTimeError: translate('conversion.error.segment.splitTime')}));
 			return;
 		}
 
@@ -247,14 +254,64 @@ export default function EditConversionModalComponent(props: EditConversionModalC
 		}
 	};
 
-	// TODO: Verify deleteSegment range logic works correctly for both 'earlier' and 'later' actions
-	const handleDeleteSegment = async (segment: ConversionSegmentData) => {
-		await deleteSegment({
-			sourceId: segment.sourceId,
-			destinationId: segment.destinationId,
-			startTime: segment.startTime,
-			endTime: segment.endTime
-		});
+	// Deletes the selected segment and updates the adjacent segment's time range
+	// to preserve continuous coverage with no time gaps or overlaps
+	const handleDeleteSegment = async () => {
+		// Ensure required state is set before proceeding
+		if (!selectedSegment || !actionDirection) return;
+		try {
+			// Sort segment by start time
+			const sorted = [...segments].sort((a, b) => {
+				const segmentAStart = a.startTime === '-infinity' ? null : moment(a.startTime);
+				const segmentBStart = b.startTime === '-infinity' ? null : moment(b.startTime);
+				if (!segmentAStart) return -1;
+				if (!segmentBStart) return 1;
+				return segmentAStart.isBefore(segmentBStart) ? -1 : 1;
+			});
+			// Find the index of the segment selected for deletion
+			const index = sorted.findIndex(seg =>
+				seg.startTime === selectedSegment.startTime && seg.endTime === selectedSegment.endTime
+			);
+			// Grab previous and next segments
+			const previous = sorted[index - 1];
+			const next = sorted[index + 1];
+
+			// If deleting earlier, update the previous segment’s end time to match the selected segment’s end time
+			if (actionDirection === 'earlier' && previous) {
+				await editSegment({
+					segment: {
+						...previous,
+						endTime: selectedSegment.endTime
+					},
+					originalStartTime: previous.startTime,
+					originalEndTime: previous.endTime
+				});
+			}
+			// TODO: Adjust next segment to keep time continuity when deleting later
+			// If deleting later, update the next segment’s start time to match the selected segment’s start time
+			if (actionDirection === 'later' && next) {
+				await editSegment({
+					segment: {
+						...next,
+						startTime: selectedSegment.startTime
+					},
+					originalStartTime: next.startTime,
+					originalEndTime: next.endTime
+				});
+			}
+			await deleteSegment({
+				sourceId: selectedSegment.sourceId,
+				destinationId: selectedSegment.destinationId,
+				startTime: selectedSegment.startTime,
+				endTime: selectedSegment.endTime
+			});
+			setSelectedSegment(null);
+			setActionDirection(null);
+			// Refresh the segments list
+			await refetchSegments();
+		} catch (error) {
+			console.error(error);
+		}
 	};
 	/* End State */
 
@@ -445,9 +502,16 @@ export default function EditConversionModalComponent(props: EditConversionModalC
 	const [showWarningModal, setShowWarningModal] = useState(false);
 	const [warningMessage, setWarningMessage] = useState('');
 
-	const handleWarningConfirm = () => {
+	const handleWarningConfirm = async () => {
 		// Close the warning modal
 		setShowWarningModal(false);
+
+		// If this warning is for a segment delete (earlier/later),
+		// perform the delete and exit early to avoid closing the Edit Conversion Modal
+		if (selectedSegment && actionDirection) {
+			await handleDeleteSegment();
+			return;
+		}
 
 		// Proceed with saving changes
 		// Close the modal first to avoid repeat clicks
@@ -482,7 +546,7 @@ export default function EditConversionModalComponent(props: EditConversionModalC
 		// If the editing segment has no slope, no intercept, and no pattern applied,
 		// show a warning modal to confirm saving a "neutral" segment with no effect.
 		if (editingSegment && editingSegment.slope === 0 && editingSegment.intercept === 0 && editingSegment.weekPatternsId === null) {
-			setFieldErrors(prev => ({ ...prev, segmentValidationError: 'Segment has 0 slope and intercept and no pattern!' }));
+			setFieldErrors(prev => ({ ...prev, segmentValidationError: translate('conversion.error.segment.neutral')}));
 			return;
 		}
 		// If editing a segment's time range, ensure there are no gaps or overlaps with adjacent segments,
@@ -505,12 +569,22 @@ export default function EditConversionModalComponent(props: EditConversionModalC
 			const next = sortedSegments[index + 1];
 			// Check for gaps/overlaps with previous segment
 			if (previous && !moment(editingSegment.startTime).isSame(previous.endTime)) {
-				setFieldErrors(prev =>({ ...prev, startTimeError: `Start time must match end time of previous segment (${previous.endTime})` }));
+				setFieldErrors(prev =>({ ...prev,
+					startTimeError: intl.formatMessage(
+						{ id: 'conversion.error.segment.startTimeMismatch' },
+						{ endTime: previous.endTime }
+					)
+				}));
 				return;
 			}
 			// Check for gaps/overlaps with next segment
 			if (next && !moment(editingSegment.endTime).isSame(next.startTime)) {
-				setFieldErrors(prev =>({ ...prev, endTimeError: `End time must match start time of next segment (${next.startTime})` }));
+				setFieldErrors(prev =>({ ...prev,
+					endTimeError: intl.formatMessage(
+						{ id: 'conversion.error.segment.endTimeMismatch' },
+						{ startTime: next.startTime }
+					)
+				}));
 				return;
 			}
 		}
@@ -623,6 +697,7 @@ export default function EditConversionModalComponent(props: EditConversionModalC
 								value={editingSegment?.slope ?? ''}
 								onChange={handleNumberChange}
 								invalid={!!fieldErrors.segmentValidationError}
+								disabled={editingSegment?.weekPatternsId !== null}
 							/>
 							<FormFeedback className='d-block'>{fieldErrors.segmentValidationError}</FormFeedback>
 						</FormGroup>
@@ -634,6 +709,7 @@ export default function EditConversionModalComponent(props: EditConversionModalC
 								value={editingSegment?.intercept ?? ''}
 								onChange={handleNumberChange}
 								invalid={!!fieldErrors.segmentValidationError}
+								disabled={editingSegment?.weekPatternsId !== null}
 							/>
 							<FormFeedback className='d-block'>{fieldErrors.segmentValidationError}</FormFeedback>
 						</FormGroup>
@@ -695,7 +771,7 @@ export default function EditConversionModalComponent(props: EditConversionModalC
 							<FormattedMessage id='cancel' />
 						</Button>
 						<Button color='primary' onClick={handleSplitSegment}>
-							<FormattedMessage id='save.all' />
+							<FormattedMessage id='confirm.action' />
 						</Button>
 					</ModalFooter>
 				</Modal>
@@ -854,7 +930,8 @@ export default function EditConversionModalComponent(props: EditConversionModalC
 												onClick={() => {
 													setActionDirection('earlier');
 													setSelectedSegment(segment);
-													handleDeleteSegment(segment);
+													setWarningMessage('Are you sure you want to delete this segment and update the previous one?');
+													setShowWarningModal(true);
 												}}
 											>
 												<FormattedMessage id='delete.earlier' /></Button></td>
@@ -864,7 +941,8 @@ export default function EditConversionModalComponent(props: EditConversionModalC
 												onClick={() => {
 													setActionDirection('later');
 													setSelectedSegment(segment);
-													handleDeleteSegment(segment);
+													setWarningMessage('Are you sure you want to delete this segment and update the next one?');
+													setShowWarningModal(true);
 												}}
 											>
 												<FormattedMessage id='delete.later' /></Button></td>
