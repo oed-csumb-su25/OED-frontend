@@ -64,7 +64,6 @@ class ConversionSegment {
 	 */
 	static async getAll(conn) {
 		const rows = await conn.any(sqlFile('conversionSegment/get_all.sql'));
-
 		return rows.map(ConversionSegment.mapRow);
 	}
 
@@ -81,7 +80,6 @@ class ConversionSegment {
 			sourceId: sourceId,
 			destinationId: destinationId
 		});
-
 		return rows.map(ConversionSegment.mapRow);
 	}
 
@@ -101,7 +99,6 @@ class ConversionSegment {
 			startTime: startTime,
 			endTime: endTime
 		});
-
 		return ConversionSegment.mapRow(row);
 	}
 
@@ -111,7 +108,6 @@ class ConversionSegment {
 	 */
 	async insert(conn) {
 		const conversionSegment = this;
-		
 		await conn.none(sqlFile('conversionSegment/insert_new_conversion_segment.sql'), conversionSegment);
 	}
 
