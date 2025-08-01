@@ -111,7 +111,7 @@ router.post('/dayId', adminAuthMiddleware('get day segments by day id'), async(r
  * @param {number} intercept The intercept of the day segment.
  * @param {string} note The notes for the day segment.
  */
-router.post('/add', adminAuthMiddleware('add day segment'), async (req, res) => {
+router.post('/addDaySegment', adminAuthMiddleware('add day segment'), async (req, res) => {
 	const validDaySegment = {
 		type: 'object',
 		maxProperties: 6,

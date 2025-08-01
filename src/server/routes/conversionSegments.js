@@ -149,7 +149,7 @@ router.post('/sourceDestinationStartEnd', adminAuthMiddleware('get conversion se
  * @param {string} endTime The end time of the conversion segment.
  * @param {string} note Notes added by the admin for the conversion segment.
  */
-router.post('/add', adminAuthMiddleware('add conversion segment'), async (req, res) => {
+router.post('/addConversionSegment', adminAuthMiddleware('add conversion segment'), async (req, res) => {
 	const validConversionSegment = {
 		type: 'object',
 		maxProperties: 8,

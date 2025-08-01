@@ -74,7 +74,7 @@ router.get('/:dayId', adminAuthMiddleware('get day by id'), async (req, res) => 
  * @param {number} intercept The intercept for the default day segment.
  * @param {string} segmentNote The notes for the default day segment.
  */
-router.post('/add', adminAuthMiddleware('add day'), async (req, res) => {
+router.post('/addDay', adminAuthMiddleware('add day'), async (req, res) => {
 	const validDay = {
 		type: 'object',
 		maxProperties: 5,
