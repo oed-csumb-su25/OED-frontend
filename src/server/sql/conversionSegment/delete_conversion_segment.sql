@@ -3,4 +3,4 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
  
 DELETE FROM conversion_segments
-WHERE source_id = ${sourceId} AND destination_id = ${destinationId} AND start_time = ${startTime};
+WHERE source_id = ${sourceId} AND destination_id = ${destinationId} AND start_time = ${startTime} AND end_time = ${endTime};

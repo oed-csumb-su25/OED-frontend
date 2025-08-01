@@ -8,12 +8,12 @@ const sqlFile = database.sqlFile;
 class Day {
     /**
      * @param {*} id This day patterns' id.
-     * @param {*} dayName This day pattern's name.
+     * @param {*} name This day pattern's name.
      * @param {*} note Comments by the admin.
      */
-    constructor(id, dayName, note) {
+    constructor(id, name, note) {
         this.id = id;
-        this.dayName = dayName;
+        this.name = name;
         this.note = note;
     }
 
@@ -34,20 +34,9 @@ class Day {
     static mapRow(row) {
         return new Day(
             row.id,
-            row.day_name,
+            row.name,
             row.note
         );
-    }
-
-    /**
-     * Delete the day associated with the id
-     * @param {*} id The day id.
-     * @param {*} conn The connection to use.
-     */
-    static async delete(id, conn) {
-        await conn.none(sqlFile('day/delete_day.sql'), {
-            id: id
-        });
     }
 
     /**
@@ -61,7 +50,7 @@ class Day {
     }
 
     /** 
-     * Returns the day associated the the id. If the day doesn't exist then return null.
+     * Get the day associated the id. If the day doesn't exist then return null.
      * @param {*} id The day id.
      * @param {*} conn The connection to use.
      * @returns {Promise.<Day>}
@@ -74,53 +63,73 @@ class Day {
     }
 
     /**
-     * Insert this day into the database along with a default day segment.
-     * The default day segment spans from 00:00 to 24:00.
+     * Insert new day into the database along with a default day segment.
+     * The default day segment spans from 0 to 24.
      * Sets the day segments day_id property to the id of the newly created day.
-     * 
-     * @param conn The database connection to use.
+     * @param {*} slope The slope of the day segment
+     * @param {*} intercept The intercept of the day segment
+     * @param {*} conn The database connection to use.
      * @returns {Promise.<>}
      */
     async insert(slope, intercept, segmentNote, conn) {
         const day = this;
 
-        if (day.id !== undefined) {
-            throw new Error(`Attempted to insert a day that already has an ID ${day.id}`);
+        try {
+            // insert new day
+            const dayData = {
+                name: day.name,
+                note: day.note
+            };
+            const resp = await conn.one(sqlFile('day/insert_new_day_pattern.sql'), dayData);
+            this.id = resp.id;
+        } catch {
+            log.error(`Error while inserting day with error(s): ${err}`);
+			failure(res, 500, `Error while inserting day with error(s): ${err}`);
         }
-        
-        // insert new day
-        const dayData = {
-            dayName: day.dayName,
-            note: day.note
-        };
 
-        const resp = await conn.one(sqlFile('day/insert_new_day_pattern.sql'), dayData);
-        this.id = resp.id;
+        try {
+            // insert default day segment, including the new day id
+            const daySegment = {
+                dayId: this.id,
+                startHour: 0,
+                endHour: 24,
+                slope: slope,
+                intercept: intercept,
+                note: segmentNote
+            };
 
-        // insert default day segment, including the new day id
-        const daySegment = {
-            dayId: this.id,
-            startHour: 0,
-            endHour: 24,
-            slope: slope,
-            intercept: intercept,
-            note: segmentNote
-        };
-
-        await conn.none(sqlFile('daySegment/insert_new_day_segment.sql'), daySegment);
+            await conn.none(sqlFile('daySegment/insert_new_day_segment.sql'), daySegment);
+        } catch {
+            log.error(`Error while inserting default day segment with error(s): ${err}`);
+			failure(res, 500, `Error while inserting default day segment with error(s): ${err}`);
+        }
     }
 
     /**
      * Returns a promise to update an existing day in the database.
-     * @param conn the connection to use.
+     * @param {*} conn the connection to use.
      * @returns {Promise.<>}
      */
     async update(conn) {
         const day = this;
-        if (day.id === undefined) {
-            throw new Error('Attempted to update a day with no ID');
+
+        try {
+            await conn.none(sqlFile('day/update_day_pattern.sql'), day);
+        } catch {
+            log.error(`Error while updating day with error(s): ${err}`);
+			failure(res, 500, `Error while updating day with error(s): ${err}`);          
         }
-        await conn.none(sqlFile('day/update_day_pattern.sql'), day);
+    }
+
+    /**
+     * Delete the day associated with the id
+     * @param {*} id The day id.
+     * @param {*} conn The connection to use.
+     */
+    static async delete(id, conn) {
+        await conn.none(sqlFile('day/delete_day.sql'), {
+            id: id
+        });
     }
 }
 

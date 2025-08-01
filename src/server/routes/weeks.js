@@ -8,28 +8,29 @@ const { getConnection } = require('../db');
 const Week = require('../models/Week');
 const { success, failure } = require('./response');
 const validate = require('jsonschema').validate;
+const { adminAuthMiddleware } = require('./authenticator');
 
 const router = express.Router();
 
 function formatWeekForResponse(item) {
 	return {
 		id: item.id, 
-        weekName: item.weekName, 
-        note: item.note,
-        sunday: item.sunday,
-        monday: item.monday,
-        tuesday: item.tuesday,
-        wednesday: item.wednesday,
-        thursday: item.thursday,
-        friday: item.friday,
-        saturday: item.saturday
+		weekName: item.weekName, 
+		note: item.note,
+		sunday: item.sunday,
+		monday: item.monday,
+		tuesday: item.tuesday,
+		wednesday: item.wednesday,
+		thursday: item.thursday,
+		friday: item.friday,
+		saturday: item.saturday
 	};
 }
 
 /**
- * Route for getting all weeks.
+ * GET all weeks.
  */
-router.get('/', async (req, res) => {
+router.get('/', adminAuthMiddleware('get all weeks'), async (req, res) => {
 	const conn = getConnection();
 	try {
 		const rows = await Week.getAll(conn);
@@ -40,82 +41,50 @@ router.get('/', async (req, res) => {
 });
 
 /**
- * Route for POST, edit week.
+ * GET week by id
  */
-router.post('/edit', async (req, res) => {
-	const validWeek = {
+router.get('/:id', adminAuthMiddleware('get week by id'), async(req, res) => {
+	const validParams = {
 		type: 'object',
-		maxProperties: 10,
+		maxProperties: 1,
 		required: ['id'],
 		properties: {
 			id: {
-				type: 'number'
-			},
-			weekName: {
-				type: 'string',
-			},
-			note: {
-				oneOf: [
-					{ type: 'string' },
-					{ type: 'null' }
-				]
-			},
-            sunday: {
-                type: 'number'
-            },
-            monday: {
-                type: 'number'
-            },
-            tuesday: {
-                type: 'number'
-            },
-            wednesday: {
-                type: 'number'
-            },
-            thursday: {
-                type: 'number'
-            },
-            friday: {
-                type: 'number'
-            },
-            saturday: {
-                type: 'number'
-            }
+				type: 'string', 
+				pattern: '^\\d+$'
+			}
 		}
 	};
 
-	const validatorResult = validate(req.body, validWeek);
+	const validatorResult = validate(req.params, validParams);
 	if (!validatorResult.valid) {
-		log.warn(`Got request to edit weeks with invalid week data, errors: ${validatorResult.errors}`);
-		failure(res, 400, `Got request to edit weeks with invalid week data, errors: ${validatorResult.errors}`);
+		const errMsg = `Got request to retrieve a week by id with invalid data, error(s): ${validatorResult.errors}`;
+		log.warn(errMsg);
+		failure(res, 400, errMsg);
 	} else {
 		const conn = getConnection();
 		try {
-			const updatedWeek = new Week(
-                req.body.id, 
-                req.body.weekName,
-			    req.body.note,
-                req.body.sunday,
-                req.body.monday,
-                req.body.tuesday,
-                req.body.wednesday,
-                req.body.thursday,
-                req.body.friday,
-                req.body.saturday
-            );
-			await updatedWeek.update(conn);
+			const row = await Week.getById(req.params.id, conn);
+			res.json(formatWeekForResponse(row));
 		} catch (err) {
-			log.error(`Error while editing week with error(s): ${err}`);
-			failure(res, 500, `Error while editing week with error(s): ${err}`);
+			log.error(`Error while performing GET week by id: ${err}`);
 		}
-		success(res);
 	}
 });
 
 /**
- * Route for POST add week.
+ * POST add week.
+ * @param {string} weekName The name for the week.
+ * @param {string} note The notes for the week.
+ * @param {number} sunday The id for the day pattern used for sunday.
+ * @param {number} monday The id for the day pattern used for monday.
+ * @param {number} tuesday The id for the day pattern used for tuesday.
+ * @param {number} wednesday The id for the day pattern used for wednesday.
+ * @param {number} thursday The id for the day pattern used for thursday.
+ * @param {number} friday The id for the day pattern used for friday.
+ * @param {number} saturday The id for the day pattern used for saturday.
  */
-router.post('/add', async (req, res) => {
+router.post('/add', adminAuthMiddleware('add week'), async (req, res) => {
 	const validWeek= {
 		type: 'object',
 		maxProperties: 9,
@@ -130,34 +99,35 @@ router.post('/add', async (req, res) => {
 					{ type: 'null' }
 				]
 			},
-            sunday: {
-                type: 'number'
-            },
-            monday: {
-                type: 'number'
-            },
-            tuesday: {
-                type: 'number'
-            },
-            wednesday: {
-                type: 'number'
-            },
-            thursday: {
-                type: 'number'
-            },
-            friday: {
-                type: 'number'
-            },
-            saturday: {
-                type: 'number'
-            }
+			sunday: {
+				type: 'number'
+			},
+			monday: {
+				type: 'number'
+			},
+			tuesday: {
+				type: 'number'
+			},
+			wednesday: {
+				type: 'number'
+			},
+			thursday: {
+				type: 'number'
+			},
+			friday: {
+				type: 'number'
+			},
+			saturday: {
+				type: 'number'
+			}
 		}
 	};
 
 	const validatorResult = validate(req.body, validWeek);
 	if (!validatorResult.valid) {
-		log.error(`Got request to insert week with invalid week data, errors: ${validatorResult.errors}`);
-		failure(res, 400, `Got request to insert week with invalid week data. Error(s): ${validatorResult.errors}`);
+		const errMsg = `Got request to insert a week with invalid week data, error(s): ${validatorResult.errors}`;
+		log.warn(errMsg);
+		failure(res, 400, errMsg);
 	} else {
 		const conn = getConnection();
 		try {
@@ -167,34 +137,123 @@ router.post('/add', async (req, res) => {
 					req.body.weekName,
 					req.body.note,
 					req.body.sunday,
-                    req.body.monday,
-                    req.body.tuesday,
-                    req.body.wednesday,
-                    req.body.thursday,
-                    req.body.friday,
-                    req.body.saturday
+					req.body.monday,
+					req.body.tuesday,
+					req.body.wednesday,
+					req.body.thursday,
+					req.body.friday,
+					req.body.saturday
 				);
 				await newWeek.insert(t);
 			});
-			res.sendStatus(200);
+			success(res, `Successfully inserted week`);
 		} catch (err) {
-			log.error(`Error while inserting new week with error(s): ${err}`);
-			failure(res, 500, `Error while inserting new week with errors(s): ${err}`);
+			const errMsg = `Error while inserting a new week with error(s): ${err}`;
+			log.error(errMsg);
+			failure(res, 500, errMsg);
 		}
 	}
 });
 
 /**
- * Route for POST, delete week.
+ * POST edit week.
+ * @param {integer} id The id for the week to be edited.
+ * @param {string} weekName The new name for the week.
+ * @param {string} note The new notes for the week.
+ * @param {number} sunday The new id for the day pattern used for sunday.
+ * @param {number} monday The new id for the day pattern used for monday.
+ * @param {number} tuesday The new id for the day pattern used for tuesday.
+ * @param {number} wednesday The new id for the day pattern used for wednesday.
+ * @param {number} thursday The new id for the day pattern used for thursday.
+ * @param {number} friday The new id for the day pattern used for friday.
+ * @param {number} saturday The new id for the day pattern used for saturday.
  */
-router.post('/delete', async (req, res) => {
+router.post('/edit', adminAuthMiddleware('edit week'), async (req, res) => {
+	const validWeek = {
+		type: 'object',
+		maxProperties: 10,
+		required: ['id', 'weekName', 'sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'],
+		properties: {
+			id: {
+				type: 'integer', 
+				minimum: 0
+			},
+			weekName: {
+				type: 'string',
+			},
+			note: {
+				oneOf: [
+					{ type: 'string' },
+					{ type: 'null' }
+				]
+			},
+			sunday: {
+				type: 'number'
+			},
+			monday: {
+				type: 'number'
+			},
+			tuesday: {
+				type: 'number'
+			},
+			wednesday: {
+				type: 'number'
+			},
+			thursday: {
+				type: 'number'
+			},
+			friday: {
+				type: 'number'
+			},
+			saturday: {
+				type: 'number'
+			}
+		}
+	};
+
+	const validatorResult = validate(req.body, validWeek);
+	if (!validatorResult.valid) {
+		const errMsg = `Got request to edit a week with invalid week data, error(s): ${validatorResult.errors}`
+		log.warn(errMsg);
+		failure(res, 400, errMsg);
+	} else {
+		const conn = getConnection();
+		try {
+			const updatedWeek = new Week(
+				req.body.id, 
+				req.body.weekName,
+				req.body.note,
+				req.body.sunday,
+				req.body.monday,
+				req.body.tuesday,
+				req.body.wednesday,
+				req.body.thursday,
+				req.body.friday,
+				req.body.saturday
+			);
+			await updatedWeek.update(conn);
+			success(res, `Successfully edited week`);
+		} catch (err) {
+			const errMsg = `Error while editing a week with error(s): ${err}`;
+			log.error(errMsg);
+			failure(res, 500, errMsg);
+		}
+	}
+});
+
+/**
+ * POST delete week.
+ * @param {integer} id The id of the week to be deleted.
+ */
+router.post('/delete', adminAuthMiddleware('delete week'), async (req, res) => {
 	const validWeek = {
 		type: 'object',
 		maxProperties: 1,
 		required: ['id'],
 		properties: {
 			id: {
-				type: 'number'
+				type: 'integer', 
+				minimum: 0
 			}
 		}
 	};
@@ -202,22 +261,24 @@ router.post('/delete', async (req, res) => {
 	// Ensure week object is valid
 	const validatorResult = validate(req.body, validWeek);
 	if (!validatorResult.valid) {
-		log.warn(`Got request to delete weeks with invalid week data, errors: ${validatorResult.errors}`);
-		failure(res, 400, `Got request to delete weeks with invalid week data. Error(s): ${validatorResult.errors}`);
+		const errMsg = `Got request to delete a week with invalid week data, error(s): ${validatorResult.errors}`;
+		log.warn(errMsg);
+		failure(res, 400, errMsg);
 	} else {
 		const conn = getConnection();
 		try {
 			// Don't worry about checking if the week already exists
 			// Just try to delete it to save the extra database call, since the database will return an error anyway if the row does not exist
 			await Week.delete(
-                req.body.id, 
+				req.body.id, 
 				conn
-            );
+			);
+			success(res, 'Successfully deleted week');
 		} catch (err) {
-			log.error(`Error while deleting week with error(s): ${err}`);
-			failure(res, 500, `Error while deleting week with errors(s): ${err}`);
+			const errMsg = `Error while deleting week with error(s): ${err}`;
+			log.error(errMsg);
+			failure(res, 500, errMsg);
 		}
-		success(res, 'Successfully deleted week');
 	}
 });
 
