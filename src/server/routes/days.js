@@ -21,7 +21,7 @@ function formatDayForResponse(item) {
 }
 
 /**
- * Route for getting all days.
+ * GET all days.
  */
 router.get('/', adminAuthMiddleware('get all days'), async (req, res) => {
 	const conn = getConnection();
@@ -34,7 +34,7 @@ router.get('/', adminAuthMiddleware('get all days'), async (req, res) => {
 });
 
 /**
- * Route for getting day by id.
+ * GET day by id.
  */
 router.get('/:id', adminAuthMiddleware('get day by id'), async (req, res) => {
 	const dayId = parseInt(req.params.id);
@@ -49,8 +49,12 @@ router.get('/:id', adminAuthMiddleware('get day by id'), async (req, res) => {
 });
 
 /**
- * Route for POST add day.
- * The slope and intercept are included to create a new day segment spanning from 0 to 24.
+ * POST add day and default day segment
+ * @param {string} name
+ * @param {string} note
+ * @param {number} slope
+ * @param {number} intercept
+ * @param {string} segmentNote
  */
 router.post('/add', adminAuthMiddleware('add day'), async (req, res) => {
 	const validDay = {
@@ -114,7 +118,10 @@ router.post('/add', adminAuthMiddleware('add day'), async (req, res) => {
 });
 
 /**
- * Route for POST, edit day.
+ * POST edit day.
+ * @param {integer} id
+ * @param {string} name
+ * @param {string} note
  */
 router.post('/edit', adminAuthMiddleware('edit day'), async (req, res) => {
 	const validDay = {
@@ -156,7 +163,8 @@ router.post('/edit', adminAuthMiddleware('edit day'), async (req, res) => {
 });
 
 /**
- * Route for POST, delete day.
+ * POST delete day.
+ * @param {integer} id
  */
 router.post('/delete', adminAuthMiddleware('delete day'), async (req, res) => {
 	const validDay = {
