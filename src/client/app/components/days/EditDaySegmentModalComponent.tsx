@@ -69,8 +69,7 @@ export default function EditDaySegmentModalComponent(props: EditDaySegmentModalC
 
 			<Modal isOpen={showEditModal} toggle={handleHideEditModal} backdrop="static">
 				<ModalHeader toggle={handleHideEditModal}>
-					{/* TODO: internationalize */}
-					Edit Segment
+					<FormattedMessage id="edit.segment.title" />
 				</ModalHeader>
 				<ModalBody>
 					<strong>{hourToTime(daySegment.startHour)} - {hourToTime(daySegment.endHour)}</strong>

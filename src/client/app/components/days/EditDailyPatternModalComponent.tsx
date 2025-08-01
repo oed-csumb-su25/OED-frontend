@@ -91,12 +91,12 @@ export default function EditDailyPatternModalComponent(props: EditDailyPatternMo
 
 		editDayMutation(dayDetails).unwrap()
 			.then(() => {
-				// TODO: internationalize
-				showSuccessNotification('Successfully edited day.');
+				
+				showSuccessNotification(translate('daily.patterns.edit.success'));
 				props.handleClose();
 			}).catch(error => {
-				// TODO: internationalize
-				showErrorNotification(error);
+				
+				showErrorNotification(translate('daily.patterns.edit.error'));
 			});
 	};
 
@@ -156,12 +156,11 @@ export default function EditDailyPatternModalComponent(props: EditDailyPatternMo
 		setShowDeleteModal(false);
 		deleteDayMutation({ id: dayDetails.id }).unwrap()
 			.then(() => {
-				// TODO: internationalize
-				showSuccessNotification('Successfully deleted day.');
+				showSuccessNotification(translate('daily.patterns.delete.success'));
 				props.handleClose();
 			})
 			.catch(error => {
-				showErrorNotification(error);
+				showErrorNotification(translate('daily.patterns.delete.error'));
 			});
 	};
 
@@ -196,16 +195,15 @@ export default function EditDailyPatternModalComponent(props: EditDailyPatternMo
 
 						{/* Table */}
 						{/* TODO: internationalize */}
-						<h5 className="mt-3 mb-2">Segments Table</h5>
+						<h5 className="mt-3 mb-2"><FormattedMessage id="daily.patterns.segments.table.title" /></h5>
 						<Table striped bordered>
 							<thead>
 								<tr>
-									{/* TODO: internationalize */}
-									<th>Time Range</th>
-									<th>Slope</th>
-									<th>Intercept</th>
-									<th>Note</th>
-									<th>Edit</th>
+									<th><FormattedMessage id="daily.patterns.segments.table.timeRange" /></th>
+									<th><FormattedMessage id="daily.patterns.segments.table.slope" /></th>
+									<th><FormattedMessage id="daily.patterns.segments.table.intercept" /></th>
+									<th><FormattedMessage id="daily.patterns.segments.table.note" /></th>
+									<th><FormattedMessage id="daily.patterns.segments.table.edit" /></th>
 									<th><FormattedMessage id="split.earlier" /></th>
 									<th><FormattedMessage id="split.later" /></th>
 									<th>Del ↑</th>
@@ -282,8 +280,7 @@ export default function EditDailyPatternModalComponent(props: EditDailyPatternMo
 				<ModalFooter>
 					{/* Delete day */}
 					<Button color="danger" onClick={() => setShowDeleteModal(true)} disabled={isSaving || isDeleting}>
-						{/* TODO: internationalize */}
-						Delete Day
+						{translate('daily.patterns.delete.button')}
 					</Button>
 					<Button color="secondary" onClick={props.handleClose}>
 						<FormattedMessage id="discard.changes" />
@@ -296,12 +293,10 @@ export default function EditDailyPatternModalComponent(props: EditDailyPatternMo
 				{/* Delete confirmation modal */}
 				<ConfirmActionModalComponent
 					show={showDeleteModal}
-					// TODO: internationalize
-					actionConfirmMessage={'Are you sure you want to delete this day?'}
+					actionConfirmMessage={translate('daily.patterns.delete.confirm')}
 					actionFunction={handleDeleteDay}
 					handleClose={() => setShowDeleteModal(false)}
-					// TODO: internationalize
-					actionConfirmText={'Delete Day'}
+					actionConfirmText={translate('daily.patterns.delete.confirm.button')}
 					actionRejectText={translate('cancel')}
 				/>
 			</Modal >
