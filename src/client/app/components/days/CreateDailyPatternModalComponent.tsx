@@ -129,6 +129,8 @@ export default function CreateDailyPatternModalComponent() {
 		});
 		// Reset the state to default values
 		resetState();
+		// Close the modal
+		setShowModal(false);
 	};
 
 	const handleWarningCancel = () => {
