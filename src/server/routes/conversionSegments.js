@@ -9,7 +9,8 @@ const ConversionSegment = require('../models/ConversionSegment');
 const { success, failure } = require('./response');
 const validate = require('jsonschema').validate;
 const { adminAuthMiddleware } = require('./authenticator');
-const { fail } = require('assert');
+const moment = require('moment');
+const { format } = require('path');
 
 const router = express.Router();
 
@@ -35,16 +36,16 @@ router.get('/', adminAuthMiddleware('get all conversion segments'), async (req, 
 		const rows = await ConversionSegment.getAll(conn);
 		res.json(rows.map(formatConversionSegmentForResponse));
 	} catch (err) {
-		log.error(`Error while performing GET conversion segments details query: ${err}`);
+		log.error(`Error while performing GET all conversion segments query: ${err}`, err);
 	}
 });
 
 /**
  * POST get all conversion segment(s) by source id and destination id.
- * @param {int} sourceId
- * @param {int} destinationId
+ * @param {int} sourceId The source meter's id.
+ * @param {int} destinationId The destination meter's id.
  */
-router.post('/segments', adminAuthMiddleware('get conversion segment(s) by source and destination id'), async (req, res) => {
+router.post('/sourceDestination', adminAuthMiddleware('get conversion segment(s) by source and destination id'), async (req, res) => {
 	const validConversionSegment = {
 		type: 'object',
 		maxProperties: 2,
@@ -62,10 +63,10 @@ router.post('/segments', adminAuthMiddleware('get conversion segment(s) by sourc
 	};
 
 	const validatorResult = validate(req.body, validConversionSegment);
-
 	if (!validatorResult.valid) {
-		log.warn(`Invalid route parameters for conversion segment, errors: ${validatorResult.errors}`);
-		failure(res, 400, `Invalid route parameters for conversion segment, errors: ${validatorResult.errors}`);
+		const errMsg = `Got request to retrieve conversion segment(s) by source id and destination id with invalid data, error(s): ${validatorResult.errors}`;
+		log.warn(errMsg);
+		failure(res, 400, errMsg);
 	} else {
 		const conn = getConnection();
 		try {
@@ -74,22 +75,23 @@ router.post('/segments', adminAuthMiddleware('get conversion segment(s) by sourc
 				req.body.destinationId, 
 				conn
 			);
-			res.json(rows);
+			res.json(rows.map(formatConversionSegmentForResponse));
 		} catch (err) {
-			log.error(`Error while preforming GET on conversion segment : ${err}`, err);
-			res.sendStatus(500);
+			const errMsg = `Error while retrieving conversion segment by source id and destination id with error(s): ${err}`
+			log.error(errMsg);
+			failure(res, 500, errMsg);
 		}
 	}
 });
 
 /**
  * POST get a conversion segment by source id, destination id, start time, and end time.
- * @param {int} sourceId
- * @param {int} destinationId
- * @param {string} startTime
- * @param {string} endTime
+ * @param {int} sourceId The source meter's id.
+ * @param {int} destinationId The destination meter's id.
+ * @param {string} startTime The start time of the conversion segment.
+ * @param {string} endTime The end time of the conversion segment.
  */
-router.post('/segment', adminAuthMiddleware('get conversion segment by source id, destination id, start time, and end time'), async (req, res) => {
+router.post('/sourceDestinationStartEnd', adminAuthMiddleware('get conversion segment by source id, destination id, start time, and end time'), async (req, res) => {
 	const validConversionSegment = {
 		type: 'object',
 		maxProperties: 4,
@@ -113,43 +115,41 @@ router.post('/segment', adminAuthMiddleware('get conversion segment by source id
 	};
 
 	const validatorResult = validate(req.body, validConversionSegment);
-
 	if (!validatorResult.valid) {
-		log.warn(`Invalid route parameters for conversion segment, errors: ${validatorResult.errors}`);
-		failure(res, 400, `Invalid route parameters for conversion segment, errors: ${validatorResult.errors}`);
+		const errMsg = `Got request to retrieve a conversion segment by source id, destination id, start time, and end time with invalid data, error(s): ${validatorResult.errors}`;
+		log.warn(errMsg);
+		failure(res, 400, errMsg);
 	} else {
 		const conn = getConnection();
 		try {
 			const row = await ConversionSegment.getBySourceDestinationStartEnd(
 				req.body.sourceId, 
 				req.body.destinationId, 
-				req.body.startTime, 
-				req.body.endTime,
+				formatTimestampValue(req.body.startTime),
+				formatTimestampValue(req.body.endTime),
 				conn
 			);
-			if (!row || row.length === 0) {
-				return res.sendStatus(404);
-			}
-			res.json(row);
+			res.json(formatConversionSegmentForResponse(row));
 		} catch (err) {
-			log.error(`Error while preforming GET on conversion segment : ${err}`, err);
-			res.sendStatus(500);
+			const errMsg = `Error while retrieving conversion segment by source id, destination id, start time, and end time with error(s): ${err}`
+			log.error(errMsg);
+			failure(res, 500, errMsg);
 		}
 	}
 });
 
 /**
  * POST add conversion segment.
- * @param {int} sourceId
- * @param {int} destinationId
- * @param {int} weekPatternsId
- * @param {number} slope
- * @param {number} intercept
- * @param {string} startTime
- * @param {string} endTime
- * @param {string} note
+ * @param {int} sourceId The source meter's id.
+ * @param {int} destinationId The destination meter's id.
+ * @param {int} weekPatternsId The id of the weekly pattern.
+ * @param {number} slope The slope for the conversion segment.
+ * @param {number} intercept The intercept for the conversion segment.
+ * @param {string} startTime The start time of the conversion segment.
+ * @param {string} endTime The end time of the conversion segment.
+ * @param {string} note Notes added by the admin for the conversion segment.
  */
-router.post('/add', adminAuthMiddleware('add conversion segment'), async (req, res) => {
+router.post('/addConversionSegment', adminAuthMiddleware('add conversion segment'), async (req, res) => {
 	const validConversionSegment = {
 		type: 'object',
 		maxProperties: 8,
@@ -192,8 +192,9 @@ router.post('/add', adminAuthMiddleware('add conversion segment'), async (req, r
 	
 	const validatorResult = validate(req.body, validConversionSegment);
 	if (!validatorResult.valid) {
-		log.warn(`Got request to add conversion segments with invalid conversion segment data, errors: ${validatorResult.errors}`);
-		failure(res, 400, `Got request to add conversion segments with invalid conversion segment data, errors: ${validatorResult.errors}`);
+		const errMsg = `Got request to add a conversion segment with invalid conversion segment data, error(s): ${validatorResult.errors}`;
+		log.warn(errMsg);
+		failure(res, 400, errMsg);
 	} else {
 		const conn = getConnection();
 		try {
@@ -204,32 +205,33 @@ router.post('/add', adminAuthMiddleware('add conversion segment'), async (req, r
 					req.body.weekPatternsId, 
 					req.body.slope, 
 					req.body.intercept, 
-					req.body.startTime, 
-					req.body.endTime, 
+					formatTimestampValue(req.body.startTime),
+					formatTimestampValue(req.body.endTime),
 					req.body.note
 				);
 				await newConversionSegment.insert(t);
 			});
 			success(res, `Successfully added conversion segment`);
 		} catch (err) {
-			log.error(`Error while inserting new conversion segment with error(s): ${err}`);
-			failure(res, 500, `Error while inserting new conversion segment with errors(s): ${err}`);
+			const errMsg = `Error adding conversion segment with error(s): ${err}`
+			log.error(errMsg);
+			failure(res, 500, errMsg);
 		}
 	}
 });
 
 /**
  * POST edit conversion segment.
- * @param {int} sourceId
- * @param {int} destinationId
- * @param {int} weekPatternsId
- * @param {number} slope
- * @param {number} intercept
- * @param {string} startTime
- * @param {string} endTime
- * @param {string} note
- * @param {string} originalStartTime
- * @param {string} originalEndTime
+ * @param {int} sourceId The source meter's id.
+ * @param {int} destinationId The destination meter's id.
+ * @param {int} weekPatternsId The id of the weekly pattern.
+ * @param {number} slope The new slope for the conversion segment.
+ * @param {number} intercept The new intercept for the conversion segment.
+ * @param {string} startTime The new start time of the conversion segment.
+ * @param {string} endTime The new end time of the conversion segment.
+ * @param {string} note The new note added by the admin for the conversion segment.
+ * @param {string} originalStartTime The start time of the conversion segment before it is edited.
+ * @param {string} originalEndTime The end time of the conversion segment before it is edited.
  */
 router.post('/edit', adminAuthMiddleware('edit conversion segment'), async (req, res) => {
 	const validConversionSegment = {
@@ -286,8 +288,9 @@ router.post('/edit', adminAuthMiddleware('edit conversion segment'), async (req,
 
 	const validatorResult = validate(req.body, validConversionSegment);
 	if (!validatorResult.valid) {
-		log.warn(`Got request to edit conversion segments with invalid conversion segment data, errors: ${validatorResult.errors}`);
-		failure(res, 400, `Got request to edit conversion segments with invalid conversion segment data, errors: ${validatorResult.errors}`);
+		const errMsg = `Got request to edit a conversion segment with invalid conversion segment data, error(s): ${validatorResult.errors}`;
+		log.warn(errMsg);
+		failure(res, 400, errMsg);
 	} else {
 		const conn = getConnection();
 		try {
@@ -298,32 +301,32 @@ router.post('/edit', adminAuthMiddleware('edit conversion segment'), async (req,
 					req.body.weekPatternsId, 
 					req.body.slope, 
 					req.body.intercept, 
-					req.body.startTime, 	
-					req.body.endTime, 
+					formatTimestampValue(req.body.startTime),
+					formatTimestampValue(req.body.endTime),
 					req.body.note
 				);
 				await updatedConversionSegment.update(
-					req.body.originalStartTime, 
-					req.body.originalEndTime, 
-					t,
-					res
+					formatTimestampValue(req.body.originalStartTime),
+					formatTimestampValue(req.body.originalEndTime),
+					t
 				);
 			});
 
-			success(res, `Successfully updated Conversion segment`);
+			success(res, `Successfully edited conversion segment`);
 		} catch (err) {
-			log.error(`Error while editing conversion segment with error(s): ${err}`);
-			failure(res, 500, `Error while editing conversion segment with error(s): ${err}`);
+			const errMsg = `Error while editing conversion segment with error(s): ${err}`
+			log.error(errMsg);
+			failure(res, 500, errMsg);
 		}
 	}
 });
 
 /**
  * POST delete conversion segment.
- * @param {int} sourceId
- * @param {int} destinationId
- * @param {string} startTime
- * @param {string} endTime
+ * @param {int} sourceId The source meter's id.
+ * @param {int} destinationId The destination meter's id.
+ * @param {string} startTime The new start time of the conversion segment.
+ * @param {string} endTime The new end time of the conversion segment.
  */
 router.post('/delete', adminAuthMiddleware('delete conversion segment'), async (req, res) => {
 	const validConversionSegment = {
@@ -350,8 +353,9 @@ router.post('/delete', adminAuthMiddleware('delete conversion segment'), async (
 	// Ensure conversion segment object is valid
 	const validatorResult = validate(req.body, validConversionSegment);
 	if (!validatorResult.valid) {
-		log.warn(`Got request to delete conversion segments with invalid conversion segment data, errors: ${validatorResult.errors}`);
-		failure(res, 400, `Got request to delete conversion segments with invalid conversion segment data. Error(s): ${validatorResult.errors}`);
+		const errMsg = `Got request to delete a conversion segment with invalid conversion segment data, error(s): ${err}`
+		log.warn(errMsg);
+		failure(res, 400, errMsg);
 	} else {
 		const conn = getConnection();
 		try {
@@ -360,16 +364,25 @@ router.post('/delete', adminAuthMiddleware('delete conversion segment'), async (
 			await ConversionSegment.delete(
 				req.body.sourceId, 
 				req.body.destinationId, 
-				req.body.startTime,
-				req.body.endTime,
+				formatTimestampValue(req.body.startTime),
+				formatTimestampValue(req.body.endTime),
 				conn
 			);
 			success(res, 'Successfully deleted conversion segment');
 		} catch (err) {
-			log.error(`Error while deleting conversion segment with error(s): ${err}`);
-			failure(res, 500, `Error while deleting conversion segment with errors(s): ${err}`);
+			const errMsg = `Error while deleting conversion segment with error(s): ${err}`
+			log.error(errMsg);
+			failure(res, 500, errMsg);
 		}
 	}
 });
+
+function formatTimestampValue(value) {
+	if (value === 'infinity' || value === '-infinity') {
+		return value;
+	} 
+
+	return moment(value).toISOString();
+}
 
 module.exports = router;
