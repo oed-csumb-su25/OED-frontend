@@ -110,8 +110,7 @@ export default function SplitDaySegmentComponent(props: SplitDaySegmentComponent
 					<FormattedMessage id={props.direction === 'earlier' ? 'split.earlier' : 'split.later'} />
 				</ModalHeader>
 				<ModalBody>
-					{/* TODO: internationalize */}
-					<p>Enter the hour to split the segment</p>
+					<p><FormattedMessage id="split.hour.prompt" /></p>
 					<Input
 						id="split"
 						type="number"
@@ -123,8 +122,9 @@ export default function SplitDaySegmentComponent(props: SplitDaySegmentComponent
 						invalid={!isSplitValid}
 					/>
 					<FormFeedback>
-						{/* TODO: internationalize */}
-						{!isSplitValid && 'Please enter a valid hour between ' + (props.daySegment.startHour + 1) + translate('and') + (props.daySegment.endHour - 1)}
+						{!isSplitValid && translate('split.hour.invalid')
+  							.replace('{start}', String(props.daySegment.startHour + 1))
+  							.replace('{end}', String(props.daySegment.endHour - 1))}
 					</FormFeedback>
 				</ModalBody>
 				<ModalFooter>
