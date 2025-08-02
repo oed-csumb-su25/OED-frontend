@@ -86,67 +86,67 @@ export default function CreateConversionModalComponent() {
 	);
 
 	const handleStringChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    if (name === 'overallConversionNote') {
-        setConversionState(prev => ({
-            ...prev,
-            overallConversion: {
-                ...prev.overallConversion,
-                note: value
-            }
-        }));
-    } else if (name === 'initialConversionNote') {
-        setConversionState(prev => ({
-            ...prev,
-            initialConversion: {
-                ...prev.initialConversion,
-                note: value
-            }
-        }));
-    }
+		const { name, value } = e.target;
+		if (name === 'overallConversionNote') {
+				setConversionState(prev => ({
+						...prev,
+						overallConversion: {
+								...prev.overallConversion,
+								note: value
+						}
+				}));
+		} else if (name === 'initialConversionNote') {
+				setConversionState(prev => ({
+						...prev,
+						initialConversion: {
+								...prev.initialConversion,
+								note: value
+						}
+				}));
+		}
 	};
 
-  const handleNumberChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
-    const newValue = Number(value);
+	const handleNumberChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+		const { name, value } = e.target;
+		const newValue = Number(value);
 
-    setConversionState(prev => {
-        if (name === 'sourceId') {
-            return {
-                ...prev,
-                overallConversion: {
-                    ...prev.overallConversion,
-                    sourceId: newValue
-                },
-                initialConversion: {
-                    ...prev.initialConversion,
-                    sourceId: newValue
-                },
-                destinationOptions: defaultValues.destinationOptions.filter(destination => destination.id !== newValue)
-            };
-        } else if (name === 'destinationId') {
-            return {
-                ...prev,
-                overallConversion: {
-                    ...prev.overallConversion,
-                    destinationId: newValue
-                },
-                initialConversion: {
-                    ...prev.initialConversion,
-                    destinationId: newValue
-                },
-                sourceOptions: defaultValues.sourceOptions.filter(source => source.id !== newValue)
-            };
-        } else {
-            return {
-                ...prev,
-                initialConversion: {
-                    ...prev.initialConversion,
-                    [name]: newValue
-                }
-            };
-        }
-    });
+		setConversionState(prev => {
+				if (name === 'sourceId') {
+						return {
+								...prev,
+								overallConversion: {
+										...prev.overallConversion,
+										sourceId: newValue
+								},
+								initialConversion: {
+										...prev.initialConversion,
+										sourceId: newValue
+								},
+								destinationOptions: defaultValues.destinationOptions.filter(destination => destination.id !== newValue)
+						};
+				} else if (name === 'destinationId') {
+						return {
+								...prev,
+								overallConversion: {
+										...prev.overallConversion,
+										destinationId: newValue
+								},
+								initialConversion: {
+										...prev.initialConversion,
+										destinationId: newValue
+								},
+								sourceOptions: defaultValues.sourceOptions.filter(source => source.id !== newValue)
+						};
+				} else {
+						return {
+								...prev,
+								initialConversion: {
+										...prev.initialConversion,
+										[name]: newValue
+								}
+						};
+				}
+		});
 	};
 
 	const handleBooleanChange = (e: React.ChangeEvent<HTMLInputElement>) => {

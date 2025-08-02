@@ -43,17 +43,17 @@ export default function CreateDayModalComponent() {
 
 	// Handlers for each type of input change
 	const [patternState, setPatternState] = useState({
-  Day: {
+	Day: {
 		name: defaultValues.name,
-    note: defaultValues.DayNote
-  },
-  initialPattern: {
-    slope: defaultValues.slope,
-    intercept: defaultValues.intercept,
+		note: defaultValues.DayNote
+	},
+	initialPattern: {
+		slope: defaultValues.slope,
+		intercept: defaultValues.intercept,
 		startHour: defaultValues.startHour,
 		endHour: defaultValues.endHour,
-    note: defaultValues.initialPatternNote
-  }
+		note: defaultValues.initialPatternNote
+	}
 });
 
 	// Check if the daily pattern is valid
@@ -65,24 +65,24 @@ export default function CreateDayModalComponent() {
 	);
 
 	const handleStringChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    if (name === 'DayNote') {
-        setPatternState(prev => ({
-            ...prev,
-            Day: {
-                ...prev.Day,
-                note: value
-            }
-        }));
-    } else if (name === 'initialPatternNote') {
-        setPatternState(prev => ({
-            ...prev,
-            initialPattern: {
-                ...prev.initialPattern,
-                note: value
-            }
-        }));
-    } else {
+		const { name, value } = e.target;
+		if (name === 'DayNote') {
+				setPatternState(prev => ({
+						...prev,
+						Day: {
+								...prev.Day,
+								note: value
+						}
+				}));
+		} else if (name === 'initialPatternNote') {
+				setPatternState(prev => ({
+						...prev,
+						initialPattern: {
+								...prev.initialPattern,
+								note: value
+						}
+				}));
+		} else {
 				setPatternState(prev => ({
 						...prev,
 						Day: {
@@ -93,9 +93,9 @@ export default function CreateDayModalComponent() {
 		}
 	};
 
-  const handleNumberChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
-    const newValue = Number(value);
+	const handleNumberChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+		const { name, value } = e.target;
+		const newValue = Number(value);
 		if (name === 'slope') {
 			setPatternState(prev => ({
 				...prev,
