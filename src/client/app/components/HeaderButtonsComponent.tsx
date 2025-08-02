@@ -233,7 +233,7 @@ export default function HeaderButtonsComponent() {
 								disabled={state.shouldDaysButtonDisabled}
 								tag={Link}
 								to="/days">
-								<FormattedMessage id='daily.patterns' />
+								<FormattedMessage id='patterns.daily' />
 							</DropdownItem>
 							<DropdownItem
 								style={state.adminViewableLinkStyle}

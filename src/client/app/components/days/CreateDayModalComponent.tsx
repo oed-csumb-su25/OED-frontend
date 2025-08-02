@@ -160,7 +160,7 @@ export default function CreateDayModalComponent() {
 	const handleSubmit = () => {
 		// Show warning modal if slope and intercept are both 0
 		if (patternState.initialPattern.slope === 0 && patternState.initialPattern.intercept === 0) {
-			setWarningMessage(translate('daily.patterns.slope.intercept.zero'));
+			setWarningMessage(translate('day.slope.intercept.zero'));
 			setShowWarningModal(true);
 		} else {
 			// Close modal first to avoid repeat clicks
@@ -180,7 +180,7 @@ export default function CreateDayModalComponent() {
 
 	const tooltipStyle = {
 		...tooltipBaseStyle,
-		tooltipCreateConversionView: 'help.admin.conversioncreate'
+		tooltipCreateConversionView: 'help.admin.daycreate'
 	};
 
 	return (
@@ -195,15 +195,15 @@ export default function CreateDayModalComponent() {
 			/>
 			{/* Show modal button */}
 			<Button color='secondary' onClick={handleShow}>
-				<FormattedMessage id="daily.patterns.create" />
+				<FormattedMessage id="day.create" />
 			</Button>
 
 			<Modal isOpen={showModal} toggle={handleClose} size='lg'>
 				<ModalHeader>
-					<FormattedMessage id="daily.patterns.create" />
-					<TooltipHelpComponent page='daily-pattern-create' />
+					<FormattedMessage id="day.create" />
+					<TooltipHelpComponent page='day-create' />
 					<div style={tooltipStyle}>
-						<TooltipMarkerComponent page='daily-pattern-create' helpTextId={tooltipStyle.tooltipCreateConversionView} />
+						<TooltipMarkerComponent page='day-create' helpTextId={tooltipStyle.tooltipCreateConversionView} />
 					</div>
 				</ModalHeader>
 				{/* when any of the conversion are changed call one of the functions. */}
@@ -269,7 +269,7 @@ export default function CreateDayModalComponent() {
 							<Col>
 								{/* Start hour input*/}
 								<FormGroup>
-									<Label for='startHour'>{translate('daily.patterns.start.hour')}</Label>
+									<Label for='startHour'>{translate('day.start.hour')}</Label>
 									<Input
 										id='startHour'
 										name='startHour'
@@ -283,7 +283,7 @@ export default function CreateDayModalComponent() {
 							<Col>
 								{/* End hour input*/}
 								<FormGroup>
-									<Label for='endHour'>{translate('daily.patterns.end.hour')}</Label>
+									<Label for='endHour'>{translate('day.end.hour')}</Label>
 									<Input
 										id='endHour'
 										name='endHour'

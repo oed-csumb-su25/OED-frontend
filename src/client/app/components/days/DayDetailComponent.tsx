@@ -40,9 +40,9 @@ export default function DayDetailComponent() {
 
 					<div className='container-fluid'>
 						<h2 style={titleStyle}>
-							<FormattedMessage id='daily.patterns' />
+							<FormattedMessage id='days' />
 							<div style={tooltipStyle}>
-								<TooltipMarkerComponent page='daily.patterns' helpTextId={tooltipStyle.tooltipDayView} />
+								<TooltipMarkerComponent page='days' helpTextId={tooltipStyle.tooltipDayView} />
 							</div>
 						</h2>
 						<div className="edit-btn">

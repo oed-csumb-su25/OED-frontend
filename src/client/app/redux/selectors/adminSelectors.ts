@@ -441,14 +441,14 @@ export const selectIsValidCreateDay = createAppSelector(
     ],
     (days, Day): [boolean, string] => {
         if (!Day.name || Day.name.trim() === '') {
-            return [false, translate('daily.patterns.create.name.required')];
+            return [false, translate('day.create.name.required')];
         }
         // Check if name already exists (case-insensitive)
         const exists = days.some(day =>
             day.name?.toLowerCase() === Day.name.trim().toLowerCase()
         );
         if (exists) {
-            return [false, translate('daily.patterns.create.name.exists')];
+            return [false, translate('day.create.name.exists')];
         }
         return [true, 'Daily Pattern is Valid'];
     }

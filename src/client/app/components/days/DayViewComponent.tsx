@@ -52,7 +52,7 @@ export default function DayViewComponent(props: DayViewComponentProps) {
 			</div>
 			<div className="edit-btn">
 				<Button color='secondary' onClick={handleShow}>
-					<FormattedMessage id="daily.patterns.edit" />
+					<FormattedMessage id="day.edit" />
 				</Button>
 				{/* Creates a child DayModalEditComponent */}
 				{/* <EditDayModalComponent
