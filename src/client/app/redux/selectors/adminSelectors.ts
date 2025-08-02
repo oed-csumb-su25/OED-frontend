@@ -342,12 +342,12 @@ export const selectDefaultCreateConversionValues = createAppSelector(
 	}
 );
 
-export const selectDefaultCreateDailyPatternValues = createAppSelector(
+export const selectDefaultCreateDayValues = createAppSelector(
 	[selectAllUnits],
 	() => {
 		const defaultValues = {
-			dayName: '',
-			dailyPatternNote: '',
+			name: '',
+			DayNote: '',
 			slope: 0,
 			intercept: 0,
 			startHour:0,
@@ -430,22 +430,22 @@ export const isValidCreateMeter = createAppSelector(
  * - Ensures the day name does not already exist (case-insensitive) in the list of days.
  * Returns a tuple: [isValid, message].
  * @param _state The Redux state (unused in this selector).
- * @param dailyPattern The daily pattern object containing the day name.
- * @param dailyPattern.dayName The name of the day to validate for uniqueness and non-blank value.
+ * @param Day The daily pattern object containing the day name.
+ * @param Day.name The name of the day to validate for uniqueness and non-blank value.
  * @returns A tuple where the first element is a boolean indicating validity, and the second is a message string.
  */
-export const selectIsValidCreateDailyPattern = createAppSelector(
+export const selectIsValidCreateDay = createAppSelector(
     [
         selectAllDays,
-        (_state, dailyPattern: { dayName: string }) => dailyPattern
+        (_state, Day: { name: string }) => Day
     ],
-    (days, dailyPattern): [boolean, string] => {
-        if (!dailyPattern.dayName || dailyPattern.dayName.trim() === '') {
+    (days, Day): [boolean, string] => {
+        if (!Day.name || Day.name.trim() === '') {
             return [false, translate('daily.patterns.create.name.required')];
         }
-        // Check if dayName already exists (case-insensitive)
+        // Check if name already exists (case-insensitive)
         const exists = days.some(day =>
-            day.dayName?.toLowerCase() === dailyPattern.dayName.trim().toLowerCase()
+            day.name?.toLowerCase() === Day.name.trim().toLowerCase()
         );
         if (exists) {
             return [false, translate('daily.patterns.create.name.exists')];

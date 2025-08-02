@@ -26,14 +26,14 @@ export default function CreateWeekModalComponent(): React.ReactElement {
 	const [showModal, setShowModal] = React.useState(false);
 
 	// Fetch days data
-	const { data: days, isFetching: isFetchingDays } = daysApi.useGetDailyPatternsQuery();
+	const { data: days, isFetching: isFetchingDays } = daysApi.useGetDaysQuery();
 
 	// Sort days by day name to make the dropdown more user-friendly
 	const sortedDays = React.useMemo(() => {
 		if (!days) {
 			return [];
 		}
-		return [...days].sort((a, b) => a.dayName.toLocaleLowerCase().localeCompare(b.dayName.toLocaleLowerCase()));
+		return [...days].sort((a, b) => a.name.toLocaleLowerCase().localeCompare(b.name.toLocaleLowerCase()));
 	}, [days]);
 
 	// Fetch weeks data (used to check if week name already exists)
@@ -197,7 +197,7 @@ export default function CreateWeekModalComponent(): React.ReactElement {
 
 														{sortedDays?.map(day => (
 															<option key={day.id} value={day.id} title={day.note}>
-																{day.dayName}
+																{day.name}
 															</option>
 														))}
 													</Input>

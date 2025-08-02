@@ -8,7 +8,7 @@ import SpinnerComponent from '../SpinnerComponent';
 import TooltipHelpComponent from '../TooltipHelpComponent';
 import TooltipMarkerComponent from '../TooltipMarkerComponent';
 import DayViewComponent from './DayViewComponent';
-import CreateDailyPatternModalComponent from './CreateDailyPatternModalComponent';
+import CreateDayModalComponent from './CreateDayModalComponent';
 import { daysApi, stableEmptyDays } from '../../redux/api/daysApi';
 
 /**
@@ -20,11 +20,11 @@ export default function DayDetailComponent() {
 	const locale = useAppSelector(selectSelectedLanguage);
 
 	// Day state
-	const { data: dayState = stableEmptyDays, isFetching: dayFetching } = daysApi.useGetDailyPatternsQuery();
+	const { data: dayState = stableEmptyDays, isFetching: dayFetching } = daysApi.useGetDaysQuery();
 
 	const tooltipStyle = {
 		...tooltipBaseStyle,
-		tooltipDayView: 'help.admin.dailypatternview'
+		tooltipDayView: 'help.admin.dayview'
 	};
 
 	return (
@@ -36,7 +36,7 @@ export default function DayDetailComponent() {
 				</div>
 			) : (
 				<div>
-					<TooltipHelpComponent page='daily.patterns' />
+					<TooltipHelpComponent page='days' />
 
 					<div className='container-fluid'>
 						<h2 style={titleStyle}>
@@ -47,11 +47,11 @@ export default function DayDetailComponent() {
 						</h2>
 						<div className="edit-btn">
 							{/* Placeholder for create day modal */}
-							<CreateDailyPatternModalComponent />
+							<CreateDayModalComponent />
 						</div>
 						<div className="card-container">
 							{Object.values(dayState)
-								.sort((a: Day, b: Day) => (a.dayName || '').toLowerCase().localeCompare((b.dayName || '').toLowerCase(), locale, { sensitivity: 'accent' }))
+								.sort((a: Day, b: Day) => (a.name || '').toLowerCase().localeCompare((b.name || '').toLowerCase(), locale, { sensitivity: 'accent' }))
 								.map(day => (
 									<DayViewComponent key={day.id} day={day} />
 								))}

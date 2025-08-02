@@ -4,46 +4,46 @@ import { DaySegment } from '../../types/redux/days'; // Adjust path as needed
 
 export const daySegmentsApi = baseApi.injectEndpoints({
 	endpoints: builder => ({
-		getDailyPatternSegments: builder.query<DaySegment[], void>({
+		getDaySegmentss: builder.query<DaySegment[], void>({
 			query: () => 'api/daySegments',
-			providesTags: ['DailyPatternSegment']
+			providesTags: ['DaySegments']
 		}),
-		getDailyPatternSegmentById: builder.query<DaySegment, number>({
+		getDaySegmentsById: builder.query<DaySegment, number>({
 			query: id => `api/daySegments/${id}`,
-			providesTags: (result, error, id) => [{ type: 'DailyPatternSegment', id }]
+			providesTags: (result, error, id) => [{ type: 'DaySegments', id }]
 		}),
-		getDailyPatternSegmentsByDayId: builder.query<DaySegment[], number>({
+		getDaySegmentssByDayId: builder.query<DaySegment[], number>({
 			query: dayId => `api/daySegments/dayId/${dayId}`,
-			providesTags: (result, error, dayId) => [{ type: 'DailyPatternSegment', dayId }]
+			providesTags: (result, error, dayId) => [{ type: 'DaySegments', dayId }]
 		}),
-		addDailyPatternSegment: builder.mutation<void, Omit<DaySegment, 'id'>>({
+		addDaySegments: builder.mutation<void, Omit<DaySegment, 'id'>>({
 			query: daySegment => ({
 				url: 'api/daySegments/add',
 				method: 'POST',
 				body: daySegment
 			}),
-			invalidatesTags: ['DailyPatternSegment']
+			invalidatesTags: ['DaySegments']
 		}),
-		editDailyPatternSegment: builder.mutation<void, DaySegment>({
+		editDaySegments: builder.mutation<void, DaySegment>({
 			query: daySegment => ({
 				url: 'api/daySegments/edit',
 				method: 'POST',
 				body: daySegment
 			}),
-			invalidatesTags: (result, error, arg) => [{ type: 'DailyPatternSegment', id: arg.id }]
+			invalidatesTags: (result, error, arg) => [{ type: 'DaySegments', id: arg.id }]
 		}),
-		deleteDailyPatternSegment: builder.mutation<void, { id: number }>({
+		deleteDaySegments: builder.mutation<void, { id: number }>({
 			query: ({ id }) => ({
 				url: 'api/daySegments/delete',
 				method: 'POST',
 				body: { id }
 			}),
-			invalidatesTags: (result, error, arg) => [{ type: 'DailyPatternSegment', id: arg.id }]
+			invalidatesTags: (result, error, arg) => [{ type: 'DaySegments', id: arg.id }]
 		})
 	})
 });
 
-export const selectDaySegmentsQueryState = daySegmentsApi.endpoints.getDailyPatternSegments.select();
+export const selectDaySegmentsQueryState = daySegmentsApi.endpoints.getDaySegmentss.select();
 export const selectDaySegments = createSelector(
 	selectDaySegmentsQueryState,
 	({ data: daySegments = [] }) => daySegments
@@ -52,10 +52,10 @@ export const selectDaySegments = createSelector(
 export const stableEmptyDaySegments: DaySegment[] = [];
 
 export const {
-	useGetDailyPatternSegmentsQuery,
-	useGetDailyPatternSegmentByIdQuery,
-	useGetDailyPatternSegmentsByDayIdQuery,
-	useAddDailyPatternSegmentMutation,
-	useEditDailyPatternSegmentMutation,
-	useDeleteDailyPatternSegmentMutation
+	useGetDaySegmentssQuery,
+	useGetDaySegmentsByIdQuery,
+	useGetDaySegmentssByDayIdQuery,
+	useAddDaySegmentsMutation,
+	useEditDaySegmentsMutation,
+	useDeleteDaySegmentsMutation
 } = daySegmentsApi;

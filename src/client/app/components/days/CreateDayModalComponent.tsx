@@ -9,7 +9,7 @@ import { FormattedMessage } from 'react-intl';
 import { Button, Col, Container, FormFeedback, FormGroup, Input, Label, Modal, ModalBody, ModalFooter, ModalHeader, Row } from 'reactstrap';
 import TooltipHelpComponent from '../TooltipHelpComponent';
 import { useAppSelector } from '../../redux/reduxHooks';
-import { selectDefaultCreateDailyPatternValues, selectIsValidCreateDailyPattern } from '../../redux/selectors/adminSelectors';
+import { selectDefaultCreateDayValues, selectIsValidCreateDay } from '../../redux/selectors/adminSelectors';
 import '../../styles/modal.css';
 import { tooltipBaseStyle } from '../../styles/modalStyle';
 import { useTranslate } from '../../redux/componentHooks';
@@ -21,11 +21,11 @@ import { daysApi } from '../../redux/api/daysApi';
  * Defines the create conversion modal form
  * @returns Conversion create element
  */
-export default function CreateDailyPatternModalComponent() {
+export default function CreateDayModalComponent() {
 	const translate = useTranslate();
-	const [addDailyPatternMutation] = daysApi.useAddDailyPatternMutation();
+	const [addDayMutation] = daysApi.useAddDayMutation();
 
-	const defaultValues = useAppSelector(selectDefaultCreateDailyPatternValues);
+	const defaultValues = useAppSelector(selectDefaultCreateDayValues);
 
 	/* State */
 	// Modal show
@@ -43,9 +43,9 @@ export default function CreateDailyPatternModalComponent() {
 
 	// Handlers for each type of input change
 	const [patternState, setPatternState] = useState({
-  dailyPattern: {
-		dayName: defaultValues.dayName,
-    note: defaultValues.dailyPatternNote
+  Day: {
+		name: defaultValues.name,
+    note: defaultValues.DayNote
   },
   initialPattern: {
     slope: defaultValues.slope,
@@ -57,20 +57,20 @@ export default function CreateDailyPatternModalComponent() {
 });
 
 	// Check if the daily pattern is valid
-	const [isValidDailyPattern, reason] = useAppSelector(state =>
-		selectIsValidCreateDailyPattern(state, {
-			dayName: patternState.dailyPattern.dayName
+	const [isValidDay, reason] = useAppSelector(state =>
+		selectIsValidCreateDay(state, {
+			name: patternState.Day.name
 			// You can add more fields if your selector uses them
 		})
 	);
 
 	const handleStringChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    if (name === 'dailyPatternNote') {
+    if (name === 'DayNote') {
         setPatternState(prev => ({
             ...prev,
-            dailyPattern: {
-                ...prev.dailyPattern,
+            Day: {
+                ...prev.Day,
                 note: value
             }
         }));
@@ -85,9 +85,9 @@ export default function CreateDailyPatternModalComponent() {
     } else {
 				setPatternState(prev => ({
 						...prev,
-						dailyPattern: {
-								...prev.dailyPattern,
-								dayName: value
+						Day: {
+								...prev.Day,
+								name: value
 						}
 				}));
 		}
@@ -120,11 +120,11 @@ export default function CreateDailyPatternModalComponent() {
 		//Close the warning modal
 		setShowWarningModal(false);
 		// Add the new pattern and update the store
-		addDailyPatternMutation({
-			dayName: patternState.dailyPattern.dayName,
+		addDayMutation({
+			name: patternState.Day.name,
 			slope: patternState.initialPattern.slope,
 			intercept: patternState.initialPattern.intercept,
-			note: patternState.dailyPattern.note,
+			note: patternState.Day.note,
 			segmentNote: patternState.initialPattern.note
 		});
 		// Reset the state to default values
@@ -141,9 +141,9 @@ export default function CreateDailyPatternModalComponent() {
 	// Reset the state to default values
 	const resetState = () => {
 		setPatternState({
-			dailyPattern: {
-				dayName: defaultValues.dayName,
-				note: defaultValues.dailyPatternNote
+			Day: {
+				name: defaultValues.name,
+				note: defaultValues.DayNote
 			},
 			initialPattern: {
 				slope: defaultValues.slope,
@@ -166,11 +166,11 @@ export default function CreateDailyPatternModalComponent() {
 			// Close modal first to avoid repeat clicks
 			setShowModal(false);
 			// Add the new pattern and update the store
-			addDailyPatternMutation({
-				dayName: patternState.dailyPattern.dayName,
+			addDayMutation({
+				name: patternState.Day.name,
 				slope: patternState.initialPattern.slope,
 				intercept: patternState.initialPattern.intercept,
-				note: patternState.dailyPattern.note,
+				note: patternState.Day.note,
 				segmentNote: patternState.initialPattern.note
 			});
 			// Reset the state to default values
@@ -213,12 +213,12 @@ export default function CreateDailyPatternModalComponent() {
 						<FormGroup>
 							<Label for='name'>{translate('name')}</Label>
 							<Input
-								id='dailyPatternName'
-								name='dailyPatternName'
+								id='DayName'
+								name='DayName'
 								type='text'
 								onChange={e => handleStringChange(e)}
-								value={patternState.dailyPattern.dayName}
-								invalid={!patternState.dailyPattern.dayName || patternState.dailyPattern.dayName.trim() === ''}
+								value={patternState.Day.name}
+								invalid={!patternState.Day.name || patternState.Day.name.trim() === ''}
 								required
 							/>
 							<FormFeedback>
@@ -229,11 +229,11 @@ export default function CreateDailyPatternModalComponent() {
 						<FormGroup>
 							<Label for='note'>{translate('note')}</Label>
 							<Input
-								id='dailyPatternNote'
-								name='dailyPatternNote'
+								id='DayNote'
+								name='DayNote'
 								type='textarea'
 								onChange={e => handleStringChange(e)}
-								value={patternState.dailyPattern.note} />
+								value={patternState.Day.note} />
 						</FormGroup>
 						{/*Initial pattern*/}
 						<h5 className="mt-3 mb-2">
@@ -310,14 +310,14 @@ export default function CreateDailyPatternModalComponent() {
 				<ModalFooter>
 					{
 						// Todo looks kind of bad make a better visible notification
-						!isValidDailyPattern && <p>{reason}</p>
+						!isValidDay && <p>{reason}</p>
 					}
 					{/* Hides the modal */}
 					<Button color='secondary' onClick={handleClose}>
 						<FormattedMessage id="discard.changes" />
 					</Button>
 					{/* On click calls the function handleSaveChanges in this component */}
-					<Button color='primary' onClick={handleSubmit} disabled={!isValidDailyPattern}>
+					<Button color='primary' onClick={handleSubmit} disabled={!isValidDay}>
 						<FormattedMessage id="save.all" />
 					</Button>
 				</ModalFooter>
