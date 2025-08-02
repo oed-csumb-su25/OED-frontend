@@ -15,7 +15,7 @@ import {
 	Row,
 	Table
 } from 'reactstrap';
-import { Day, DaySegment } from 'types/redux/days';
+import { Day, DaySegment, UpdateDaySegmentPayload } from 'types/redux/days';
 import { daysApi } from '../../redux/api/daysApi';
 import { daySegmentsApi } from '../../redux/api/daySegmentsApi';
 import { LocaleDataKey } from '../../translations/data';
@@ -65,15 +65,7 @@ export default function EditDailyPatternModalComponent(props: EditDailyPatternMo
 
 	const [dayDetails, setDayDetails] = React.useState({ ...props.day });
 
-	const { data: daySegments } = daySegmentsApi.useGetDailyPatternSegmentsByDayIdQuery(props.day.id);
-
-	// Sort day segments by start hour to display them in the correct order in the table
-	const sortedDaySegments = React.useMemo(() => {
-		if (!daySegments) {
-			return [];
-		}
-		return [...daySegments].sort((a, b) => a.startHour - b.startHour);
-	}, [daySegments]);
+	const { data: daySegments = [] } = daySegmentsApi.useGetDailyPatternSegmentsByDayIdQuery(props.day.id);
 
 	// Fetch days data (used to check if day name already exists)
 	const { data: days } = daysApi.useGetDailyPatternsQuery();
@@ -102,8 +94,8 @@ export default function EditDailyPatternModalComponent(props: EditDailyPatternMo
 
 	// Pagination
 	const [page, setPage] = React.useState(1);
-	const totalPages = Math.ceil(sortedDaySegments?.length ?? 1 / PER_PAGE);
-	const paged = sortedDaySegments?.slice((page - 1) * PER_PAGE, page * PER_PAGE);
+	const totalPages = Math.ceil(daySegments.length ?? 1 / PER_PAGE);
+	const paged = daySegments.slice((page - 1) * PER_PAGE, page * PER_PAGE);
 
 	// State to hold validation message for day name
 	// This is used to show an error message if the day name is invalid
@@ -124,6 +116,20 @@ export default function EditDailyPatternModalComponent(props: EditDailyPatternMo
 		return true;
 	}, [dayDetails]);
 
+	// State to hold the modal for editing a day segment
+	const [showEditSegmentModal, setShowEditSegmentModal] = React.useState(false);
+	const [editSegment, setEditSegment] = React.useState<DaySegment | null>(null);
+
+	// Function to open the edit segment modal
+	const handleShowEditSegmentModal = (segment: DaySegment) => {
+		setEditSegment(segment);
+		setShowEditSegmentModal(true);
+	};
+	// Function to close the edit segment modal
+	const handleCloseEditSegmentModal = () => {
+		setShowEditSegmentModal(false);
+		setEditSegment(null);
+	};
 
 	const [editDaySegmentMutation] = daySegmentsApi.useEditDailyPatternSegmentMutation();
 	const [deleteDaySegmentMutation] = daySegmentsApi.useDeleteDailyPatternSegmentMutation();
@@ -131,14 +137,20 @@ export default function EditDailyPatternModalComponent(props: EditDailyPatternMo
 	// Function to handle deleting a segment
 	// Adjusts the neighboring segment's start or end hour accordingly
 	const handleDeleteSegment = (seg: DaySegment, direction: 'earlier' | 'later') => {
-		const index = sortedDaySegments.findIndex(s => s.id === seg.id);
-		let targetSegment = direction === 'earlier' ? sortedDaySegments[index - 1] : sortedDaySegments[index + 1];
-		targetSegment = {
+		const index = daySegments.findIndex(s => s.id === seg.id);
+		const targetSegment = direction === 'earlier' ? daySegments[index - 1] : daySegments[index + 1];
+
+		const startHour = direction === 'later' ? seg.startHour : targetSegment.startHour;
+		const endHour = direction === 'earlier' ? seg.endHour : targetSegment.endHour;
+
+		const editSegment: UpdateDaySegmentPayload = {
 			...targetSegment,
-			startHour: direction === 'later' ? seg.startHour : targetSegment.startHour,
-			endHour: direction === 'earlier' ? seg.endHour : targetSegment.endHour
+			startHour,
+			endHour,
+			originalStartHour: startHour,
+			originalEndHour: endHour
 		};
-		const editPromise = editDaySegmentMutation(targetSegment).unwrap();
+		const editPromise = editDaySegmentMutation(editSegment).unwrap();
 		const deletePromise = deleteDaySegmentMutation({ id: seg.id }).unwrap();
 
 		Promise.all([editPromise, deletePromise])
@@ -224,7 +236,9 @@ export default function EditDailyPatternModalComponent(props: EditDailyPatternMo
 												: seg.note ?? ''}
 										</td>
 										<td>
-											<EditDaySegmentModalComponent daySegment={seg} />
+											<Button color="secondary" size="sm" onClick={() => handleShowEditSegmentModal(seg)}>
+												<FormattedMessage id="edit" />
+											</Button>
 										</td>
 										<td>
 											{/* only show split buttons if segment is longer than 1 hour */}
@@ -255,7 +269,7 @@ export default function EditDailyPatternModalComponent(props: EditDailyPatternMo
 						</Table>
 
 						{/* Pagination */}
-						{sortedDaySegments && sortedDaySegments.length > PER_PAGE && (
+						{daySegments && daySegments.length > PER_PAGE && (
 							<Pagination style={{ justifyContent: 'center' }}>
 								<PaginationItem disabled={page === 1}>
 									<PaginationLink first onClick={() => setPage(1)} />
@@ -305,6 +319,9 @@ export default function EditDailyPatternModalComponent(props: EditDailyPatternMo
 					actionRejectText={translate('cancel')}
 				/>
 			</Modal >
+
+			{/* Edit Day Segment modal */}
+			{editSegment && <EditDaySegmentModalComponent show={showEditSegmentModal} daySegment={editSegment} handleClose={handleCloseEditSegmentModal} />}
 		</>
 	);
 }

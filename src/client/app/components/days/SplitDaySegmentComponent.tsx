@@ -32,19 +32,21 @@ export default function SplitDaySegmentComponent(props: SplitDaySegmentComponent
 
 	const [splitHour, setSplitHour] = React.useState<number>(props.daySegment.startHour + 1);
 
-	const [showEditModal, setShowEditModal] = React.useState(false);
+	const [showSplitModal, setShowSplitModal] = React.useState(false);
 
-	const [editDaySegmentMutation, { isLoading: isEditSaving }] = daySegmentsApi.useEditDailyPatternSegmentMutation();
+	const [deleteDaySegmentMutation, { isLoading: isDeleting }] = daySegmentsApi.useDeleteDailyPatternSegmentMutation();
 
 	const [addDaySegmentMutation, { isLoading: isAddSaving }] = daySegmentsApi.useAddDailyPatternSegmentMutation();
 
-	const handleShowEditModal = () => setShowEditModal(true);
-	const handleHideEditModal = () => setShowEditModal(false);
+	const handleShowSplitModal = () => setShowSplitModal(true);
+	const handleHideSplitModal = () => setShowSplitModal(false);
 
 	const handleSplitInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 		setSplitHour(Number(e.target.value));
 	};
 
+	// Validate the split hour
+	// It should be greater than the start hour and less than the end hour
 	const isSplitValid = React.useMemo(() => {
 		if (!Number.isInteger(splitHour)) {
 			return false;
@@ -53,16 +55,26 @@ export default function SplitDaySegmentComponent(props: SplitDaySegmentComponent
 
 	}, [splitHour, props.daySegment, props.direction]);
 
-	const handleSplitSegment = () => {
+	// Handle the split operation
+	// It deletes the original segment and creates two new segments based on the split hour
+	const handleSubmit = () => {
 		if (!isSplitValid) {
 			return;
 		}
 
-		const editSegment: DaySegment = {
-			...props.daySegment,
+		// New segment based on the original segment
+		// It copies the slope and intercept from the original segment
+		// and sets the start and end hours based on the split hour
+		// The original segment is deleted after the new segments are created
+		const copySegment: Omit<DaySegment, 'id'> = {
+			dayId: props.daySegment.dayId,
+			slope: props.daySegment.slope,
+			intercept: props.daySegment.intercept,
+			note: props.daySegment.note,
 			startHour: props.direction === 'earlier' ? splitHour : props.daySegment.startHour,
 			endHour: props.direction === 'earlier' ? props.daySegment.endHour : splitHour
 		};
+
 		const newSegment: Omit<DaySegment, 'id'> = {
 			dayId: props.daySegment.dayId,
 			slope: 0,
@@ -71,12 +83,16 @@ export default function SplitDaySegmentComponent(props: SplitDaySegmentComponent
 			endHour: props.direction === 'earlier' ? splitHour : props.daySegment.endHour
 		};
 
-		const editPromise = editDaySegmentMutation(editSegment).unwrap();
-		const addPromise = addDaySegmentMutation(newSegment).unwrap();
+		const deleteOriginalSegment = deleteDaySegmentMutation({ id: props.daySegment.id }).unwrap();
 
-		Promise.all([editPromise, addPromise])
+		const createCopySegment = addDaySegmentMutation(copySegment).unwrap();
+		const createNewSegment = addDaySegmentMutation(newSegment).unwrap();
+
+		deleteOriginalSegment
+			.then(() =>
+				Promise.all([createCopySegment, createNewSegment]))
 			.then(() => {
-				handleHideEditModal();
+				handleHideSplitModal();
 			})
 			.catch(error => {
 				showErrorNotification(error);
@@ -85,11 +101,11 @@ export default function SplitDaySegmentComponent(props: SplitDaySegmentComponent
 
 	return (
 		<>
-			<Button size="sm" onClick={handleShowEditModal}>
+			<Button size="sm" onClick={handleShowSplitModal}>
 				<FormattedMessage id={props.direction === 'earlier' ? 'split.earlier' : 'split.later'} />
 			</Button>
 
-			<Modal isOpen={showEditModal} toggle={handleHideEditModal} backdrop="static" >
+			<Modal isOpen={showSplitModal} toggle={handleHideSplitModal} backdrop="static" >
 				<ModalHeader>
 					<FormattedMessage id={props.direction === 'earlier' ? 'split.earlier' : 'split.later'} />
 				</ModalHeader>
@@ -112,13 +128,13 @@ export default function SplitDaySegmentComponent(props: SplitDaySegmentComponent
 					</FormFeedback>
 				</ModalBody>
 				<ModalFooter>
-					<Button color="secondary" onClick={handleHideEditModal}>
+					<Button color="secondary" onClick={handleHideSplitModal}>
 						<FormattedMessage id="cancel" />
 					</Button>
 					<Button
 						color="primary"
-						onClick={handleSplitSegment}
-						disabled={!isSplitValid || isEditSaving || isAddSaving}
+						onClick={handleSubmit}
+						disabled={!isSplitValid || isDeleting || isAddSaving}
 					>
 						<FormattedMessage id="save.all" />
 					</Button>

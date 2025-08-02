@@ -1,3 +1,7 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 import { createSelector } from '@reduxjs/toolkit';
 import { Day } from '../../types/redux/days';
 import { baseApi } from './baseApi';
@@ -19,6 +23,7 @@ export const daysApi = baseApi.injectEndpoints({
 				method: 'POST',
 				body: dailyPattern
 			}),
+			transformErrorResponse: res => res.data,
 			invalidatesTags: ['DailyPattern']
 		}),
 		editDailyPattern: builder.mutation<void, { id: number; dayName?: string; note?: string }>({
@@ -28,7 +33,7 @@ export const daysApi = baseApi.injectEndpoints({
 				body: dailyPattern
 			}),
 			transformErrorResponse: res => res.data,
-			invalidatesTags: (result, error, arg) => [{ type: 'DailyPattern', id: arg.id }]
+			invalidatesTags: ['DailyPattern']
 		}),
 		deleteDailyPattern: builder.mutation<void, { id: number }>({
 			query: ({ id }) => ({
@@ -36,7 +41,8 @@ export const daysApi = baseApi.injectEndpoints({
 				method: 'POST',
 				body: { id }
 			}),
-			invalidatesTags: (result, error, arg) => [{ type: 'DailyPattern', id: arg.id }]
+			transformErrorResponse: res => res.data,
+			invalidatesTags: ['DailyPattern']
 		})
 	})
 });

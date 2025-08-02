@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import { createSelector } from '@reduxjs/toolkit';
-import { DaySegment } from '../../types/redux/days';
+import { DaySegment, UpdateDaySegmentPayload } from '../../types/redux/days';
 import { baseApi } from './baseApi';
 
 // TODO: fix tags and invalidation
@@ -31,14 +31,16 @@ export const daySegmentsApi = baseApi.injectEndpoints({
 				method: 'POST',
 				body: daySegment
 			}),
+			transformErrorResponse: res => res.data,
 			invalidatesTags: ['DailyPatternSegment']
 		}),
-		editDailyPatternSegment: builder.mutation<void, DaySegment>({
+		editDailyPatternSegment: builder.mutation<void, UpdateDaySegmentPayload>({
 			query: daySegment => ({
 				url: 'api/daySegments/edit',
 				method: 'POST',
 				body: daySegment
 			}),
+			transformErrorResponse: res => res.data,
 			invalidatesTags: (result, error, arg) => [{ type: 'DailyPatternSegment', dayId: arg.dayId }]
 		}),
 		deleteDailyPatternSegment: builder.mutation<void, { id: number }>({
@@ -47,6 +49,7 @@ export const daySegmentsApi = baseApi.injectEndpoints({
 				method: 'POST',
 				body: { id }
 			}),
+			transformErrorResponse: res => res.data,
 			invalidatesTags: (result, error, arg) => [{ type: 'DailyPatternSegment', id: arg.id }]
 		})
 	})

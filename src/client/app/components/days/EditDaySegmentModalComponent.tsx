@@ -4,9 +4,10 @@
 
 import * as React from 'react';
 import { FormattedMessage } from 'react-intl';
-import { Button, FormGroup, Input, Label, Modal, ModalBody, ModalFooter, ModalHeader } from 'reactstrap';
+import { Button, Col, FormFeedback, FormGroup, Input, Label, Modal, ModalBody, ModalFooter, ModalHeader, Row } from 'reactstrap';
 import { daySegmentsApi } from '../../redux/api/daySegmentsApi';
-import { DaySegment } from '../../types/redux/days';
+import { DaySegment, UpdateDaySegmentPayload } from '../../types/redux/days';
+import { showErrorNotification } from '../../utils/notifications';
 
 
 /**
@@ -25,9 +26,19 @@ function hourToTime(hour: number) {
 
 interface EditDaySegmentModalComponentProps {
 	/**
-	 * The week to edit
+	 * Whether the modal is visible or not
+	 */
+	show: boolean;
+
+	/**
+	 * The day segment to edit
 	 */
 	daySegment: DaySegment;
+
+	/**
+	 * Function to run when edit modal closes
+	 */
+	handleClose: () => void;
 }
 
 /**
@@ -37,9 +48,12 @@ interface EditDaySegmentModalComponentProps {
  * @returns Day segment edit element
  */
 export default function EditDaySegmentModalComponent(props: EditDaySegmentModalComponentProps): React.ReactElement {
-	const [daySegment, setDaySegment] = React.useState({ ...props.daySegment });
+	const [daySegment, setDaySegment] = React.useState<UpdateDaySegmentPayload>(
+		{ ...props.daySegment, originalStartHour: props.daySegment.startHour, originalEndHour: props.daySegment.endHour }
+	);
 
-	const [showEditModal, setShowEditModal] = React.useState(false);
+	// Fetch day segments by day ID to validate start and end hours
+	const { data: daySegments = [] } = daySegmentsApi.useGetDailyPatternSegmentsByDayIdQuery(props.daySegment.dayId);
 
 	const [editDaySegmentMutation, { isLoading: isSaving }] = daySegmentsApi.useEditDailyPatternSegmentMutation();
 
@@ -52,33 +66,69 @@ export default function EditDaySegmentModalComponent(props: EditDaySegmentModalC
 	};
 
 	const handleSubmit = () => {
+		if (!isSegmentValid) {
+			return;
+		}
 		editDaySegmentMutation(daySegment).unwrap()
 			.then(() => {
-				handleHideEditModal();
+				props.handleClose();
+			})
+			.catch(error => {
+				showErrorNotification(error);
 			});
 	};
 
-	const handleShowEditModal = () => setShowEditModal(true);
-	const handleHideEditModal = () => setShowEditModal(false);
+	// Validate the start hour
+	// It should be a valid hour and not conflict with existing segments
+	const isStartHourValid = React.useMemo(() => {
+		if (daySegment.startHour < 0 || daySegment.startHour >= daySegment.endHour || daySegment.startHour >= 24 || daySegment.startHour < 0) {
+			return false;
+		}
+		// Check if the start hour does not conflict with existing segments
+		const segmentIndex = daySegments.findIndex(s => s.id === daySegment.id);
+		if (segmentIndex > 0) {
+			const earlierSegment = daySegments[segmentIndex - 1];
+			return daySegment.startHour > earlierSegment.startHour;
+		}
+
+		return true;
+	}, [daySegment.startHour, daySegment.endHour]);
+
+	// Validate the end hour
+	// It should be a valid hour and not conflict with existing segments
+	const isEndHourValid = React.useMemo(() => {
+		if (daySegment.endHour <= daySegment.startHour || daySegment.endHour > 24 || daySegment.endHour < 0) {
+			return false;
+		}
+		// Check if the end hour does not conflict with existing segments
+		const segmentIndex = daySegments.findIndex(s => s.id === daySegment.id);
+		if (segmentIndex < daySegments.length - 1) {
+			const laterSegment = daySegments[segmentIndex + 1];
+			return daySegment.endHour < laterSegment.endHour;
+		}
+		return true;
+	}, [daySegment.startHour, daySegment.endHour]);
+
+	// Validate the segment as a whole
+	// It should have valid start and end hours
+	const isSegmentValid = React.useMemo(() => {
+		return isStartHourValid && isEndHourValid;
+	}, [daySegment.startHour, daySegment.endHour]);
+
 
 	return (
 		<>
-			<Button color="secondary" size="sm" onClick={handleShowEditModal}>
-				<FormattedMessage id="edit" />
-			</Button>
-
-			<Modal isOpen={showEditModal} toggle={handleHideEditModal} backdrop="static">
-				<ModalHeader toggle={handleHideEditModal}>
+			<Modal isOpen={props.show} toggle={props.handleClose} backdrop="static">
+				<ModalHeader toggle={props.handleClose}>
 					{/* TODO: internationalize */}
 					Edit Segment
 				</ModalHeader>
 				<ModalBody>
-					<strong>{hourToTime(daySegment.startHour)} - {hourToTime(daySegment.endHour)}</strong>
-
 					<FormGroup>
-						<Label for="slope">Slope</Label>
+						{/* TODO: internationalize */}
+						<Label for="segment-slope">Slope</Label>
 						<Input
-							id="slope"
+							id="segment-slope"
 							name="slope"
 							type="number"
 							required
@@ -87,9 +137,10 @@ export default function EditDaySegmentModalComponent(props: EditDaySegmentModalC
 						/>
 					</FormGroup>
 					<FormGroup>
-						<Label for="intercept">Intercept</Label>
+						{/* TODO: internationalize */}
+						<Label for="segment-intercept">Intercept</Label>
 						<Input
-							id="intercept"
+							id="segment-intercept"
 							name="intercept"
 							type="number"
 							required
@@ -98,9 +149,63 @@ export default function EditDaySegmentModalComponent(props: EditDaySegmentModalC
 						/>
 					</FormGroup>
 					<FormGroup>
-						<Label for="note">Note</Label>
+						<Row>
+							<Col>
+								<Label for="segment-start-hour">
+									<FormattedMessage id="daily.patterns.start.hour" />
+								</Label>
+								<Input
+									id="segment-start-hour"
+									name="startHour"
+									type="number"
+									min={0}
+									max={daySegment.endHour - 1}
+									step="1"
+									value={daySegment.startHour}
+									onChange={handleNumberChange}
+									invalid={!isStartHourValid}
+									valid={isStartHourValid}
+									disabled={daySegment.originalStartHour === 0}
+								/>
+								<FormFeedback valid>
+									{hourToTime(daySegment.startHour)}
+								</FormFeedback>
+								<FormFeedback>
+									<FormattedMessage id="invalid.input" />
+								</FormFeedback>
+							</Col>
+							<Col>
+								<Label for="segment-end-hour">
+									<FormattedMessage id="daily.patterns.end.hour" />
+								</Label>
+								<Input
+									id="segment-end-hour"
+									name="endHour"
+									type="number"
+									min={daySegment.startHour + 1}
+									max={24}
+									step="1"
+									value={daySegment.endHour}
+									onChange={handleNumberChange}
+									invalid={!isEndHourValid}
+									valid={isEndHourValid}
+									disabled={daySegment.originalEndHour === 24}
+								/>
+								<FormFeedback valid>
+									{hourToTime(daySegment.endHour)}
+								</FormFeedback>
+								<FormFeedback>
+									<FormattedMessage id="invalid.input" />
+								</FormFeedback>
+							</Col>
+						</Row>
+					</FormGroup>
+					<FormGroup>
+						<Label for="segment-note">
+							<FormattedMessage id="note" />
+						</Label>
 						<Input
-							id="note"
+							id="segment-note"
 							name="note"
 							type="textarea"
 							value={daySegment.note ?? ''}
@@ -110,14 +215,14 @@ export default function EditDaySegmentModalComponent(props: EditDaySegmentModalC
 				</ModalBody>
 				<ModalFooter>
 					{/* Discard changes */}
-					<Button color="secondary" onClick={handleHideEditModal}>
+					<Button color="secondary" onClick={props.handleClose}>
 						<FormattedMessage id="discard.changes" />
 					</Button>
 					{/* Save changes */}
 					<Button
 						color="primary"
 						onClick={handleSubmit}
-						disabled={isSaving}
+						disabled={!isSegmentValid || isSaving}
 					>
 						<FormattedMessage id="save.all" />
 					</Button>
