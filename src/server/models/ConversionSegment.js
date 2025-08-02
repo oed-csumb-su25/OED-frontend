@@ -5,7 +5,7 @@
 const database = require('./database');
 const sqlFile = database.sqlFile;
 const { log } = require('../log');
-const { failure } = require('./response');
+const moment = require('moment');
 
 class ConversionSegment {
 	/**
@@ -24,8 +24,8 @@ class ConversionSegment {
 		this.weekPatternsId = weekPatternsId;
 		this.slope = slope;
 		this.intercept = intercept;
-		this.startTime = startTime;
-		this.endTime = endTime;
+		this.startTime = formatTimestampValue(startTime);
+		this.endTime = formatTimestampValue(endTime);
 		this.note = note;
 	}
 
@@ -90,6 +90,9 @@ class ConversionSegment {
 	 * @param {*} conn The connection to use.
 	 * @returns {Promise.<ConversionSegment>}
 	 */
+
+
+
 	static async getBySourceDestinationStartEnd(sourceId, destinationId, startTime, endTime, conn) {
 		const row = await conn.one(sqlFile('conversionSegment/get_by_source_destination_start_end.sql'), {
 			sourceId: sourceId,
@@ -106,13 +109,7 @@ class ConversionSegment {
 	 */
 	async insert(conn) {
 		const conversionSegment = this;
-
-		try {
-			await conn.none(sqlFile('conversionSegment/insert_new_conversion_segment.sql'), conversionSegment);
-		} catch {
-			log.error(`Error while inserting conversion segment`);
-			failure(res, 500, `Error while inserting conversion segment`);
-		}
+		await conn.none(sqlFile('conversionSegment/insert_new_conversion_segment.sql'), conversionSegment);
 	}
 
 	/**
@@ -127,21 +124,23 @@ class ConversionSegment {
 			originalStartTime,
 			originalEndTime
 		};
+		const startChanged = this.startTime !== originalStartTime
+		const endChanged = this.endTime !== originalEndTime;
 
 		// check that -infinity and infinity aren't being updated
-		if ((this.startTime !== originalStartTime && originalStartTime === '-infinity') || (this.endTime !== originalEndTime && originalEndTime === 'infinity')) {
+		if ((startChanged && (originalStartTime === '-infinity')) || endChanged && (originalEndTime === 'infinity')) {
 			const errMsg = `Cannot update starting time of -infinity or ending time of infinity`;
 			log.error(errMsg);
 			throw new Error(errMsg);
 		}
 
-		// Check and update previous segment's end time to updated start time
-		if (this.startTime !== originalStartTime) {
+		// update the previous segment's end time to the updated start time
+		if (startChanged) {
 				await conn.none(sqlFile('conversionSegment/update_prev_seg_end_to_new_start.sql'), conversionSegment);
 		}
 
-		// Check and update next segment's start time to updated end time
-		if (this.endTime !== originalEndTime) {
+		// update the next segment's start time to the updated end time
+		if (endChanged) {
 			await conn.none(sqlFile('conversionSegment/update_next_seg_start_to_new_end.sql'), conversionSegment);
 		}
 
@@ -165,6 +164,16 @@ class ConversionSegment {
 			endTime: endTime
 		});
 	}
+
+
+}
+
+function formatTimestampValue(value) {
+	if (value === 'infinity' || value === '-infinity') {
+		return value;
+	} 
+
+	return moment(value).toISOString();
 }
 
 module.exports = ConversionSegment;

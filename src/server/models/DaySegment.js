@@ -4,7 +4,6 @@
 
 const database = require('./database');
 const sqlFile = database.sqlFile;
-const { failure } = require('./response');
 
 class DaySegment {
 	/**
@@ -72,7 +71,7 @@ class DaySegment {
 		const row = await conn.one(sqlFile('daySegment/get_by_id.sql'), {
 			id: id
 		});
-		return row === null ? null : DaySegment.mapRow(row);
+		return DaySegment.mapRow(row);
 	}
 
 	/** 
@@ -95,12 +94,7 @@ class DaySegment {
 	 */
 	async insert(conn) {
 		const daySegment = this;
-		try {
-			const resp =  await conn.none(sqlFile('daySegment/insert_new_day_segment.sql'), daySegment);
-		} catch{
-			log.error(`Error while inserting day segment`);
-			failure(res, 500, `Error while inserting day segment`);
-		}
+		await conn.none(sqlFile('daySegment/insert_new_day_segment.sql'), daySegment);
 	}
 	
 	/**

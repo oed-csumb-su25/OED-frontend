@@ -84,7 +84,7 @@ router.get('/:id', adminAuthMiddleware('get week by id'), async(req, res) => {
  * @param {number} friday The id for the day pattern used for friday.
  * @param {number} saturday The id for the day pattern used for saturday.
  */
-router.post('/add', adminAuthMiddleware('add week'), async (req, res) => {
+router.post('/addWeek', adminAuthMiddleware('add week'), async (req, res) => {
 	const validWeek= {
 		type: 'object',
 		maxProperties: 9,
