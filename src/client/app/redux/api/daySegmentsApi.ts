@@ -19,7 +19,7 @@ export const daySegmentsApi = baseApi.injectEndpoints({
 		}),
 		getDailyPatternSegmentsByDayId: builder.query<DaySegment[], number>({
 			query: dayId => ({
-				url: 'api/daySegments/segments',
+				url: 'api/daySegments/dayId',
 				method: 'POST',
 				body: { dayId }
 			}),
@@ -27,7 +27,7 @@ export const daySegmentsApi = baseApi.injectEndpoints({
 		}),
 		addDailyPatternSegment: builder.mutation<void, Omit<DaySegment, 'id'>>({
 			query: daySegment => ({
-				url: 'api/daySegments/add',
+				url: 'api/daySegments/addDaySegment',
 				method: 'POST',
 				body: daySegment
 			}),

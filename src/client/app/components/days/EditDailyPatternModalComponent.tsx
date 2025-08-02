@@ -83,11 +83,9 @@ export default function EditDailyPatternModalComponent(props: EditDailyPatternMo
 
 		editDayMutation(dayDetails).unwrap()
 			.then(() => {
-				
 				showSuccessNotification(translate('daily.patterns.edit.success'));
 				props.handleClose();
 			}).catch(error => {
-				
 				showErrorNotification(translate('daily.patterns.edit.error'));
 			});
 	};

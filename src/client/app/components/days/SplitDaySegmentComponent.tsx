@@ -123,8 +123,8 @@ export default function SplitDaySegmentComponent(props: SplitDaySegmentComponent
 					/>
 					<FormFeedback>
 						{!isSplitValid && translate('split.hour.invalid')
-  							.replace('{start}', String(props.daySegment.startHour + 1))
-  							.replace('{end}', String(props.daySegment.endHour - 1))}
+							.replace('{start}', String(props.daySegment.startHour + 1))
+							.replace('{end}', String(props.daySegment.endHour - 1))}
 					</FormFeedback>
 				</ModalBody>
 				<ModalFooter>

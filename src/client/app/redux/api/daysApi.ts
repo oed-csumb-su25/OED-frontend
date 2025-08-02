@@ -19,7 +19,7 @@ export const daysApi = baseApi.injectEndpoints({
 		}),
 		addDailyPattern: builder.mutation<void, { dayName: string; slope: number; intercept: number; note?: string, segmentNote?: string }>({
 			query: dailyPattern => ({
-				url: 'api/days/add',
+				url: 'api/days/addDay',
 				method: 'POST',
 				body: dailyPattern
 			}),
