@@ -11,7 +11,10 @@ export const daysApi = baseApi.injectEndpoints({
 	endpoints: builder => ({
 		getDays: builder.query<Day[], void>({
 			query: () => 'api/days',
-			providesTags: ['Days']
+			providesTags: result =>
+				result
+					? [...result.map(({ id }) => ({ type: 'Days' as const, id })), { type: 'Days', id: 'LIST' }]
+					: [{ type: 'Days', id: 'LIST' }]
 		}),
 		getDayById: builder.query<Day, number>({
 			query: id => `api/days/${id}`,

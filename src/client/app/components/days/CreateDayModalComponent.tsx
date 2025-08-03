@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/indent */
 /* This Source Code Form is subject to the terms of the Mozilla Public
 * License, v. 2.0. If a copy of the MPL was not distributed with this
 * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -16,6 +15,7 @@ import { useTranslate } from '../../redux/componentHooks';
 import TooltipMarkerComponent from '../TooltipMarkerComponent';
 import ConfirmActionModalComponent from '../ConfirmActionModalComponent';
 import { daysApi } from '../../redux/api/daysApi';
+import { showErrorNotification, showSuccessNotification } from '../../utils/notifications';
 
 /**
  * Defines the create conversion modal form
@@ -43,53 +43,50 @@ export default function CreateDayModalComponent() {
 
 	// Handlers for each type of input change
 	const [patternState, setPatternState] = useState({
-	Day: {
-		name: defaultValues.name,
-		note: defaultValues.DayNote
-	},
-	initialSegment: {
-		slope: defaultValues.slope,
-		intercept: defaultValues.intercept,
-		startHour: defaultValues.startHour,
-		endHour: defaultValues.endHour,
-		segmentNote: defaultValues.initialSegmentNote
-	}
-});
+		Day: {
+			name: defaultValues.name,
+			note: defaultValues.DayNote
+		},
+		initialSegment: {
+			slope: defaultValues.slope,
+			intercept: defaultValues.intercept,
+			startHour: defaultValues.startHour,
+			endHour: defaultValues.endHour,
+			segmentNote: defaultValues.initialSegmentNote
+		}
+	});
 
 	// Check if the daily pattern is valid
 	const [isValidDay, reason] = useAppSelector(state =>
-		selectIsValidCreateDay(state, {
-			name: patternState.Day.name
-			// You can add more fields if your selector uses them
-		})
+		selectIsValidCreateDay(state, patternState)
 	);
 
 	const handleTextInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 		const { name, value } = e.target;
 		if (name === 'DayNote') {
-				setPatternState(prev => ({
-						...prev,
-						Day: {
-								...prev.Day,
-								note: value
-						}
-				}));
+			setPatternState(prev => ({
+				...prev,
+				Day: {
+					...prev.Day,
+					note: value
+				}
+			}));
 		} else if (name === 'initialSegmentNote') {
-				setPatternState(prev => ({
-						...prev,
-						initialSegment: {
-								...prev.initialSegment,
-								segmentNote: value
-						}
-				}));
+			setPatternState(prev => ({
+				...prev,
+				initialSegment: {
+					...prev.initialSegment,
+					segmentNote: value
+				}
+			}));
 		} else {
-				setPatternState(prev => ({
-						...prev,
-						Day: {
-								...prev.Day,
-								name: value
-						}
-				}));
+			setPatternState(prev => ({
+				...prev,
+				Day: {
+					...prev.Day,
+					name: value
+				}
+			}));
 		}
 	};
 
@@ -126,7 +123,13 @@ export default function CreateDayModalComponent() {
 			intercept: patternState.initialSegment.intercept,
 			note: patternState.Day.note,
 			segmentNote: patternState.initialSegment.segmentNote
-		});
+		}).unwrap()
+			.then(() => {
+				showSuccessNotification(translate('day.create.success'));
+			})
+			.catch(error => {
+				showErrorNotification(translate('day.create.failure') + error);
+			});
 		// Reset the state to default values
 		resetState();
 		// Close the modal
@@ -172,7 +175,13 @@ export default function CreateDayModalComponent() {
 				intercept: patternState.initialSegment.intercept,
 				note: patternState.Day.note,
 				segmentNote: patternState.initialSegment.segmentNote
-			});
+			}).unwrap()
+				.then(() => {
+					showSuccessNotification(translate('day.create.success'));
+				})
+				.catch(error => {
+					showErrorNotification(translate('day.create.failure') + error);
+				});
 			// Reset the state to default values
 			resetState();
 		}
@@ -235,9 +244,9 @@ export default function CreateDayModalComponent() {
 								onChange={e => handleTextInputChange(e)}
 								value={patternState.Day.note} />
 						</FormGroup>
-						{/*Initial pattern*/}
+						{/*Initial day segment*/}
 						<h5>
-							<FormattedMessage id="initial.pattern" />
+							<FormattedMessage id="initial.segment" />
 						</h5>
 						<Row xs='1' lg='2'>
 							<Col>

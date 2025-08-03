@@ -431,22 +431,24 @@ export const isValidCreateMeter = createAppSelector(
  * - Ensures the day name does not already exist (case-insensitive) in the list of days.
  * Returns a tuple: [isValid, message].
  * @param _state The Redux state (unused in this selector).
- * @param Day The daily pattern object containing the day name.
- * @param Day.name The name of the day to validate for uniqueness and non-blank value.
+ * @param patternState The full pattern state object.
+ * @param patternState.Day The Day object containing the name of the daily pattern.
+ * @param patternState.Day.name The name of the daily pattern to validate.
  * @returns A tuple where the first element is a boolean indicating validity, and the second is a message string.
  */
 export const selectIsValidCreateDay = createAppSelector(
     [
         selectAllDays,
-        (_state, Day: { name: string }) => Day
+        (_state, patternState: { Day: { name: string } }) => patternState
     ],
-    (days, Day): [boolean, string] => {
-        if (!Day.name || Day.name.trim() === '') {
+    (days, patternState): [boolean, string] => {
+        const name = patternState.Day?.name;
+        if (!name || name.trim() === '') {
             return [false, translate('day.create.name.required')];
         }
         // Check if name already exists (case-insensitive)
         const exists = days.some(day =>
-            day.name?.toLowerCase() === Day.name.trim().toLowerCase()
+            day.name?.toLowerCase() === name.trim().toLowerCase()
         );
         if (exists) {
             return [false, translate('day.create.name.exists')];
