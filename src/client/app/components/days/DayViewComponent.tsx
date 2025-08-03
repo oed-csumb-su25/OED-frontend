@@ -20,12 +20,8 @@ interface DayViewComponentProps {
  * @returns Single day element
  */
 export default function DayViewComponent(props: DayViewComponentProps) {
-	//const translate = useTranslate();
-	// Don't check if admin since only an admin is allow to route to this page.
-
 	// Edit Modal Show
 	const [showEditModal, setShowEditModal] = useState(false);
-	//const unitDataById = useAppSelector(selectUnitDataById);
 
 	const handleShow = () => {
 		setShowEditModal(true);
@@ -34,12 +30,6 @@ export default function DayViewComponent(props: DayViewComponentProps) {
 	const handleClose = () => {
 		setShowEditModal(false);
 	};
-
-	// Create header from sourceId, destinationId identifiers
-	//const conversionIdentifier = String(unitDataById[props.conversion.sourceId]?.identifier + conversionArrow(props.conversion.bidirectional) +
-	//  unitDataById[props.conversion.destinationId]?.identifier);
-
-	// Unlike the details component, we don't check if units are loaded since must come through that page.
 
 	return (
 		<div className="card">

@@ -53,9 +53,9 @@ export default function EditDaySegmentModalComponent(props: EditDaySegmentModalC
 	);
 
 	// Fetch day segments by day ID to validate start and end hours
-	const { data: daySegments = [] } = daySegmentsApi.useGetDailyPatternSegmentsByDayIdQuery(props.daySegment.dayId);
+	const { data: daySegments = [] } = daySegmentsApi.useGetDaySegmentsByDayIdQuery(props.daySegment.dayId);
 
-	const [editDaySegmentMutation, { isLoading: isSaving }] = daySegmentsApi.useEditDailyPatternSegmentMutation();
+	const [editDaySegmentMutation, { isLoading: isSaving }] = daySegmentsApi.useEditDaySegmentMutation();
 
 	const handleStringChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 		setDaySegment({ ...daySegment, [e.target.name]: e.target.value });

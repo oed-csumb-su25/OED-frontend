@@ -34,9 +34,9 @@ export default function SplitDaySegmentComponent(props: SplitDaySegmentComponent
 
 	const [showSplitModal, setShowSplitModal] = React.useState(false);
 
-	const [deleteDaySegmentMutation, { isLoading: isDeleting }] = daySegmentsApi.useDeleteDailyPatternSegmentMutation();
+	const [deleteDaySegmentMutation, { isLoading: isDeleting }] = daySegmentsApi.useDeleteDaySegmentsMutation();
 
-	const [addDaySegmentMutation, { isLoading: isAddSaving }] = daySegmentsApi.useAddDailyPatternSegmentMutation();
+	const [addDaySegmentMutation, { isLoading: isAddSaving }] = daySegmentsApi.useAddDaySegmentMutation();
 
 	const handleShowSplitModal = () => setShowSplitModal(true);
 	const handleHideSplitModal = () => setShowSplitModal(false);

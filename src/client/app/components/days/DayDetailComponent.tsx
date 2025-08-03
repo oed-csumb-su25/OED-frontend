@@ -8,7 +8,7 @@ import { titleStyle, tooltipBaseStyle } from '../../styles/modalStyle';
 import SpinnerComponent from '../SpinnerComponent';
 import TooltipHelpComponent from '../TooltipHelpComponent';
 import TooltipMarkerComponent from '../TooltipMarkerComponent';
-import CreateDailyPatternModalComponent from './CreateDailyPatternModalComponent';
+import CreateDayModalComponent from './CreateDayModalComponent';
 import DayViewComponent from './DayViewComponent';
 
 /**

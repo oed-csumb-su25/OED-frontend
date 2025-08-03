@@ -64,7 +64,7 @@ export default function CreateDayModalComponent() {
 		})
 	);
 
-	const handleStringChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+	const handleTextInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 		const { name, value } = e.target;
 		if (name === 'DayNote') {
 				setPatternState(prev => ({
@@ -79,7 +79,7 @@ export default function CreateDayModalComponent() {
 						...prev,
 						initialSegment: {
 								...prev.initialSegment,
-								note: value
+								segmentNote: value
 						}
 				}));
 		} else {
@@ -93,7 +93,7 @@ export default function CreateDayModalComponent() {
 		}
 	};
 
-	const handleNumberChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+	const handleNumberInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
 		const { name, value } = e.target;
 		const newValue = Number(value);
 		if (name === 'slope') {
@@ -216,7 +216,7 @@ export default function CreateDayModalComponent() {
 								id='DayName'
 								name='DayName'
 								type='text'
-								onChange={e => handleStringChange(e)}
+								onChange={e => handleTextInputChange(e)}
 								value={patternState.Day.name}
 								invalid={!patternState.Day.name || patternState.Day.name.trim() === ''} // TODO: OED needs to decide how to trim names universally
 								required
@@ -232,7 +232,7 @@ export default function CreateDayModalComponent() {
 								id='DayNote'
 								name='DayNote'
 								type='textarea'
-								onChange={e => handleStringChange(e)}
+								onChange={e => handleTextInputChange(e)}
 								value={patternState.Day.note} />
 						</FormGroup>
 						{/*Initial pattern*/}
@@ -249,7 +249,7 @@ export default function CreateDayModalComponent() {
 										name='slope'
 										type='number'
 										value={patternState.initialSegment.slope}
-										onChange={e => handleNumberChange(e)} />
+										onChange={e => handleNumberInputChange(e)} />
 								</FormGroup>
 							</Col>
 							<Col>
@@ -261,7 +261,7 @@ export default function CreateDayModalComponent() {
 										name='intercept'
 										type='number'
 										value={patternState.initialSegment.intercept}
-										onChange={e => handleNumberChange(e)} />
+										onChange={e => handleNumberInputChange(e)} />
 								</FormGroup>
 							</Col>
 						</Row>
@@ -302,7 +302,7 @@ export default function CreateDayModalComponent() {
 								id='initialSegmentNote'
 								name='initialSegmentNote'
 								type='textarea'
-								onChange={e => handleStringChange(e)}
+								onChange={e => handleTextInputChange(e)}
 								value={patternState.initialSegment.segmentNote} />
 						</FormGroup>
 					</Container>

@@ -25,7 +25,7 @@ import ConfirmActionModalComponent from '../ConfirmActionModalComponent';
 import EditDaySegmentModalComponent from './EditDaySegmentModalComponent';
 import SplitDaySegmentComponent from './SplitDaySegmentComponent';
 
-export interface EditDailyPatternModalComponentProps {
+export interface EditDayModalComponentProps {
 	/**
 	 * Whether the modal is visible or not
 	 */
@@ -61,16 +61,16 @@ function hourToTime(hour: number) {
  * @param props The properties for the component
  * @returns Day edit element
  */
-export default function EditDailyPatternModalComponent(props: EditDailyPatternModalComponentProps) {
+export default function EditDayModalComponent(props: EditDayModalComponentProps) {
 
 	const [dayDetails, setDayDetails] = React.useState({ ...props.day });
 
-	const { data: daySegments = [] } = daySegmentsApi.useGetDailyPatternSegmentsByDayIdQuery(props.day.id);
+	const { data: daySegments = [] } = daySegmentsApi.useGetDaySegmentsByDayIdQuery(props.day.id);
 
 	// Fetch days data (used to check if day name already exists)
-	const { data: days } = daysApi.useGetDailyPatternsQuery();
+	const { data: days } = daysApi.useGetDaysQuery();
 
-	const [editDayMutation, { isLoading: isSaving }] = daysApi.useEditDailyPatternMutation();
+	const [editDayMutation, { isLoading: isSaving }] = daysApi.useEditDayMutation();
 
 	const handleStringChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 		setDayDetails({ ...dayDetails, [e.target.name]: e.target.value });
@@ -83,10 +83,10 @@ export default function EditDailyPatternModalComponent(props: EditDailyPatternMo
 
 		editDayMutation(dayDetails).unwrap()
 			.then(() => {
-				showSuccessNotification(translate('daily.patterns.edit.success'));
+				showSuccessNotification(translate('day.edit.success'));
 				props.handleClose();
-			}).catch(error => {
-				showErrorNotification(translate('daily.patterns.edit.error'));
+			}).catch(() => {
+				showErrorNotification(translate('day.edit.error'));
 			});
 	};
 
@@ -102,11 +102,11 @@ export default function EditDailyPatternModalComponent(props: EditDailyPatternMo
 	// Validate the day name to ensure it is not empty and does not already exist
 	const isDayValid = React.useMemo(() => {
 		if (dayDetails.name === '') {
-			setNameValidationMessageId('daily.patterns.create.name.required');
+			setNameValidationMessageId('day.create.name.required');
 			return false;
 		}
 		if (days?.some(day => day.name.toLowerCase() === dayDetails.name.toLowerCase() && day.id !== dayDetails.id)) {
-			setNameValidationMessageId('daily.patterns.create.name.exists');
+			setNameValidationMessageId('day.create.name.exists');
 			return false;
 		}
 
@@ -129,8 +129,8 @@ export default function EditDailyPatternModalComponent(props: EditDailyPatternMo
 		setEditSegment(null);
 	};
 
-	const [editDaySegmentMutation] = daySegmentsApi.useEditDailyPatternSegmentMutation();
-	const [deleteDaySegmentMutation] = daySegmentsApi.useDeleteDailyPatternSegmentMutation();
+	const [editDaySegmentMutation] = daySegmentsApi.useEditDaySegmentMutation();
+	const [deleteDaySegmentMutation] = daySegmentsApi.useDeleteDaySegmentsMutation();
 
 	// Function to handle deleting a segment
 	// Adjusts the neighboring segment's start or end hour accordingly
@@ -159,18 +159,18 @@ export default function EditDailyPatternModalComponent(props: EditDailyPatternMo
 
 	// Delete day confirmation modal
 	const [showDeleteModal, setShowDeleteModal] = React.useState(false);
-	const [deleteDayMutation, { isLoading: isDeleting }] = daysApi.useDeleteDailyPatternMutation();
+	const [deleteDayMutation, { isLoading: isDeleting }] = daysApi.useDeleteDayMutation();
 
 	// Function to handle deleting the day
 	const handleDeleteDay = () => {
 		setShowDeleteModal(false);
 		deleteDayMutation({ id: dayDetails.id }).unwrap()
 			.then(() => {
-				showSuccessNotification(translate('daily.patterns.delete.success'));
+				showSuccessNotification(translate('day.delete.success'));
 				props.handleClose();
 			})
-			.catch(error => {
-				showErrorNotification(translate('daily.patterns.delete.error'));
+			.catch(() => {
+				showErrorNotification(translate('day.delete.error'));
 			});
 	};
 
@@ -179,7 +179,7 @@ export default function EditDailyPatternModalComponent(props: EditDailyPatternMo
 		<>
 			<Modal isOpen={props.show} toggle={props.handleClose} size="xl">
 				<ModalHeader toggle={props.handleClose}>
-					<FormattedMessage id="daily.patterns.edit" />
+					<FormattedMessage id="day.edit" />
 				</ModalHeader>
 
 				<ModalBody>
@@ -205,15 +205,15 @@ export default function EditDailyPatternModalComponent(props: EditDailyPatternMo
 
 						{/* Table */}
 						{/* TODO: internationalize */}
-						<h5 className="mt-3 mb-2"><FormattedMessage id="daily.patterns.segments.table.title" /></h5>
+						<h5 className="mt-3 mb-2"><FormattedMessage id="day.segments.table.title" /></h5>
 						<Table striped bordered>
 							<thead>
 								<tr>
-									<th><FormattedMessage id="daily.patterns.segments.table.timeRange" /></th>
-									<th><FormattedMessage id="daily.patterns.segments.table.slope" /></th>
-									<th><FormattedMessage id="daily.patterns.segments.table.intercept" /></th>
-									<th><FormattedMessage id="daily.patterns.segments.table.note" /></th>
-									<th><FormattedMessage id="daily.patterns.segments.table.edit" /></th>
+									<th><FormattedMessage id="day.segments.table.timeRange" /></th>
+									<th><FormattedMessage id="day.segments.table.slope" /></th>
+									<th><FormattedMessage id="day.segments.table.intercept" /></th>
+									<th><FormattedMessage id="day.segments.table.note" /></th>
+									<th><FormattedMessage id="day.segments.table.edit" /></th>
 									<th><FormattedMessage id="split.earlier" /></th>
 									<th><FormattedMessage id="split.later" /></th>
 									<th>Del ↑</th>
@@ -292,7 +292,7 @@ export default function EditDailyPatternModalComponent(props: EditDailyPatternMo
 				<ModalFooter>
 					{/* Delete day */}
 					<Button color="danger" onClick={() => setShowDeleteModal(true)} disabled={isSaving || isDeleting}>
-						{translate('daily.patterns.delete.button')}
+						{translate('day.delete.button')}
 					</Button>
 					<Button color="secondary" onClick={props.handleClose}>
 						<FormattedMessage id="discard.changes" />
@@ -305,10 +305,10 @@ export default function EditDailyPatternModalComponent(props: EditDailyPatternMo
 				{/* Delete confirmation modal */}
 				<ConfirmActionModalComponent
 					show={showDeleteModal}
-					actionConfirmMessage={translate('daily.patterns.delete.confirm')}
+					actionConfirmMessage={translate('day.delete.confirm')}
 					actionFunction={handleDeleteDay}
 					handleClose={() => setShowDeleteModal(false)}
-					actionConfirmText={translate('daily.patterns.delete.confirm.button')}
+					actionConfirmText={translate('day.delete.confirm.button')}
 					actionRejectText={translate('cancel')}
 				/>
 			</Modal >
