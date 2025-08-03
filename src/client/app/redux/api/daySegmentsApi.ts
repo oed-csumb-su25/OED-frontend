@@ -1,49 +1,61 @@
-import { createSelector } from '@reduxjs/toolkit';
-import { baseApi } from './baseApi';
-import { DaySegment } from '../../types/redux/days'; // Adjust path as needed
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+import { createSelector } from '@reduxjs/toolkit';
+import { DaySegment, UpdateDaySegmentPayload } from '../../types/redux/days';
+import { baseApi } from './baseApi';
+
+// TODO: fix tags and invalidation
 export const daySegmentsApi = baseApi.injectEndpoints({
 	endpoints: builder => ({
-		getDailyPatternSegments: builder.query<DaySegment[], void>({
+		getDaySegments: builder.query<DaySegment[], void>({
 			query: () => 'api/daySegments',
-			providesTags: ['DailyPatternSegment']
+			providesTags: ['DaySegments']
 		}),
-		getDailyPatternSegmentById: builder.query<DaySegment, number>({
+		getDaySegmentsById: builder.query<DaySegment, number>({
 			query: id => `api/daySegments/${id}`,
-			providesTags: (result, error, id) => [{ type: 'DailyPatternSegment', id }]
+			providesTags: (result, error, id) => [{ type: 'DaySegments', id }]
 		}),
-		getDailyPatternSegmentsByDayId: builder.query<DaySegment[], number>({
-			query: dayId => `api/daySegments/dayId/${dayId}`,
-			providesTags: (result, error, dayId) => [{ type: 'DailyPatternSegment', dayId }]
+		getDaySegmentsByDayId: builder.query<DaySegment[], number>({
+			query: dayId => ({
+				url: 'api/daySegments/dayId',
+				method: 'POST',
+				body: { dayId }
+			}),
+			providesTags: (result, error, dayId) => [{ type: 'DaySegments', dayId }]
 		}),
-		addDailyPatternSegment: builder.mutation<void, Omit<DaySegment, 'id'>>({
+		addDaySegment: builder.mutation<void, Omit<DaySegment, 'id'>>({
 			query: daySegment => ({
-				url: 'api/daySegments/add',
+				url: 'api/daySegments/addDaySegment',
 				method: 'POST',
 				body: daySegment
 			}),
-			invalidatesTags: ['DailyPatternSegment']
+			transformErrorResponse: res => res.data,
+			invalidatesTags: ['DaySegments']
 		}),
-		editDailyPatternSegment: builder.mutation<void, DaySegment>({
+		editDaySegment: builder.mutation<void, UpdateDaySegmentPayload>({
 			query: daySegment => ({
 				url: 'api/daySegments/edit',
 				method: 'POST',
 				body: daySegment
 			}),
-			invalidatesTags: (result, error, arg) => [{ type: 'DailyPatternSegment', id: arg.id }]
+			transformErrorResponse: res => res.data,
+			invalidatesTags: (result, error, arg) => [{ type: 'DaySegments', dayId: arg.dayId }]
 		}),
-		deleteDailyPatternSegment: builder.mutation<void, { id: number }>({
+		deleteDaySegments: builder.mutation<void, { id: number }>({
 			query: ({ id }) => ({
 				url: 'api/daySegments/delete',
 				method: 'POST',
 				body: { id }
 			}),
-			invalidatesTags: (result, error, arg) => [{ type: 'DailyPatternSegment', id: arg.id }]
+			transformErrorResponse: res => res.data,
+			invalidatesTags: (result, error, arg) => [{ type: 'DaySegments', id: arg.id }]
 		})
 	})
 });
 
-export const selectDaySegmentsQueryState = daySegmentsApi.endpoints.getDailyPatternSegments.select();
+export const selectDaySegmentsQueryState = daySegmentsApi.endpoints.getDaySegments.select();
 export const selectDaySegments = createSelector(
 	selectDaySegmentsQueryState,
 	({ data: daySegments = [] }) => daySegments
@@ -52,10 +64,10 @@ export const selectDaySegments = createSelector(
 export const stableEmptyDaySegments: DaySegment[] = [];
 
 export const {
-	useGetDailyPatternSegmentsQuery,
-	useGetDailyPatternSegmentByIdQuery,
-	useGetDailyPatternSegmentsByDayIdQuery,
-	useAddDailyPatternSegmentMutation,
-	useEditDailyPatternSegmentMutation,
-	useDeleteDailyPatternSegmentMutation
+	useGetDaySegmentsQuery,
+	useGetDaySegmentsByIdQuery,
+	useGetDaySegmentsByDayIdQuery,
+	useAddDaySegmentMutation,
+	useEditDaySegmentMutation,
+	useDeleteDaySegmentsMutation
 } = daySegmentsApi;

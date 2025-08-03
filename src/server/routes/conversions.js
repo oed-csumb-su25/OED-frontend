@@ -82,7 +82,7 @@ router.post('/edit', async (req, res) => {
  * Route for POST add conversion.
  * The slope, intercept, week pattern id, and note are included to create a new conversion segment spanning from -infinity to infinity.
  */
-router.post('/add', async (req, res) => {
+router.post('/addConversion', async (req, res) => {
 	const validConversion = {
 		type: 'object',
 		maxProperties: 8,

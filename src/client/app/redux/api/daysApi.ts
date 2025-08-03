@@ -1,3 +1,7 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 import { createSelector } from '@reduxjs/toolkit';
 import { Day } from '../../types/redux/days';
 import { baseApi } from './baseApi';
@@ -5,42 +9,42 @@ import { baseApi } from './baseApi';
 // Tag type for cache invalidation
 export const daysApi = baseApi.injectEndpoints({
 	endpoints: builder => ({
-		getDailyPatterns: builder.query<Day[], void>({
+		getDays: builder.query<Day[], void>({
 			query: () => 'api/days',
-			providesTags: ['DailyPattern']
+			providesTags: ['Days']
 		}),
-		getDailyPatternById: builder.query<Day, number>({
+		getDayById: builder.query<Day, number>({
 			query: id => `api/days/${id}`,
-			providesTags: (result, error, id) => [{ type: 'DailyPattern', id }]
+			providesTags: (result, error, id) => [{ type: 'Days', id }]
 		}),
-		addDailyPattern: builder.mutation<void, { dayName: string; slope: number; intercept: number; note?: string, segmentNote?: string }>({
-			query: dailyPattern => ({
-				url: 'api/days/add',
+		addDay: builder.mutation<void, { name: string; slope: number; intercept: number; note?: string, segmentNote?: string }>({
+			query: Day => ({
+				url: 'api/days/addDay',
 				method: 'POST',
-				body: dailyPattern
+				body: Day
 			}),
-			invalidatesTags: ['DailyPattern']
+			invalidatesTags: ['Days']
 		}),
-		editDailyPattern: builder.mutation<void, { id: number; dayName?: string; note?: string }>({
-			query: dailyPattern => ({
+		editDay: builder.mutation<void, { id: number; name?: string; note?: string }>({
+			query: Day => ({
 				url: 'api/days/edit',
 				method: 'POST',
-				body: dailyPattern
+				body: Day
 			}),
-			invalidatesTags: (result, error, arg) => [{ type: 'DailyPattern', id: arg.id }]
+			invalidatesTags: (result, error, arg) => [{ type: 'Days', id: arg.id }]
 		}),
-		deleteDailyPattern: builder.mutation<void, { id: number }>({
+		deleteDay: builder.mutation<void, { id: number }>({
 			query: ({ id }) => ({
 				url: 'api/days/delete',
 				method: 'POST',
 				body: { id }
 			}),
-			invalidatesTags: (result, error, arg) => [{ type: 'DailyPattern', id: arg.id }]
+			invalidatesTags: (result, error, arg) => [{ type: 'Days', id: arg.id }]
 		})
 	})
 });
 
-export const selectDaysQueryState = daysApi.endpoints.getDailyPatterns.select();
+export const selectDaysQueryState = daysApi.endpoints.getDays.select();
 export const selectAllDays = createSelector(
 	selectDaysQueryState,
 	({ data: days = [] }) => days
@@ -49,9 +53,9 @@ export const selectAllDays = createSelector(
 export const stableEmptyDays: Day[] = [];
 
 export const {
-	useGetDailyPatternsQuery,
-	useGetDailyPatternByIdQuery,
-	useAddDailyPatternMutation,
-	useEditDailyPatternMutation,
-	useDeleteDailyPatternMutation
+	useGetDaysQuery,
+	useGetDayByIdQuery,
+	useAddDayMutation,
+	useEditDayMutation,
+	useDeleteDayMutation
 } = daysApi;

@@ -4,4 +4,4 @@
  
 UPDATE day_segments
 	SET end_hour = ${startHour}
-	WHERE day_id = $[dayId] AND end_hour = ${originalStartHour};
+	WHERE day_id = ${dayId} AND end_hour = ${originalStartHour};

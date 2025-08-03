@@ -12,5 +12,6 @@ CREATE TABLE IF NOT EXISTS conversion_segments (
 	end_time TIMESTAMP NOT NULL DEFAULT 'infinity',
 	note TEXT,
 	FOREIGN KEY (source_id, destination_id) REFERENCES conversions(source_id, destination_id),
-	PRIMARY KEY (source_id, destination_id, start_time, end_time)
+	PRIMARY KEY (source_id, destination_id, start_time, end_time),
+	CHECK (start_time < end_time)
 );

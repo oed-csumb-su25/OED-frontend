@@ -11,4 +11,5 @@ SELECT
     start_time::TEXT AS start_time,
     end_time::TEXT AS end_time,
     note
-FROM conversion_segments;
+FROM conversion_segments
+ORDER BY start_time::TIMESTAMP ASC;

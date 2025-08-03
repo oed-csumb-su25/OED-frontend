@@ -5,6 +5,7 @@
 const database = require('./database');
 const sqlFile = database.sqlFile;
 const { log } = require('../log');
+const moment = require('moment');
 
 class ConversionSegment {
 	/**
@@ -23,8 +24,8 @@ class ConversionSegment {
 		this.weekPatternsId = weekPatternsId;
 		this.slope = slope;
 		this.intercept = intercept;
-		this.startTime = startTime;
-		this.endTime = endTime;
+		this.startTime = formatTimestampValue(startTime);
+		this.endTime = formatTimestampValue(endTime);
 		this.note = note;
 	}
 
@@ -38,9 +39,9 @@ class ConversionSegment {
 	}
 
 	/**
-	 * Creates a new conversion segment from the row's data.
+	 * Creates a new conversion segment from the data in a row.
 	 * @param {*} row The row from which the conversion segment will be created.
-	 * @returns The new conversion segment object.
+	 * @returns ConversionSegment
 	 */
 	static mapRow(row) {
 		return new ConversionSegment(
@@ -55,7 +56,7 @@ class ConversionSegment {
 	}
 
 	/**
-	 * Get all conversion segments.
+	 * Returns a promise to get all conversion segments from the database.
 	 * @param {*} conn The connection to use.
 	 * @returns {Promise.<Array.<ConversionSegment>>}
 	 */
@@ -65,10 +66,10 @@ class ConversionSegment {
 	}
 
 	/**
-	 * Get all conversion segments associated with the source and destination id. 
+	 * Returns a promise to get all conversion segments with the given source id and destination id from the database. 
 	 * If the conversion segment doesn't exist then return null.
-	 * @param {*} sourceId The source unit id.
-	 * @param {*} destinationId The destination unit id.
+	 * @param {*} sourceId The source meter's id.
+	 * @param {*} destinationId The destination meter's id.
 	 * @param {*} conn The connection to use.
 	 * @returns {Promise.<ConversionSegment>}
 	 */
@@ -81,15 +82,17 @@ class ConversionSegment {
 	}
 
 	/**
-	 * Returns the conversion segment associated with source, destination, startTime, and endTime. 
-	 * If the conversion segment doesn't exist then return null.
-	 * @param {*} sourceId The source unit id.
-	 * @param {*} destinationId The destination unit id.
-	 * @param {*} startTime The conversion segment start time
-	 * @param {*} endTime The conversion segment end time
+	 * Returns a promise to get the conversion segment associated with the given source id, destination id, startTime, and endTime from the database. 
+	 * @param {*} sourceId The source meter's id.
+	 * @param {*} destinationId The destination meter's id.
+	 * @param {*} startTime The start time of the conversion segment.
+	 * @param {*} endTime The end time of the conversion segment.
 	 * @param {*} conn The connection to use.
 	 * @returns {Promise.<ConversionSegment>}
 	 */
+
+
+
 	static async getBySourceDestinationStartEnd(sourceId, destinationId, startTime, endTime, conn) {
 		const row = await conn.one(sqlFile('conversionSegment/get_by_source_destination_start_end.sql'), {
 			sourceId: sourceId,
@@ -97,7 +100,7 @@ class ConversionSegment {
 			startTime: startTime,
 			endTime: endTime
 		});
-		return row === null ? null : ConversionSegment.mapRow(row);
+		return ConversionSegment.mapRow(row);
 	}
 
 	/**
@@ -106,75 +109,51 @@ class ConversionSegment {
 	 */
 	async insert(conn) {
 		const conversionSegment = this;
-
-		try {
-			await conn.none(sqlFile('conversionSegment/insert_new_conversion_segment.sql'), conversionSegment);
-		} catch {
-			log.error(`Error while inserting conversion segment with error(s): ${err}`);
-			failure(res, 500, `Error while inserting conversion segment with error(s): ${err}`);
-		}
+		await conn.none(sqlFile('conversionSegment/insert_new_conversion_segment.sql'), conversionSegment);
 	}
 
 	/**
 	 * Updates an existed conversion segment in the database.
-	 * @param {*} originalStartTime The original start time of the segment being updated
-	 * @param {*} originalEndTime The original end time of the segment being updated
+	 * @param {*} originalStartTime The original start time of the segment being updated.
+	 * @param {*} originalEndTime The original end time of the segment being updated.
 	 * @param {*} conn The connection to use.
 	 */
-	async update(originalStartTime, originalEndTime, conn, res) {
+	async update(originalStartTime, originalEndTime, conn) {
 		const conversionSegment = {
 			...this,
 			originalStartTime,
 			originalEndTime
 		};
+		const startChanged = this.startTime !== originalStartTime
+		const endChanged = this.endTime !== originalEndTime;
 
 		// check that -infinity and infinity aren't being updated
-		if ((this.startTime !== originalStartTime && originalStartTime === '-infinity') || (this.endTime !== originalEndTime && originalEndTime === 'infinity')) {
-			log.error(`Cannot update starting time of -infinity or ending time of infinity`);
-			failure(res, 500, `Cannot update staring time of -infinity or ending time of infinity`);
-			return;
+		if ((startChanged && (originalStartTime === '-infinity')) || endChanged && (originalEndTime === 'infinity')) {
+			const errMsg = `Cannot update starting time of -infinity or ending time of infinity`;
+			log.error(errMsg);
+			throw new Error(errMsg);
 		}
 
-		// Check and update previous segment's end time to updated start time
-		if (this.startTime !== originalStartTime) {
-			try {
+		// update the previous segment's end time to the updated start time
+		if (startChanged) {
 				await conn.none(sqlFile('conversionSegment/update_prev_seg_end_to_new_start.sql'), conversionSegment);
-			} catch(err) {
-				log.error(`Error while updating conversion segment with error(s): ${err}`);
-				failure(res, 500, `Error while updating prior conversion segment end time with error(s): ${err}`);
-				throw new Error(`Cannot update segment starting at -infinity`);
-				return;
-			}
 		}
 
-		// Check and update next segment's start time to updated end time
-		if (this.endTime !== originalEndTime) {
-			try {
-				await conn.none(sqlFile('conversionSegment/update_next_seg_start_to_new_end.sql'), conversionSegment);
-			} catch(err) {
-				log.error(`Error while updating startTime of next conversion segment with error(s): ${err}`);
-				failure(res, 500, `Error while updating startTime of next conversion segment with error(s): ${err}`);
-				throw new Error(`Error while updating updating startTime of next segment`);
-				return;
-			}
+		// update the next segment's start time to the updated end time
+		if (endChanged) {
+			await conn.none(sqlFile('conversionSegment/update_next_seg_start_to_new_end.sql'), conversionSegment);
 		}
 
 		// Update the current segment
-		try {
-			await conn.none(sqlFile('conversionSegment/update_conversion_segment.sql'), conversionSegment);
-		} catch(err) {
-			log.error(`Error while updating current conversion segment with error(s): ${err}`);
-			failure(res, 500, `Error while updating current conversion segment with error(s): ${err}`);
-			throw new Error(`Error while updating current conversion segment`);
-		}
+		await conn.none(sqlFile('conversionSegment/update_conversion_segment.sql'), conversionSegment);
 }
 
 	/**
 	 * Deletes the conversion associated with the source, destination, start time, and end time from the database.
-	 * @param {*} sourceId The source unit id.
-	 * @param {*} destinationId The destination unit id.
-	 * @param {*} startTime The time the segment starts.
-	 * @param {*} endTime The time the segment ends.
+	 * @param {*} sourceId The source meter's id.
+	 * @param {*} destinationId The destination meter's id.
+	 * @param {*} startTime The start time of the conversion segment.
+	 * @param {*} endTime The end time of the conversion segment.
 	 * @param {*} conn The connection to use.
 	 */
 	static async delete(sourceId, destinationId, startTime, endTime, conn) {
@@ -185,6 +164,16 @@ class ConversionSegment {
 			endTime: endTime
 		});
 	}
+
+
+}
+
+function formatTimestampValue(value) {
+	if (value === 'infinity' || value === '-infinity') {
+		return value;
+	} 
+
+	return moment(value).toISOString();
 }
 
 module.exports = ConversionSegment;

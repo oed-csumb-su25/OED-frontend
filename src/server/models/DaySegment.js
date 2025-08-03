@@ -18,7 +18,7 @@ class DaySegment {
 	constructor(id, dayId, startHour, endHour, slope, intercept, note) {
 		this.id = id;
 		this.dayId = dayId;
-		this.startHour = startHour; 
+		this.startHour = startHour;
 		this.endHour = endHour;
 		this.slope = slope;
 		this.intercept = intercept;
@@ -60,8 +60,8 @@ class DaySegment {
 		return rows.map(DaySegment.mapRow);
 	}
 
-	/** 
-	 * Returns the day segment associated the id. 
+	/**
+	 * Returns the day segment associated the id.
 	 * If the day segment doesn't exist then return null.
 	 * @param {*} id The day segment id.
 	 * @param {*} conn The connection to use.
@@ -71,10 +71,10 @@ class DaySegment {
 		const row = await conn.one(sqlFile('daySegment/get_by_id.sql'), {
 			id: id
 		});
-		return row === null ? null : DaySegment.mapRow(row);
+		return DaySegment.mapRow(row);
 	}
 
-	/** 
+	/**
 	 * Returns all day segments associated with the day id.
 	 * @param {*} dayId The day pattern id.
 	 * @param {*} conn The connection to use.
@@ -94,14 +94,9 @@ class DaySegment {
 	 */
 	async insert(conn) {
 		const daySegment = this;
-		try {
-			const resp =  await conn.none(sqlFile('daySegment/insert_new_day_segment.sql'), daySegment);
-		} catch(err) {
-			log.error(`Error while inserting day segment with error(s): ${err}`);
-			failure(res, 500, `Error while inserting day segment with error(s): ${err}`);
-		}
+		await conn.none(sqlFile('daySegment/insert_new_day_segment.sql'), daySegment);
 	}
-	
+
 	/**
 	 * Returns a promise to update a daySegment in the database.
 	 * @param {*} originalStartHour The original start hour of the segment being updated
@@ -109,7 +104,7 @@ class DaySegment {
 	 * @param {*} conn the connection to use.
 	 * @returns {Promise.<>}
 	 */
-	async update(originalStartHour, originalEndHour, conn, res) {
+	async update(originalStartHour, originalEndHour, conn) {
 		const daySegment = {
 			...this,
 			originalStartHour,
@@ -118,40 +113,20 @@ class DaySegment {
 
 		// check that 0 and 24 aren't being updated
 		if ((this.startHour !== originalStartHour && originalStartHour === 0) || (this.endHour !== originalEndHour && originalEndHour === 24)) {
-			log.error(`Cannot update starting hour of 0 or ending hour of 24`);
-			failure(res, 500, `Cannot update staring hour of 0 or ending hour of 24`);
-			return;
+			const errMsg = `Cannot update starting hour of 0 or ending hour of 24`;
+			log.error(errMsg);
+			throw new Error(errMsg);
 		}
 
 		// Check and update previous segment's end time to updated start time
-		if (this.startHour !== originalStartHour) {
-			try {
-				await conn.none(sqlFile('daySegment/update_prev_seg_end_to_new_start.sql'), daySegment);
-			} catch(err) {
-				log.error(`Error while updating previous segment with error(s): ${err}`);
-				failure(res, 500, `Error while updating previous segment with error(s): ${err}`);
-				return;
-			}
-		}
+		await conn.none(sqlFile('daySegment/update_prev_seg_end_to_new_start.sql'), daySegment);
 
 		// Check and update next segment's start time to updated end time
-		if (this.endHour !== originalEndHour) {
-			try {
-				await conn.none(sqlFile('daySegment/update_next_seg_start_to_new_end.sql'), daySegment);
-			} catch(err) {
-				log.error(`Error while updating the next segments start time with error(s) ${err}`);
-				failure(res, 500, `Error while updating the next segments start time with error(s) ${err}`);
-				return;
-			}
-		}
+		await conn.none(sqlFile('daySegment/update_next_seg_start_to_new_end.sql'), daySegment);
+
 
 		// update the current segment
-		try {
-			await conn.none(sqlFile('daySegment/update_day_segment.sql'), daySegment);
-		} catch(err) {
-			log.error(`Error while updating day segment with error(s): ${err}`);
-			failure(res, 500, `Error while updating day segment with error(s): ${err}`);
-		}
+		await conn.none(sqlFile('daySegment/update_day_segment.sql'), daySegment);
 	}
 
 	/**

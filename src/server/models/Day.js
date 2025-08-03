@@ -59,7 +59,7 @@ class Day {
         const row = await conn.one(sqlFile('day/get_by_id.sql'), {
             id: id
         });
-        return row === null ? null : Day.mapRow(row);
+        return Day.mapRow(row);
     }
 
     /**
@@ -74,35 +74,24 @@ class Day {
     async insert(slope, intercept, segmentNote, conn) {
         const day = this;
 
-        try {
-            // insert new day
-            const dayData = {
-                name: day.name,
-                note: day.note
-            };
-            const resp = await conn.one(sqlFile('day/insert_new_day_pattern.sql'), dayData);
-            this.id = resp.id;
-        } catch {
-            log.error(`Error while inserting day with error(s): ${err}`);
-			failure(res, 500, `Error while inserting day with error(s): ${err}`);
-        }
+        // insert new day
+        const dayData = {
+            name: day.name,
+            note: day.note
+        };
+        const resp = await conn.one(sqlFile('day/insert_new_day_pattern.sql'), dayData);
+        this.id = resp.id;
 
-        try {
-            // insert default day segment, including the new day id
-            const daySegment = {
-                dayId: this.id,
-                startHour: 0,
-                endHour: 24,
-                slope: slope,
-                intercept: intercept,
-                note: segmentNote
-            };
-
-            await conn.none(sqlFile('daySegment/insert_new_day_segment.sql'), daySegment);
-        } catch {
-            log.error(`Error while inserting default day segment with error(s): ${err}`);
-			failure(res, 500, `Error while inserting default day segment with error(s): ${err}`);
-        }
+        // insert default day segment, including the new day id
+        const daySegment = {
+            dayId: this.id,
+            startHour: 0,
+            endHour: 24,
+            slope: slope,
+            intercept: intercept,
+            note: segmentNote
+        };
+        await conn.none(sqlFile('daySegment/insert_new_day_segment.sql'), daySegment);
     }
 
     /**
@@ -112,13 +101,7 @@ class Day {
      */
     async update(conn) {
         const day = this;
-
-        try {
-            await conn.none(sqlFile('day/update_day_pattern.sql'), day);
-        } catch {
-            log.error(`Error while updating day with error(s): ${err}`);
-			failure(res, 500, `Error while updating day with error(s): ${err}`);          
-        }
+        await conn.none(sqlFile('day/update_day_pattern.sql'), day);
     }
 
     /**

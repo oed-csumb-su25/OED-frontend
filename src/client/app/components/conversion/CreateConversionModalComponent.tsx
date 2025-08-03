@@ -58,9 +58,6 @@ export default function CreateConversionModalComponent() {
 			note: defaultValues.overallConversionNote
 		},
 		initialConversion: {
-			sourceId: defaultValues.sourceId,
-			destinationId: defaultValues.destinationId,
-			bidirectional: defaultValues.bidirectional,
 			slope: defaultValues.slope,
 			intercept: defaultValues.intercept,
 			pattern: defaultValues.weeklyPattern,
@@ -74,82 +71,74 @@ export default function CreateConversionModalComponent() {
 	// If the currently selected conversion is valid
 	// TODO: Add a check for the weekly pattern as well.
 	const [validConversion, reason] = useAppSelector(state =>
-		selectIsValidConversion(state, {
-			sourceId: conversionState.initialConversion.sourceId,
-			destinationId: conversionState.initialConversion.destinationId,
-			bidirectional: conversionState.initialConversion.bidirectional,
-			slope: conversionState.initialConversion.slope,
-			intercept: conversionState.initialConversion.intercept,
-			//pattern: conversionState.initialConversion.pattern,
-			note: conversionState.initialConversion.note
-		})
+		selectIsValidConversion(state, conversionState)
 	);
 
-	const handleStringChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    if (name === 'overallConversionNote') {
-        setConversionState(prev => ({
-            ...prev,
-            overallConversion: {
-                ...prev.overallConversion,
-                note: value
-            }
-        }));
-    } else if (name === 'initialConversionNote') {
-        setConversionState(prev => ({
-            ...prev,
-            initialConversion: {
-                ...prev.initialConversion,
-                note: value
-            }
-        }));
-    }
+	const handleNoteChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+		const { name, value } = e.target;
+		if (name === 'overallConversionNote') {
+				setConversionState(prev => ({
+						...prev,
+						overallConversion: {
+								...prev.overallConversion,
+								note: value
+						}
+				}));
+		} else if (name === 'initialConversionNote') {
+				setConversionState(prev => ({
+						...prev,
+						initialConversion: {
+								...prev.initialConversion,
+								note: value
+						}
+				}));
+		}
 	};
 
-  const handleNumberChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
-    const newValue = Number(value);
+	const handleConversionNumberFieldChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+		const { name, value } = e.target;
+		const newValue = Number(value);
 
-    setConversionState(prev => {
-        if (name === 'sourceId') {
-            return {
-                ...prev,
-                overallConversion: {
-                    ...prev.overallConversion,
-                    sourceId: newValue
-                },
-                initialConversion: {
-                    ...prev.initialConversion,
-                    sourceId: newValue
-                },
-                destinationOptions: defaultValues.destinationOptions.filter(destination => destination.id !== newValue)
-            };
-        } else if (name === 'destinationId') {
-            return {
-                ...prev,
-                overallConversion: {
-                    ...prev.overallConversion,
-                    destinationId: newValue
-                },
-                initialConversion: {
-                    ...prev.initialConversion,
-                    destinationId: newValue
-                },
-                sourceOptions: defaultValues.sourceOptions.filter(source => source.id !== newValue)
-            };
-        } else {
-            return {
-                ...prev,
-                initialConversion: {
-                    ...prev.initialConversion,
-                    [name]: newValue
-                }
-            };
-        }
-    });
+		setConversionState(prev => {
+				if (name === 'sourceId') {
+						return {
+								...prev,
+								overallConversion: {
+										...prev.overallConversion,
+										sourceId: newValue
+								},
+								initialConversion: {
+										...prev.initialConversion,
+										sourceId: newValue
+								},
+								destinationOptions: defaultValues.destinationOptions.filter(destination => destination.id !== newValue)
+						};
+				} else if (name === 'destinationId') {
+						return {
+								...prev,
+								overallConversion: {
+										...prev.overallConversion,
+										destinationId: newValue
+								},
+								initialConversion: {
+										...prev.initialConversion,
+										destinationId: newValue
+								},
+								sourceOptions: defaultValues.sourceOptions.filter(source => source.id !== newValue)
+						};
+				} else {
+						return {
+								...prev,
+								initialConversion: {
+										...prev.initialConversion,
+										[name]: newValue
+								}
+						};
+				}
+		});
 	};
 
-	const handleBooleanChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+	const handleBidirectionalChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 		const value = e.target.value === 'true';
 		setConversionState(prev => ({
 			...prev,
@@ -164,17 +153,19 @@ export default function CreateConversionModalComponent() {
 		}));
 	};
 
-	const handleInitialPatternChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-		const selectedValue = e.target.value;
-		setConversionState(prev => ({
-			...prev,
-			initialConversion: {
-				...prev.initialConversion,
-				pattern: selectedValue, // week ID as string or "No Pattern"
-				slope: selectedValue === 'No Pattern' ? prev.initialConversion.slope : 0,
-				intercept: selectedValue === 'No Pattern' ? prev.initialConversion.intercept : 0
-			}
-		}));
+	const handlePatternChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+			const selectedValue = Number(e.target.value);
+			const isNoPattern = selectedValue === -99;
+
+			setConversionState(prev => ({
+					...prev,
+					initialConversion: {
+							...prev.initialConversion,
+							pattern: selectedValue,
+							slope: isNoPattern ? prev.initialConversion.slope : 0,
+							intercept: isNoPattern ? prev.initialConversion.intercept : 0
+					}
+			}));
 	};
 	/* End State */
 
@@ -196,7 +187,7 @@ export default function CreateConversionModalComponent() {
 		//Close the warning modal
 		setShowWarningModal(false);
 		const weekPatternsId =
-			conversionState.initialConversion.pattern === 'No Pattern'
+			conversionState.initialConversion.pattern === -99
 				? undefined
 				: Number(conversionState.initialConversion.pattern);
 		const payload = {
@@ -228,9 +219,6 @@ export default function CreateConversionModalComponent() {
 				note: defaultValues.overallConversionNote
 			},
 			initialConversion: {
-				sourceId: defaultValues.sourceId,
-				destinationId: defaultValues.destinationId,
-				bidirectional: defaultValues.bidirectional,
 				slope: defaultValues.slope,
 				intercept: defaultValues.intercept,
 				pattern: defaultValues.weeklyPattern,
@@ -246,14 +234,18 @@ export default function CreateConversionModalComponent() {
 	// Submit
 	const handleSubmit = () => {
 		// Show warning modal if slope and intercept are both 0
-		if (conversionState.initialConversion.slope === 0 && conversionState.initialConversion.intercept === 0) {
+		if (
+			conversionState.initialConversion.slope === 0 &&
+			conversionState.initialConversion.intercept === 0 &&
+			conversionState.initialConversion.pattern === -99
+		) {
 			setWarningMessage(translate('conversion.slope.intercept.zero'));
 			setShowWarningModal(true);
 		} else if (validConversion) {
 			// Close modal first to avoid repeat clicks
 			setShowModal(false);
 			const weekPatternsId =
-				conversionState.initialConversion.pattern === 'No Pattern'
+				conversionState.initialConversion.pattern === -99
 					? undefined
 					: Number(conversionState.initialConversion.pattern);
 			const payload = {
@@ -314,7 +306,7 @@ export default function CreateConversionModalComponent() {
 										name='sourceId'
 										type='select'
 										value={conversionState.overallConversion.sourceId}
-										onChange={e => handleNumberChange(e)}
+										onChange={e => handleConversionNumberFieldChange(e)}
 										disabled={isFetchingWeeks}
 										invalid={conversionState.overallConversion.sourceId === -999}>
 										{<option
@@ -342,7 +334,7 @@ export default function CreateConversionModalComponent() {
 										name='destinationId'
 										type='select'
 										value={conversionState.overallConversion.destinationId}
-										onChange={e => handleNumberChange(e)}
+										onChange={e => handleConversionNumberFieldChange(e)}
 										invalid={conversionState.overallConversion.destinationId === -999}>
 										{<option
 											value={-999}
@@ -368,7 +360,7 @@ export default function CreateConversionModalComponent() {
 								id='bidirectional'
 								name='bidirectional'
 								type='select'
-								onChange={e => handleBooleanChange(e)}
+								onChange={e => handleBidirectionalChange(e)}
 								value={String(conversionState.overallConversion.bidirectional)}
 								invalid={(isMeterSource() || isSuffixUsed()) && conversionState.overallConversion.bidirectional === true}>
 								{Object.keys(TrueFalseType).map(key => {
@@ -393,11 +385,11 @@ export default function CreateConversionModalComponent() {
 								id='overallConversionNote'
 								name='overallConversionNote'
 								type='textarea'
-								onChange={e => handleStringChange(e)}
+								onChange={e => handleNoteChange(e)}
 								value={conversionState.overallConversion.note} />
 						</FormGroup>
 						{/*Initial conversion*/}
-						<h5 className="mt-3 mb-2">
+						<h5>
 							<FormattedMessage id="initial.conversion" />
 						</h5>
 						<Row xs='1' lg='2'>
@@ -410,8 +402,8 @@ export default function CreateConversionModalComponent() {
 										name='slope'
 										type='number'
 										value={conversionState.initialConversion.slope}
-										onChange={e => handleNumberChange(e)}
-										disabled={conversionState.initialConversion.pattern !== 'No Pattern'} />
+										onChange={e => handleConversionNumberFieldChange(e)}
+										disabled={conversionState.initialConversion.pattern !== -99} />
 								</FormGroup>
 							</Col>
 							<Col>
@@ -423,8 +415,8 @@ export default function CreateConversionModalComponent() {
 										name='intercept'
 										type='number'
 										value={conversionState.initialConversion.intercept}
-										onChange={e => handleNumberChange(e)}
-										disabled={conversionState.initialConversion.pattern !== 'No Pattern'} />
+										onChange={e => handleConversionNumberFieldChange(e)}
+										disabled={conversionState.initialConversion.pattern !== -99} />
 								</FormGroup>
 							</Col>
 						</Row>
@@ -436,9 +428,9 @@ export default function CreateConversionModalComponent() {
 								name='pattern'
 								type='select'
 								value={conversionState.initialConversion.pattern}
-								onChange={handleInitialPatternChange}
+								onChange={handlePatternChange}
 							>
-								<option value="No Pattern">{translate('conversion.pattern.no')}</option>
+								<option value={-99}>{translate('conversion.pattern.no')}</option>
 								{weeks.map(week => (
 									<option key={week.id} value={week.id}>{week.weekName}</option>
 								))}
@@ -451,7 +443,7 @@ export default function CreateConversionModalComponent() {
 								id='initialConversionNote'
 								name='initialConversionNote'
 								type='textarea'
-								onChange={e => handleStringChange(e)}
+								onChange={e => handleNoteChange(e)}
 								value={conversionState.initialConversion.note} />
 						</FormGroup>
 					</Container>

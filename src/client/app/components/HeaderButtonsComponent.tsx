@@ -64,7 +64,7 @@ export default function HeaderButtonsComponent() {
 		shouldCSVReadingsButtonDisabled: true,
 		shouldUnitsButtonDisabled: true,
 		shouldConversionsButtonDisabled: true,
-		shouldDailyPatternsButtonDisabled: true,
+		shouldDaysButtonDisabled: true,
 		shouldWeeksButtonDisabled: true,
 		shouldLogMsgButtonDisabled: true,
 		shouldVisualUnitMapButtonDisabled: true,
@@ -104,7 +104,7 @@ export default function HeaderButtonsComponent() {
 			shouldCSVReadingsButtonDisabled: pathname === '/csvReadings',
 			shouldUnitsButtonDisabled: pathname === '/units',
 			shouldConversionsButtonDisabled: pathname === '/conversions',
-			shouldDailyPatternsButtonDisabled: pathname === '/dailyPatterns',
+			shouldDaysButtonDisabled: pathname === '/Days',
 			shouldWeeksButtonDisabled: pathname === '/weeks',
 			shouldLogMsgButtonDisabled: pathname === '/logmsg',
 			shouldVisualUnitMapButtonDisabled: pathname === '/visual-unit'
@@ -230,10 +230,10 @@ export default function HeaderButtonsComponent() {
 							</DropdownItem>
 							<DropdownItem
 								style={state.adminViewableLinkStyle}
-								disabled={state.shouldDailyPatternsButtonDisabled}
+								disabled={state.shouldDaysButtonDisabled}
 								tag={Link}
 								to="/days">
-								<FormattedMessage id='daily.patterns' />
+								<FormattedMessage id='patterns.daily' />
 							</DropdownItem>
 							<DropdownItem
 								style={state.adminViewableLinkStyle}

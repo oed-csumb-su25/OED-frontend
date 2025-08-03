@@ -9,7 +9,6 @@ import { selectAllGroups } from '../../redux/api/groupsApi';
 import { selectAllMeters, selectMeterById } from '../../redux/api/metersApi';
 import { selectAdminPreferences } from '../../redux/slices/adminSlice';
 import { selectSelectedLanguage } from '../../redux/slices/appStateSlice';
-import { ConversionData } from '../../types/redux/conversions';
 import { MeterData, MeterTimeSortType } from '../../types/redux/meters';
 import { DisableChecksType, UnitData, UnitType } from '../../types/redux/units';
 import { Week } from '../../types/redux/weeks';
@@ -17,8 +16,8 @@ import { unitsCompatibleWithUnit } from '../../utils/determineCompatibleUnits';
 import { AreaUnitType } from '../../utils/getAreaUnitConversion';
 import { MAX_VAL, MIN_VAL, noUnitTranslated, potentialGraphicUnits } from '../../utils/input';
 import translate from '../../utils/translate';
-import { selectAllUnits, selectUnitDataById } from '../api/unitsApi';
 import { selectAllDays } from '../api/daysApi';
+import { selectAllUnits, selectUnitDataById } from '../api/unitsApi';
 import { selectVisibleMetersAndGroups } from './authVisibilitySelectors';
 import { createAppSelector } from './selectors';
 
@@ -208,11 +207,9 @@ export const selectIsValidConversion = createAppSelector(
 	[
 		selectUnitDataById,
 		selectConversionsDetails,
-		(_state, conversionDetails: ConversionData) => conversionDetails.sourceId,
-		(_state, conversionDetails: ConversionData) => conversionDetails.destinationId,
-		(_state, conversionDetails: ConversionData) => conversionDetails.bidirectional
+		(_state, conversionState) => conversionState
 	],
-	(unitDataById, conversions, sourceId, destinationId, bidirectional): [boolean, string] => {
+	(unitDataById, conversions, conversionState): [boolean, string] => {
 		/* Create Conversion Validation:
 					Source equals destination: invalid conversion
 					Conversion exists: invalid conversion
@@ -223,6 +220,10 @@ export const selectIsValidConversion = createAppSelector(
 					Cannot mix unit represent
 					TODO Some of these can go away when we make the menus dynamic.
 				*/
+		const sourceId = conversionState.overallConversion.sourceId;
+    const destinationId = conversionState.overallConversion.destinationId;
+    const bidirectional = conversionState.overallConversion.bidirectional;
+
 		// The destination cannot be a meter unit.
 		if (destinationId !== -999 && unitDataById[destinationId].typeOfUnit === UnitType.meter) {
 			return [false, translate('conversion.create.destination.meter')];
@@ -336,23 +337,23 @@ export const selectDefaultCreateConversionValues = createAppSelector(
 			initialConversionNote: '',
 			slope: 0,
 			intercept: 0,
-			weeklyPattern: 'No Pattern'
+			weeklyPattern: -99
 		};
 		return defaultValues;
 	}
 );
 
-export const selectDefaultCreateDailyPatternValues = createAppSelector(
+export const selectDefaultCreateDayValues = createAppSelector(
 	[selectAllUnits],
 	() => {
 		const defaultValues = {
-			dayName: '',
-			dailyPatternNote: '',
+			name: '',
+			DayNote: '',
 			slope: 0,
 			intercept: 0,
-			startHour:0,
+			startHour: 0,
 			endHour: 24,
-			initialPatternNote: ''
+			initialSegmentNote: ''
 		};
 		return defaultValues;
 	}
@@ -430,25 +431,25 @@ export const isValidCreateMeter = createAppSelector(
  * - Ensures the day name does not already exist (case-insensitive) in the list of days.
  * Returns a tuple: [isValid, message].
  * @param _state The Redux state (unused in this selector).
- * @param dailyPattern The daily pattern object containing the day name.
- * @param dailyPattern.dayName The name of the day to validate for uniqueness and non-blank value.
+ * @param Day The daily pattern object containing the day name.
+ * @param Day.name The name of the day to validate for uniqueness and non-blank value.
  * @returns A tuple where the first element is a boolean indicating validity, and the second is a message string.
  */
-export const selectIsValidCreateDailyPattern = createAppSelector(
+export const selectIsValidCreateDay = createAppSelector(
     [
         selectAllDays,
-        (_state, dailyPattern: { dayName: string }) => dailyPattern
+        (_state, Day: { name: string }) => Day
     ],
-    (days, dailyPattern): [boolean, string] => {
-        if (!dailyPattern.dayName || dailyPattern.dayName.trim() === '') {
-            return [false, translate('daily.patterns.create.name.required')];
+    (days, Day): [boolean, string] => {
+        if (!Day.name || Day.name.trim() === '') {
+            return [false, translate('day.create.name.required')];
         }
-        // Check if dayName already exists (case-insensitive)
+        // Check if name already exists (case-insensitive)
         const exists = days.some(day =>
-            day.dayName?.toLowerCase() === dailyPattern.dayName.trim().toLowerCase()
+            day.name?.toLowerCase() === Day.name.trim().toLowerCase()
         );
         if (exists) {
-            return [false, translate('daily.patterns.create.name.exists')];
+            return [false, translate('day.create.name.exists')];
         }
         return [true, 'Daily Pattern is Valid'];
     }
