@@ -18,16 +18,14 @@ export const conversionSegmentsApi = baseApi.injectEndpoints({
 		}),
 		getConversionSegmentByConversion: builder.query<ConversionSegmentData[], {sourceId: number; destinationId: number }>({
 			query: ({ sourceId, destinationId }) => ({
-				url: 'api/conversionSegments/segments',
+				url: '/api/conversionSegments/segments',
 				method: 'POST',
 				body: { sourceId, destinationId }
 			}),
 			providesTags: (result, error, segment) => [
 				{ type: 'ConversionSegments', id: 'LIST' },
 				{ type: 'ConversionSegments', id: `${segment.sourceId}-${segment.destinationId}` }
-			],
-			transformResponse: (response: ConversionSegmentData[]) =>
-				Array.isArray(response) ? response : response ? [response] : []
+			]
 		}),
 		getConversionSegmentByKey: builder.query<ConversionSegmentData, { sourceId: number; destinationId: number; startTime: string; endTime: string }>({
 			query: ({ sourceId, destinationId, startTime, endTime }) => ({
@@ -40,11 +38,7 @@ export const conversionSegmentsApi = baseApi.injectEndpoints({
 				id: `${segment.sourceId}-${segment.destinationId}-${segment.startTime}-${segment.endTime}`
 			}]
 		}),
-		editConversionSegment: builder.mutation<void, {
-			segment: ConversionSegmentData;
-			originalStartTime: string;
-			originalEndTime: string;
-		}>({
+		editConversionSegment: builder.mutation<void, { segment: ConversionSegmentData; originalStartTime: string; originalEndTime: string; }>({
 			query: ({ segment, originalStartTime, originalEndTime }) => ({
 				url: '/api/conversionSegments/edit',
 				method: 'POST',
@@ -54,9 +48,9 @@ export const conversionSegmentsApi = baseApi.injectEndpoints({
 					originalEndTime
 				}
 			}),
-			invalidatesTags: (result, error, { segment, originalStartTime }) => [
-				{ type: 'ConversionSegments', id: `${segment.sourceId}-${segment.destinationId}` },
-				{ type: 'ConversionSegments', id: `${segment.sourceId}-${segment.destinationId}-${originalStartTime}` }
+			invalidatesTags: (result, error, { segment }) => [
+				{ type: 'ConversionSegments', id: 'LIST' },
+				{ type: 'ConversionSegments', id: `${segment.sourceId}-${segment.destinationId}` }
 			]
 		}),
 		addConversionSegment: builder.mutation<void, ConversionSegmentData>({
@@ -77,8 +71,8 @@ export const conversionSegmentsApi = baseApi.injectEndpoints({
 				body: payload
 			}),
 			invalidatesTags: (result, error, segment) => [
-				{ type: 'ConversionSegments', id: `${segment.sourceId}-${segment.destinationId}` },
-				{ type: 'ConversionSegments', id: `${segment.sourceId}-${segment.destinationId}-${segment.startTime}` }
+				{ type: 'ConversionSegments', id: 'LIST' },
+				{ type: 'ConversionSegments', id: `${segment.sourceId}-${segment.destinationId}` }
 			]
 		})
 	})
