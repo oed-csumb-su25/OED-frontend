@@ -15,7 +15,7 @@ export const daysApi = baseApi.injectEndpoints({
 		}),
 		addDay: builder.mutation<void, { name: string; slope: number; intercept: number; note?: string, segmentNote?: string }>({
 			query: Day => ({
-				url: 'api/days/add',
+				url: 'api/days/addDay',
 				method: 'POST',
 				body: Day
 			}),

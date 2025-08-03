@@ -29,7 +29,7 @@ export const conversionsApi = baseApi.injectEndpoints({
 			segmentNote: string;
 		}>({
 			query: conversion => ({
-				url: 'api/conversions/add',
+				url: 'api/conversions/addConversion',
 				method: 'POST',
 				body: conversion
 			}),

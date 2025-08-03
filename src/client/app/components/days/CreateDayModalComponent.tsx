@@ -47,12 +47,12 @@ export default function CreateDayModalComponent() {
 		name: defaultValues.name,
 		note: defaultValues.DayNote
 	},
-	initialPattern: {
+	initialSegment: {
 		slope: defaultValues.slope,
 		intercept: defaultValues.intercept,
 		startHour: defaultValues.startHour,
 		endHour: defaultValues.endHour,
-		note: defaultValues.initialPatternNote
+		segmentNote: defaultValues.initialSegmentNote
 	}
 });
 
@@ -74,11 +74,11 @@ export default function CreateDayModalComponent() {
 								note: value
 						}
 				}));
-		} else if (name === 'initialPatternNote') {
+		} else if (name === 'initialSegmentNote') {
 				setPatternState(prev => ({
 						...prev,
-						initialPattern: {
-								...prev.initialPattern,
+						initialSegment: {
+								...prev.initialSegment,
 								note: value
 						}
 				}));
@@ -99,16 +99,16 @@ export default function CreateDayModalComponent() {
 		if (name === 'slope') {
 			setPatternState(prev => ({
 				...prev,
-				initialPattern: {
-					...prev.initialPattern,
+				initialSegment: {
+					...prev.initialSegment,
 					slope: newValue
 				}
 			}));
 		} else if (name === 'intercept') {
 			setPatternState(prev => ({
 				...prev,
-				initialPattern: {
-					...prev.initialPattern,
+				initialSegment: {
+					...prev.initialSegment,
 					intercept: newValue
 				}
 			}));
@@ -122,10 +122,10 @@ export default function CreateDayModalComponent() {
 		// Add the new pattern and update the store
 		addDayMutation({
 			name: patternState.Day.name,
-			slope: patternState.initialPattern.slope,
-			intercept: patternState.initialPattern.intercept,
+			slope: patternState.initialSegment.slope,
+			intercept: patternState.initialSegment.intercept,
 			note: patternState.Day.note,
-			segmentNote: patternState.initialPattern.note
+			segmentNote: patternState.initialSegment.segmentNote
 		});
 		// Reset the state to default values
 		resetState();
@@ -145,12 +145,12 @@ export default function CreateDayModalComponent() {
 				name: defaultValues.name,
 				note: defaultValues.DayNote
 			},
-			initialPattern: {
+			initialSegment: {
 				slope: defaultValues.slope,
 				intercept: defaultValues.intercept,
 				startHour: defaultValues.startHour,
 				endHour: defaultValues.endHour,
-				note: defaultValues.initialPatternNote
+				segmentNote: defaultValues.initialSegmentNote
 			}
 		});
 	};
@@ -159,7 +159,7 @@ export default function CreateDayModalComponent() {
 	// Submit
 	const handleSubmit = () => {
 		// Show warning modal if slope and intercept are both 0
-		if (patternState.initialPattern.slope === 0 && patternState.initialPattern.intercept === 0) {
+		if (patternState.initialSegment.slope === 0 && patternState.initialSegment.intercept === 0) {
 			setWarningMessage(translate('day.slope.intercept.zero'));
 			setShowWarningModal(true);
 		} else {
@@ -168,10 +168,10 @@ export default function CreateDayModalComponent() {
 			// Add the new pattern and update the store
 			addDayMutation({
 				name: patternState.Day.name,
-				slope: patternState.initialPattern.slope,
-				intercept: patternState.initialPattern.intercept,
+				slope: patternState.initialSegment.slope,
+				intercept: patternState.initialSegment.intercept,
 				note: patternState.Day.note,
-				segmentNote: patternState.initialPattern.note
+				segmentNote: patternState.initialSegment.segmentNote
 			});
 			// Reset the state to default values
 			resetState();
@@ -218,7 +218,7 @@ export default function CreateDayModalComponent() {
 								type='text'
 								onChange={e => handleStringChange(e)}
 								value={patternState.Day.name}
-								invalid={!patternState.Day.name || patternState.Day.name.trim() === ''}
+								invalid={!patternState.Day.name || patternState.Day.name.trim() === ''} // TODO: OED needs to decide how to trim names universally
 								required
 							/>
 							<FormFeedback>
@@ -236,7 +236,7 @@ export default function CreateDayModalComponent() {
 								value={patternState.Day.note} />
 						</FormGroup>
 						{/*Initial pattern*/}
-						<h5 className="mt-3 mb-2">
+						<h5>
 							<FormattedMessage id="initial.pattern" />
 						</h5>
 						<Row xs='1' lg='2'>
@@ -248,7 +248,7 @@ export default function CreateDayModalComponent() {
 										id='slope'
 										name='slope'
 										type='number'
-										value={patternState.initialPattern.slope}
+										value={patternState.initialSegment.slope}
 										onChange={e => handleNumberChange(e)} />
 								</FormGroup>
 							</Col>
@@ -260,7 +260,7 @@ export default function CreateDayModalComponent() {
 										id='intercept'
 										name='intercept'
 										type='number'
-										value={patternState.initialPattern.intercept}
+										value={patternState.initialSegment.intercept}
 										onChange={e => handleNumberChange(e)} />
 								</FormGroup>
 							</Col>
@@ -274,7 +274,7 @@ export default function CreateDayModalComponent() {
 										id='startHour'
 										name='startHour'
 										type='number'
-										value={patternState.initialPattern.startHour}
+										value={patternState.initialSegment.startHour}
 										disabled
 										readOnly
 									/>
@@ -288,7 +288,7 @@ export default function CreateDayModalComponent() {
 										id='endHour'
 										name='endHour'
 										type='number'
-										value={patternState.initialPattern.endHour}
+										value={patternState.initialSegment.endHour}
 										disabled
 										readOnly
 									/>
@@ -299,17 +299,17 @@ export default function CreateDayModalComponent() {
 						<FormGroup>
 							<Label for='note'>{translate('note')}</Label>
 							<Input
-								id='initialPatternNote'
-								name='initialPatternNote'
+								id='initialSegmentNote'
+								name='initialSegmentNote'
 								type='textarea'
 								onChange={e => handleStringChange(e)}
-								value={patternState.initialPattern.note} />
+								value={patternState.initialSegment.segmentNote} />
 						</FormGroup>
 					</Container>
 				</ModalBody>
 				<ModalFooter>
 					{
-						// Todo looks kind of bad make a better visible notification
+						// TODO: looks kind of bad make a better visible notification
 						!isValidDay && <p>{reason}</p>
 					}
 					{/* Hides the modal */}

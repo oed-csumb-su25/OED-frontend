@@ -9,7 +9,6 @@ import { selectAllGroups } from '../../redux/api/groupsApi';
 import { selectAllMeters, selectMeterById } from '../../redux/api/metersApi';
 import { selectAdminPreferences } from '../../redux/slices/adminSlice';
 import { selectSelectedLanguage } from '../../redux/slices/appStateSlice';
-import { ConversionData } from '../../types/redux/conversions';
 import { MeterData, MeterTimeSortType } from '../../types/redux/meters';
 import { DisableChecksType, UnitData, UnitType } from '../../types/redux/units';
 import { Week } from '../../types/redux/weeks';
@@ -208,11 +207,9 @@ export const selectIsValidConversion = createAppSelector(
 	[
 		selectUnitDataById,
 		selectConversionsDetails,
-		(_state, conversionDetails: ConversionData) => conversionDetails.sourceId,
-		(_state, conversionDetails: ConversionData) => conversionDetails.destinationId,
-		(_state, conversionDetails: ConversionData) => conversionDetails.bidirectional
+		(_state, conversionState) => conversionState
 	],
-	(unitDataById, conversions, sourceId, destinationId, bidirectional): [boolean, string] => {
+	(unitDataById, conversions, conversionState): [boolean, string] => {
 		/* Create Conversion Validation:
 					Source equals destination: invalid conversion
 					Conversion exists: invalid conversion
@@ -223,6 +220,10 @@ export const selectIsValidConversion = createAppSelector(
 					Cannot mix unit represent
 					TODO Some of these can go away when we make the menus dynamic.
 				*/
+		const sourceId = conversionState.overallConversion.sourceId;
+    const destinationId = conversionState.overallConversion.destinationId;
+    const bidirectional = conversionState.overallConversion.bidirectional;
+
 		// The destination cannot be a meter unit.
 		if (destinationId !== -999 && unitDataById[destinationId].typeOfUnit === UnitType.meter) {
 			return [false, translate('conversion.create.destination.meter')];
@@ -336,7 +337,7 @@ export const selectDefaultCreateConversionValues = createAppSelector(
 			initialConversionNote: '',
 			slope: 0,
 			intercept: 0,
-			weeklyPattern: 'No Pattern'
+			weeklyPattern: -99
 		};
 		return defaultValues;
 	}
@@ -352,7 +353,7 @@ export const selectDefaultCreateDayValues = createAppSelector(
 			intercept: 0,
 			startHour:0,
 			endHour: 24,
-			initialPatternNote: ''
+			initialSegmentNote: ''
 		};
 		return defaultValues;
 	}
