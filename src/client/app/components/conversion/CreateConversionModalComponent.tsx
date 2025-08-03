@@ -234,7 +234,11 @@ export default function CreateConversionModalComponent() {
 	// Submit
 	const handleSubmit = () => {
 		// Show warning modal if slope and intercept are both 0
-		if (conversionState.initialConversion.slope === 0 && conversionState.initialConversion.intercept === 0) {
+		if (
+			conversionState.initialConversion.slope === 0 &&
+			conversionState.initialConversion.intercept === 0 &&
+			conversionState.initialConversion.pattern === -99
+		) {
 			setWarningMessage(translate('conversion.slope.intercept.zero'));
 			setShowWarningModal(true);
 		} else if (validConversion) {
