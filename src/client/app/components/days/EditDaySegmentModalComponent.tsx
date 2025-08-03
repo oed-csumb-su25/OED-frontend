@@ -151,7 +151,7 @@ export default function EditDaySegmentModalComponent(props: EditDaySegmentModalC
 						<Row>
 							<Col>
 								<Label for="segment-start-hour">
-									<FormattedMessage id="daily.patterns.start.hour" />
+									<FormattedMessage id="day.start.hour" />
 								</Label>
 								<Input
 									id="segment-start-hour"
@@ -175,7 +175,7 @@ export default function EditDaySegmentModalComponent(props: EditDaySegmentModalC
 							</Col>
 							<Col>
 								<Label for="segment-end-hour">
-									<FormattedMessage id="daily.patterns.end.hour" />
+									<FormattedMessage id="day.end.hour" />
 								</Label>
 								<Input
 									id="segment-end-hour"
