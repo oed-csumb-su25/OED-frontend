@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/indent */
 /* This Source Code Form is subject to the terms of the Mozilla Public
 * License, v. 2.0. If a copy of the MPL was not distributed with this
 * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -14,7 +13,7 @@ import { selectDefaultCreateConversionValues, selectIsValidConversion } from '..
 import '../../styles/modal.css';
 import { tooltipBaseStyle } from '../../styles/modalStyle';
 import { TrueFalseType } from '../../types/items';
-import { showErrorNotification } from '../../utils/notifications';
+import { showErrorNotification, showSuccessNotification } from '../../utils/notifications';
 import { useTranslate } from '../../redux/componentHooks';
 import TooltipMarkerComponent from '../TooltipMarkerComponent';
 import ConfirmActionModalComponent from '../ConfirmActionModalComponent';
@@ -77,21 +76,21 @@ export default function CreateConversionModalComponent() {
 	const handleNoteChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 		const { name, value } = e.target;
 		if (name === 'overallConversionNote') {
-				setConversionState(prev => ({
-						...prev,
-						overallConversion: {
-								...prev.overallConversion,
-								note: value
-						}
-				}));
+			setConversionState(prev => ({
+				...prev,
+				overallConversion: {
+					...prev.overallConversion,
+					note: value
+				}
+			}));
 		} else if (name === 'initialConversionNote') {
-				setConversionState(prev => ({
-						...prev,
-						initialConversion: {
-								...prev.initialConversion,
-								note: value
-						}
-				}));
+			setConversionState(prev => ({
+				...prev,
+				initialConversion: {
+					...prev.initialConversion,
+					note: value
+				}
+			}));
 		}
 	};
 
@@ -100,41 +99,41 @@ export default function CreateConversionModalComponent() {
 		const newValue = Number(value);
 
 		setConversionState(prev => {
-				if (name === 'sourceId') {
-						return {
-								...prev,
-								overallConversion: {
-										...prev.overallConversion,
-										sourceId: newValue
-								},
-								initialConversion: {
-										...prev.initialConversion,
-										sourceId: newValue
-								},
-								destinationOptions: defaultValues.destinationOptions.filter(destination => destination.id !== newValue)
-						};
-				} else if (name === 'destinationId') {
-						return {
-								...prev,
-								overallConversion: {
-										...prev.overallConversion,
-										destinationId: newValue
-								},
-								initialConversion: {
-										...prev.initialConversion,
-										destinationId: newValue
-								},
-								sourceOptions: defaultValues.sourceOptions.filter(source => source.id !== newValue)
-						};
-				} else {
-						return {
-								...prev,
-								initialConversion: {
-										...prev.initialConversion,
-										[name]: newValue
-								}
-						};
-				}
+			if (name === 'sourceId') {
+				return {
+					...prev,
+					overallConversion: {
+						...prev.overallConversion,
+						sourceId: newValue
+					},
+					initialConversion: {
+						...prev.initialConversion,
+						sourceId: newValue
+					},
+					destinationOptions: defaultValues.destinationOptions.filter(destination => destination.id !== newValue)
+				};
+			} else if (name === 'destinationId') {
+				return {
+					...prev,
+					overallConversion: {
+						...prev.overallConversion,
+						destinationId: newValue
+					},
+					initialConversion: {
+						...prev.initialConversion,
+						destinationId: newValue
+					},
+					sourceOptions: defaultValues.sourceOptions.filter(source => source.id !== newValue)
+				};
+			} else {
+				return {
+					...prev,
+					initialConversion: {
+						...prev.initialConversion,
+						[name]: newValue
+					}
+				};
+			}
 		});
 	};
 
@@ -154,18 +153,18 @@ export default function CreateConversionModalComponent() {
 	};
 
 	const handlePatternChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-			const selectedValue = Number(e.target.value);
-			const isNoPattern = selectedValue === -99;
+		const selectedValue = Number(e.target.value);
+		const isNoPattern = selectedValue === -99;
 
-			setConversionState(prev => ({
-					...prev,
-					initialConversion: {
-							...prev.initialConversion,
-							pattern: selectedValue,
-							slope: isNoPattern ? prev.initialConversion.slope : 0,
-							intercept: isNoPattern ? prev.initialConversion.intercept : 0
-					}
-			}));
+		setConversionState(prev => ({
+			...prev,
+			initialConversion: {
+				...prev.initialConversion,
+				pattern: selectedValue,
+				slope: isNoPattern ? prev.initialConversion.slope : 0,
+				intercept: isNoPattern ? prev.initialConversion.intercept : 0
+			}
+		}));
 	};
 	/* End State */
 
@@ -200,7 +199,13 @@ export default function CreateConversionModalComponent() {
 			weekPatternsId,
 			segmentNote: conversionState.initialConversion.note
 		};
-		addConversionMutation(payload);
+		addConversionMutation(payload).unwrap()
+			.then(() => {
+				showSuccessNotification(translate('week.create.success'));
+			})
+			.catch(error => {
+				showErrorNotification(translate('week.create.failure') + error);
+			});
 		resetState();
 	};
 
@@ -258,7 +263,13 @@ export default function CreateConversionModalComponent() {
 				weekPatternsId,
 				segmentNote: conversionState.initialConversion.note
 			};
-			addConversionMutation(payload);
+			addConversionMutation(payload).unwrap()
+				.then(() => {
+					showSuccessNotification(translate('conversion.create.success'));
+				})
+				.catch(error => {
+					showErrorNotification(translate('conversion.create.failure') + error);
+				});
 			resetState();
 		} else {
 			showErrorNotification(reason);

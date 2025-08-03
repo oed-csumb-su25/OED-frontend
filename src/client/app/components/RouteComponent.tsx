@@ -18,7 +18,7 @@ import AdminComponent from './admin/AdminComponent';
 import LogMsgComponent from './admin/LogMsgComponent';
 import UsersDetailComponent from './admin/users/UsersDetailComponent';
 import ConversionsDetailComponent from './conversion/ConversionsDetailComponent';
-import DayDetailComponent from './days/DayDetailComponent';
+import DaysDetailComponent from './days/DaysDetailComponent';
 import GroupsDetailComponent from './groups/GroupsDetailComponent';
 import MetersDetailComponent from './meters/MetersDetailComponent';
 import AdminOutlet from './router/AdminOutlet';
@@ -59,7 +59,7 @@ const router = createBrowserRouter([
 					{ path: 'admin', element: <AdminComponent /> },
 					{ path: 'calibration', element: <MapCalibrationContainer /> },
 					{ path: 'conversions', element: <ConversionsDetailComponent /> },
-					{ path: 'days', element: <DayDetailComponent /> },
+					{ path: 'days', element: <DaysDetailComponent /> },
 					{ path: 'weeks', element: <WeeksDetailComponent /> },
 					{ path: 'csvMeters', element: <MetersCSVUploadComponent /> },
 					{ path: 'maps', element: <MapsDetailContainer /> },
