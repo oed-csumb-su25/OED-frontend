@@ -18,7 +18,7 @@ export const conversionSegmentsApi = baseApi.injectEndpoints({
 		}),
 		getConversionSegmentByConversion: builder.query<ConversionSegmentData[], {sourceId: number; destinationId: number }>({
 			query: ({ sourceId, destinationId }) => ({
-				url: 'api/conversionSegments/segments',
+				url: 'api/conversionSegments/sourceDestination',
 				method: 'POST',
 				body: { sourceId, destinationId }
 			}),
