@@ -40,7 +40,6 @@ interface EditWeekModalComponentProps {
  */
 export default function EditWeekModalComponent(props: EditWeekModalComponentProps): React.ReactElement {
 
-	// #region Edit week
 	// State to hold the week details being edited. Initialized with the week passed in through props
 	const [weekDetails, setWeekDetails] = React.useState({ ...props.week });
 
@@ -64,9 +63,17 @@ export default function EditWeekModalComponent(props: EditWeekModalComponentProp
 		setWeekDetails({ ...props.week });
 	};
 
+	const handleStringChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+		setWeekDetails({ ...weekDetails, [e.target.name]: e.target.value });
+	};
+
+	const handleNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+		setWeekDetails({ ...weekDetails, [e.target.name]: Number(e.target.value) });
+	};
+
 	// Function to handle form submission. Validates the week details and submits them to the API
 	const handleSubmit = () => {
-		if (!isWeekValid) {
+		if (!isWeekNameValid) {
 			return;
 		}
 
@@ -86,12 +93,11 @@ export default function EditWeekModalComponent(props: EditWeekModalComponentProp
 
 	// Validate the week name to ensure it is not empty and does not already exist
 	const isWeekNameValid = React.useMemo(() => {
-		const trimmedName = weekDetails.weekName.trim();
-		if (trimmedName === '') {
+		if (weekDetails.weekName === '') {
 			setNameValidationMessageId('error.required');
 			return false;
 		}
-		if (weeks?.some(week => week.weekName.toLowerCase() === trimmedName.toLowerCase() && week.id !== weekDetails.id)) {
+		if (weeks?.some(week => week.weekName.toLowerCase() === weekDetails.weekName.toLowerCase() && week.id !== weekDetails.id)) {
 			setNameValidationMessageId('week.validation.name.exists');
 			return false;
 		}
@@ -100,20 +106,8 @@ export default function EditWeekModalComponent(props: EditWeekModalComponentProp
 		return true;
 	}, [weekDetails.weekName, weeks, weekDetails.id]);
 
-	// Validate the week details to ensure all days are selected and the week name is valid
-	// This is used to enable/disable the submit button
-	const isWeekValid = React.useMemo(() => {
-		return isWeekNameValid && weekDetails.sunday >= 0 &&
-			weekDetails.monday >= 0 &&
-			weekDetails.tuesday >= 0 &&
-			weekDetails.wednesday >= 0 &&
-			weekDetails.thursday >= 0 &&
-			weekDetails.friday >= 0 &&
-			weekDetails.saturday >= 0;
-	}, [weekDetails, isWeekNameValid]);
-	// #endregion Edit week
 
-	// #region Delete week
+	// Delete confirmation dialog visibility
 	const [showDeleteModal, setShowDeleteModal] = React.useState(false);
 	const [deleteWeekMutation, { isLoading: isDeleting }] = weeksApi.useDeleteWeekMutation();
 
@@ -129,7 +123,6 @@ export default function EditWeekModalComponent(props: EditWeekModalComponentProp
 				showErrorNotification(translate('week.delete.failure') + error);
 			});
 	};
-	// #endregion Delete week
 
 	return (
 		<>
@@ -151,11 +144,11 @@ export default function EditWeekModalComponent(props: EditWeekModalComponentProp
 									<Input
 										id="name"
 										type="text"
-										name="name"
+										name="weekName"
 										required
 										value={weekDetails.weekName}
 										invalid={!isWeekNameValid}
-										onChange={event => setWeekDetails({ ...weekDetails, weekName: event.target.value })} />
+										onChange={handleStringChange} />
 									<FormFeedback>
 										{nameValidationMessageId && <FormattedMessage id={nameValidationMessageId as string} />}
 									</FormFeedback>
@@ -172,7 +165,7 @@ export default function EditWeekModalComponent(props: EditWeekModalComponentProp
 										type="textarea"
 										name="note"
 										value={weekDetails.note}
-										onChange={event => setWeekDetails({ ...weekDetails, note: event.target.value })} />
+										onChange={handleStringChange} />
 								</FormGroup>
 							</Col>
 						</Row>
@@ -195,9 +188,8 @@ export default function EditWeekModalComponent(props: EditWeekModalComponentProp
 														type="select"
 														name={day}
 														value={weekDetails[day]}
-														invalid={weekDetails[day] < 0}
 														disabled={isFetchingDays}
-														onChange={event => setWeekDetails({ ...weekDetails, [day]: Number(event.target.value) })}
+														onChange={handleNumberChange}
 													>
 														{sortedDays?.map(day => (
 															<option key={day.id} value={day.id} title={day.note}>
@@ -230,7 +222,7 @@ export default function EditWeekModalComponent(props: EditWeekModalComponentProp
 					<Button
 						color="primary"
 						onClick={handleSubmit}
-						disabled={!isWeekValid || isSaving || isDeleting}
+						disabled={!isWeekNameValid || isSaving || isDeleting}
 					>
 						<FormattedMessage id="save.all" />
 					</Button>

@@ -27,7 +27,8 @@ export default function WeekViewComponent(props: WeekViewComponentProps): React.
 		<div className="card">
 			<div className="identifier-container">{week.weekName}</div>
 			<div className="item-container p-2">
-				<b><FormattedMessage id="note" /></b> {week.note}
+				{/* Only show first 30 characters so card does not get too big. Should limit to one line */}
+				<b><FormattedMessage id="note" /></b> {week.note?.slice(0, 29)}
 			</div>
 			<div className="edit-btn">
 				<Button color="secondary" onClick={() => setShowEditModal(true)}>

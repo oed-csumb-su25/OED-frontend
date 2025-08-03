@@ -2,7 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { createSelector } from '@reduxjs/toolkit';
 import { Week } from '../../types/redux/weeks';
 import { baseApi } from './baseApi';
 
@@ -26,7 +25,7 @@ export const weeksApi = baseApi.injectEndpoints({
 
 		addWeek: builder.mutation<void, Omit<Week, 'id'>>({
 			query: week => ({
-				url: 'api/weeks/add',
+				url: 'api/weeks/addWeek',
 				method: 'POST',
 				body: week
 			}),
@@ -56,10 +55,3 @@ export const weeksApi = baseApi.injectEndpoints({
 		})
 	})
 });
-
-export const selectWeeksQueryState = weeksApi.endpoints.getWeeks.select();
-export const selectWeeks = createSelector(
-	selectWeeksQueryState,
-	weeksQueryState => weeksQueryState.data ?? []
-);
-

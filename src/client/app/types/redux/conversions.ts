@@ -9,7 +9,6 @@ export interface ConversionData {
 	slope: number;
 	intercept: number;
 	note: string;
-	segments?: ConversionSegment[]; // Optional since new conversions (e.g., in Create Conversion) won’t have segments initially
 }
 
 export interface ConversionsState {
@@ -21,11 +20,13 @@ export interface ConversionsState {
 	conversions: ConversionData[];
 }
 
-export interface ConversionSegment {
-	start_time: string;
-	end_time: string;
+export interface ConversionSegmentData {
+	sourceId: number;
+	destinationId: number;
+	startTime: string;
+	endTime: string;
 	slope: number;
 	intercept: number;
-	week_patterns_id: number | null;
+	weekPatternsId: number | null;
 	note: string;
 }

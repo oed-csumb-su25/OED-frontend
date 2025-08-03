@@ -1,3 +1,4 @@
+// DayViewComponent.tsx
 /* eslint-disable no-trailing-spaces */
 import * as React from 'react';
 // Realize that * is already imported from react
@@ -7,7 +8,7 @@ import { Button } from 'reactstrap';
 import { Day } from 'types/redux/days';
 import '../../styles/card-page.css';
 //import { useTranslate } from '../../redux/componentHooks';
-//import EditConversionModalComponent from './EditConversionModalComponent';
+import EditDailyPatternModalComponent from './EditDailyPatternModalComponent';
 
 interface DayViewComponentProps {
 	day: Day;
@@ -23,7 +24,6 @@ export default function DayViewComponent(props: DayViewComponentProps) {
 	// Don't check if admin since only an admin is allow to route to this page.
 
 	// Edit Modal Show
-	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	const [showEditModal, setShowEditModal] = useState(false);
 	//const unitDataById = useAppSelector(selectUnitDataById);
 
@@ -31,9 +31,9 @@ export default function DayViewComponent(props: DayViewComponentProps) {
 		setShowEditModal(true);
 	};
 
-	// const handleClose = () => {
-	// 	setShowEditModal(false);
-	// };
+	const handleClose = () => {
+		setShowEditModal(false);
+	};
 
 	// Create header from sourceId, destinationId identifiers
 	//const conversionIdentifier = String(unitDataById[props.conversion.sourceId]?.identifier + conversionArrow(props.conversion.bidirectional) +
@@ -55,12 +55,11 @@ export default function DayViewComponent(props: DayViewComponentProps) {
 					<FormattedMessage id="day.edit" />
 				</Button>
 				{/* Creates a child DayModalEditComponent */}
-				{/* <EditDayModalComponent
+				<EditDailyPatternModalComponent
 					show={showEditModal}
 					day={props.day}
-					dayIdentifier={dayIdentifier}
-					handleShow={handleShow}
-					handleClose={handleClose} /> */}
+					handleClose={handleClose}
+				/>
 			</div>
 		</div>
 	);

@@ -16,8 +16,8 @@ import { unitsCompatibleWithUnit } from '../../utils/determineCompatibleUnits';
 import { AreaUnitType } from '../../utils/getAreaUnitConversion';
 import { MAX_VAL, MIN_VAL, noUnitTranslated, potentialGraphicUnits } from '../../utils/input';
 import translate from '../../utils/translate';
-import { selectAllUnits, selectUnitDataById } from '../api/unitsApi';
 import { selectAllDays } from '../api/daysApi';
+import { selectAllUnits, selectUnitDataById } from '../api/unitsApi';
 import { selectVisibleMetersAndGroups } from './authVisibilitySelectors';
 import { createAppSelector } from './selectors';
 
@@ -351,7 +351,7 @@ export const selectDefaultCreateDayValues = createAppSelector(
 			DayNote: '',
 			slope: 0,
 			intercept: 0,
-			startHour:0,
+			startHour: 0,
 			endHour: 24,
 			initialSegmentNote: ''
 		};

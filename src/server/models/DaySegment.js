@@ -18,7 +18,7 @@ class DaySegment {
 	constructor(id, dayId, startHour, endHour, slope, intercept, note) {
 		this.id = id;
 		this.dayId = dayId;
-		this.startHour = startHour; 
+		this.startHour = startHour;
 		this.endHour = endHour;
 		this.slope = slope;
 		this.intercept = intercept;
@@ -60,8 +60,8 @@ class DaySegment {
 		return rows.map(DaySegment.mapRow);
 	}
 
-	/** 
-	 * Returns the day segment associated the id. 
+	/**
+	 * Returns the day segment associated the id.
 	 * If the day segment doesn't exist then return null.
 	 * @param {*} id The day segment id.
 	 * @param {*} conn The connection to use.
@@ -74,7 +74,7 @@ class DaySegment {
 		return DaySegment.mapRow(row);
 	}
 
-	/** 
+	/**
 	 * Returns all day segments associated with the day id.
 	 * @param {*} dayId The day pattern id.
 	 * @param {*} conn The connection to use.
@@ -96,7 +96,7 @@ class DaySegment {
 		const daySegment = this;
 		await conn.none(sqlFile('daySegment/insert_new_day_segment.sql'), daySegment);
 	}
-	
+
 	/**
 	 * Returns a promise to update a daySegment in the database.
 	 * @param {*} originalStartHour The original start hour of the segment being updated
