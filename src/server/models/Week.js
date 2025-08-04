@@ -8,7 +8,7 @@ const sqlFile = database.sqlFile;
 class Week {
 	/**
 	 * @param {*} id This week_pattern's id.
-	 * @param {*} weekName This week_pattern's name.
+	 * @param {*} name This week_pattern's name.
 	 * @param {*} note This week_pattern's note.
 	 * @param {*} sunday The id for sunday's day_pattern.
 	 * @param {*} monday The id for monday's day_pattern.
@@ -18,9 +18,9 @@ class Week {
 	 * @param {*} friday The id for friday's day_pattern.
 	 * @param {*} saturday The id for saturday's day_pattern.
 	 */
-	constructor(id, weekName, note, sunday, monday, tuesday, wednesday, thursday, friday, saturday) {
+	constructor(id, name, note, sunday, monday, tuesday, wednesday, thursday, friday, saturday) {
 		this.id = id;
-		this.weekName = weekName;
+		this.name = name;
 		this.note = note;
 		this.sunday = sunday;
 		this.monday = monday;
