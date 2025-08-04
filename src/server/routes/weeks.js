@@ -15,7 +15,7 @@ const router = express.Router();
 function formatWeekForResponse(item) {
 	return {
 		id: item.id, 
-		weekName: item.weekName, 
+		name: item.name, 
 		note: item.note,
 		sunday: item.sunday,
 		monday: item.monday,
@@ -74,7 +74,7 @@ router.get('/:id', adminAuthMiddleware('get week by id'), async(req, res) => {
 
 /**
  * POST add week.
- * @param {string} weekName The name for the week.
+ * @param {string} name The name for the week.
  * @param {string} note The notes for the week.
  * @param {number} sunday The id for the day pattern used for sunday.
  * @param {number} monday The id for the day pattern used for monday.
@@ -88,9 +88,9 @@ router.post('/addWeek', adminAuthMiddleware('add week'), async (req, res) => {
 	const validWeek= {
 		type: 'object',
 		maxProperties: 9,
-		required: ['weekName', 'sunday','monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'],
+		required: ['name', 'sunday','monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'],
 		properties: {
-			weekName: {
+			name: {
 				type: 'string',
 			},
 			note: {
@@ -134,7 +134,7 @@ router.post('/addWeek', adminAuthMiddleware('add week'), async (req, res) => {
 			await conn.tx(async t => {
 				const newWeek = new Week(
 					undefined,
-					req.body.weekName,
+					req.body.name,
 					req.body.note,
 					req.body.sunday,
 					req.body.monday,
@@ -158,7 +158,7 @@ router.post('/addWeek', adminAuthMiddleware('add week'), async (req, res) => {
 /**
  * POST edit week.
  * @param {integer} id The id for the week to be edited.
- * @param {string} weekName The new name for the week.
+ * @param {string} name The new name for the week.
  * @param {string} note The new notes for the week.
  * @param {number} sunday The new id for the day pattern used for sunday.
  * @param {number} monday The new id for the day pattern used for monday.
@@ -172,13 +172,13 @@ router.post('/edit', adminAuthMiddleware('edit week'), async (req, res) => {
 	const validWeek = {
 		type: 'object',
 		maxProperties: 10,
-		required: ['id', 'weekName', 'sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'],
+		required: ['id', 'name', 'sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'],
 		properties: {
 			id: {
 				type: 'integer', 
 				minimum: 0
 			},
-			weekName: {
+			name: {
 				type: 'string',
 			},
 			note: {
@@ -221,7 +221,7 @@ router.post('/edit', adminAuthMiddleware('edit week'), async (req, res) => {
 		try {
 			const updatedWeek = new Week(
 				req.body.id, 
-				req.body.weekName,
+				req.body.name,
 				req.body.note,
 				req.body.sunday,
 				req.body.monday,

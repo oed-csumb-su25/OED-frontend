@@ -4,7 +4,7 @@
 -- Insert a new week pattern into the week table
 
 INSERT INTO week_patterns (
-	week_name, 
+	name, 
 	note, 
 	sunday, 
 	monday, 
@@ -14,7 +14,7 @@ INSERT INTO week_patterns (
 	friday, 
 	saturday
 ) VALUES (
-	${weekName}, 
+	${name}, 
 	${note}, 
 	${sunday}, 
 	${monday}, 
