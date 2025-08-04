@@ -236,25 +236,13 @@ export default function EditConversionModalComponent(props: EditConversionModalC
 	// to preserve continuous coverage with no time gaps or overlaps
 	const handleDeleteSegment = async () => {
 		try {
-			// Sort segment by start time
-			const sorted = [...segments].sort((a, b) => {
-				const segmentAStart = a.startTime === '-infinity' ? null : moment(a.startTime);
-				const segmentBStart = b.startTime === '-infinity' ? null : moment(b.startTime);
-				if (!segmentAStart) {
-					return -1;
-				}
-				if (!segmentBStart) {
-					return 1;
-				}
-				return segmentAStart.isBefore(segmentBStart) ? -1 : 1;
-			});
 			// Find the index of the segment selected for deletion
-			const index = sorted.findIndex(seg =>
+			const index = segments.findIndex(seg =>
 				seg.startTime === selectedSegment!.startTime && seg.endTime === selectedSegment!.endTime
 			);
 			// Grab previous and next segments
-			const previous = sorted[index - 1];
-			const next = sorted[index + 1];
+			const previous = segments[index - 1];
+			const next = segments[index + 1];
 
 			// If deleting earlier, update the previous segment’s end time to match the selected segment’s end time
 			if (actionDirection === 'earlier' && previous) {
@@ -554,25 +542,13 @@ export default function EditConversionModalComponent(props: EditConversionModalC
 		// If editing a segment's time range, ensure there are no gaps or overlaps with adjacent segments,
 		// but only if the range is bounded (i.e., not -infinity or infinity).
 		if (editingSegment) {
-			// Sort segments by start time
-			const sortedSegments = [...segments].sort((a, b) => {
-				const segmentAStartTime = a.startTime === '-infinity' ? null : moment(a.startTime);
-				const segmentBStartTime = b.startTime === '-infinity' ? null : moment(b.startTime);
-				if (!segmentAStartTime) {
-					return -1;
-				}
-				if (!segmentBStartTime) {
-					return 1;
-				}
-				return segmentAStartTime.isBefore(segmentBStartTime) ? -1 : 1;
-			});
 			// Find the index of the segment being edited
-			const index = sortedSegments.findIndex(
+			const index = segments.findIndex(
 				seg => seg.startTime === editingSegment.originalStartTime && seg.endTime === editingSegment.originalEndTime
 			);
 			// Grab previous and next segments if they exist
-			const previous = sortedSegments[index - 1];
-			const next = sortedSegments[index + 1];
+			const previous = segments[index - 1];
+			const next = segments[index + 1];
 			// Check for gaps/overlaps with previous segment
 			if (previous && !moment(editingSegment.startTime).isSame(previous.endTime)) {
 				setFieldErrors(prev =>({ ...prev,
