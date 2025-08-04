@@ -17,3 +17,13 @@ export interface ConversionSegmentData {
 	weekPatternsId: number | null;
 	note: string;
 }
+
+/**
+ * Payload used when updating an existing conversion segment.
+ * Includes the original start and end times to uniquely identify
+ * the segment in the database, since startTime and endTime are part of the primary key.
+ */
+export interface UpdateConversionSegmentPayload extends ConversionSegmentData {
+	originalStartTime: string;
+	originalEndTime: string;
+}

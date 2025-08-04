@@ -19,7 +19,7 @@ import '../../styles/modal.css';
 import { tooltipBaseStyle } from '../../styles/modalStyle';
 import { TrueFalseType } from '../../types/items';
 import { ConversionData } from '../../types/redux/conversions';
-import { ConversionSegmentData } from '../../types/redux/conversionSegments';
+import { ConversionSegmentData, UpdateConversionSegmentPayload } from '../../types/redux/conversionSegments';
 import { UnitData, UnitType } from '../../types/redux/units';
 import { showErrorNotification } from '../../utils/notifications';
 import { useTranslate } from '../../redux/componentHooks';
@@ -78,7 +78,7 @@ export default function EditConversionModalComponent(props: EditConversionModalC
 	// Handlers for each type of input change
 	const [state, setState] = useState(values);
 	// Tracks the active segment being edited, with original start/end times used to match and update the correct entry in the backend
-	const [editingSegment, setEditingSegment] = useState<ConversionSegmentData & { originalStartTime: string; originalEndTime: string } | null>(null);
+	const [editingSegment, setEditingSegment] = useState<UpdateConversionSegmentPayload | null>(null);
 	const [showSegmentNoteModal, setShowSegmentNoteModal] = React.useState(false);
 	const [showEditSegmentModal, setShowEditSegmentModal] = React.useState(false);
 	const [showSplitSegmentModal, setShowSplitSegmentModal] = React.useState(false);
@@ -104,7 +104,7 @@ export default function EditConversionModalComponent(props: EditConversionModalC
 		setState({...state, [e.target.name]: JSON.parse(e.target.value) });
 	};
 
-	const handleNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+	const handleSegmentNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 		setEditingSegment(prev => ({
 			...prev!,
 			[e.target.name]: Number(e.target.value), // dynamically sets either slope or intercept
@@ -672,7 +672,7 @@ export default function EditConversionModalComponent(props: EditConversionModalC
 								name='slope'
 								type='number'
 								value={editingSegment?.slope ?? ''}
-								onChange={e => handleNumberChange(e)}
+								onChange={e => handleSegmentNumberChange(e)}
 								disabled={editingSegment?.weekPatternsId !== -99}
 							/>
 						</FormGroup>
@@ -682,7 +682,7 @@ export default function EditConversionModalComponent(props: EditConversionModalC
 								name='intercept'
 								type='number'
 								value={editingSegment?.intercept ?? ''}
-								onChange={e => handleNumberChange(e)}
+								onChange={e => handleSegmentNumberChange(e)}
 								disabled={editingSegment?.weekPatternsId !== -99}
 							/>
 						</FormGroup>
