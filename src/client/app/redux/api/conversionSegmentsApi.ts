@@ -55,7 +55,7 @@ export const conversionSegmentsApi = baseApi.injectEndpoints({
 		}),
 		addConversionSegment: builder.mutation<void, ConversionSegmentData>({
 			query: segment => ({
-				url: '/api/conversionSegments/add',
+				url: '/api/conversionSegments/addConversionSegment',
 				method: 'POST',
 				body: segment
 			}),

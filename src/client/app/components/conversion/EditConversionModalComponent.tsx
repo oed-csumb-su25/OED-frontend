@@ -184,17 +184,10 @@ export default function EditConversionModalComponent(props: EditConversionModalC
 		const isEndTimeValid = selectedSegment!.endTime === 'infinity' || splitTime.isBefore(moment(selectedSegment!.endTime));
 
 		if (!isStartTimeValid || !isEndTimeValid || !isFormatValid) {
-			console.log('[INVALID]', {
-				actionDatetime,
-				isFormatValid,
-				isStartTimeValid,
-				isEndTimeValid
-			});
 			setFieldErrors(prev => ({ ...prev, segmentTimeError: translate('conversion.error.segment.splitTime')}));
 			return;
 		}
 
-		// Common fields for both segments
 		const segmentFields = {
 			sourceId: selectedSegment!.sourceId,
 			destinationId: selectedSegment!.destinationId,
@@ -205,40 +198,24 @@ export default function EditConversionModalComponent(props: EditConversionModalC
 		};
 
 		try {
-			// Delete the original segment
+			// 1. Add both new segments first
+			await addSegment({
+				...segmentFields,
+				startTime: selectedSegment!.startTime,
+				endTime: actionDatetime
+			});
+			await addSegment({
+				...segmentFields,
+				startTime: actionDatetime,
+				endTime: selectedSegment!.endTime
+			});
+			// 2. Only after both succeed, delete the original
 			await deleteSegment({
 				sourceId: selectedSegment!.sourceId,
 				destinationId: selectedSegment!.destinationId,
 				startTime: selectedSegment!.startTime,
 				endTime: selectedSegment!.endTime
 			});
-			if (actionDirection === 'earlier') {
-				// Earlier segment is new
-				await addSegment({
-					...segmentFields,
-					startTime: selectedSegment!.startTime,
-					endTime: actionDatetime
-				});
-				// Later segment keeps original values
-				await addSegment({
-					...segmentFields,
-					startTime: actionDatetime,
-					endTime: selectedSegment!.endTime
-				});
-			} else if (actionDirection === 'later') {
-				// Earlier segment keeps original values
-				await addSegment({
-					...segmentFields,
-					startTime: selectedSegment!.startTime,
-					endTime: actionDatetime
-				});
-				// Later segment is new
-				await addSegment({
-					...segmentFields,
-					startTime: actionDatetime,
-					endTime: selectedSegment!.endTime
-				});
-			}
 			setShowSplitSegmentModal(false);
 			setSelectedSegment(null);
 			setActionDirection(null);
