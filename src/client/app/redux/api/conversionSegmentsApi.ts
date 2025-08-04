@@ -29,7 +29,7 @@ export const conversionSegmentsApi = baseApi.injectEndpoints({
 		}),
 		getConversionSegmentByKey: builder.query<ConversionSegmentData, { sourceId: number; destinationId: number; startTime: string; endTime: string }>({
 			query: ({ sourceId, destinationId, startTime, endTime }) => ({
-				url: '/api/conversionSegments/segment',
+				url: '/api/conversionSegments/sourceDestinationStartEnd',
 				method: 'POST',
 				body: { sourceId, destinationId, startTime, endTime }
 			}),

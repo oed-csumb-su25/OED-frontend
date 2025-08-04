@@ -119,7 +119,7 @@ export default function EditConversionModalComponent(props: EditConversionModalC
 			if (selectedPattern === 'No Pattern') {
 				return {
 					...prev!,
-					weekPatternsId: null,
+					weekPatternsId: -99,
 					slope: 0,
 					intercept: 0
 				};
@@ -545,28 +545,26 @@ export default function EditConversionModalComponent(props: EditConversionModalC
 	};
 
 	const handleSaveSegment = async() => {
-		// Used to track whether all validation checks pass before allowing the save to proceed
-		let isSaveValid = true;
 		// Prevent saving if start time or end time is not in valid format
-		const isStartValid = moment(editingSegment?.startTime, 'YYYY-MM-DD HH:mm:ss', true).isValid() || editingSegment?.startTime === '-infinity';
-		const isEndValid = moment(editingSegment?.endTime, 'YYYY-MM-DD HH:mm:ss', true).isValid() || editingSegment?.endTime === 'infinity';
-		if (!isStartValid || !isEndValid) {
-			isSaveValid = false;
+		const isStartTimeValid = moment(editingSegment?.startTime).isValid() || editingSegment?.startTime === '-infinity';
+		const isEndTimeValid = moment(editingSegment?.endTime).isValid() || editingSegment?.endTime === 'infinity';
+		if (!isStartTimeValid || !isEndTimeValid) {
+			return;
 		}
 		// If editing a segment's time range, ensure there are no gaps or overlaps with adjacent segments,
 		// but only if the range is bounded (i.e., not -infinity or infinity).
 		if (editingSegment) {
 			// Sort segments by start time
 			const sortedSegments = [...segments].sort((a, b) => {
-				const segmentAStart = a.startTime === '-infinity' ? null : moment(a.startTime);
-				const segmentBStart = b.startTime === '-infinity' ? null : moment(b.startTime);
-				if (!segmentAStart) {
+				const segmentAStartTime = a.startTime === '-infinity' ? null : moment(a.startTime);
+				const segmentBStartTime = b.startTime === '-infinity' ? null : moment(b.startTime);
+				if (!segmentAStartTime) {
 					return -1;
 				}
-				if (!segmentBStart) {
+				if (!segmentBStartTime) {
 					return 1;
 				}
-				return segmentAStart.isBefore(segmentBStart) ? -1 : 1;
+				return segmentAStartTime.isBefore(segmentBStartTime) ? -1 : 1;
 			});
 			// Find the index of the segment being edited
 			const index = sortedSegments.findIndex(
@@ -583,7 +581,7 @@ export default function EditConversionModalComponent(props: EditConversionModalC
 						{ endTime: previous.endTime }
 					)
 				}));
-				isSaveValid = false;
+				return;
 			}
 			// Check for gaps/overlaps with next segment
 			if (next && !moment(editingSegment.endTime).isSame(next.startTime)) {
@@ -593,11 +591,8 @@ export default function EditConversionModalComponent(props: EditConversionModalC
 						{ startTime: next.startTime }
 					)
 				}));
-				isSaveValid = false;
+				return;
 			}
-		}
-		if (!isSaveValid) {
-			return;
 		}
 		// If a segment is being edited, send the updated data to the backend
 		// and close the edit segment modal if the request succeeds.
@@ -615,6 +610,8 @@ export default function EditConversionModalComponent(props: EditConversionModalC
 					toast.POSITION.TOP_RIGHT,
 					5000
 				);
+			} finally {
+				await refetchSegments();
 			}
 		}
 	};
@@ -700,7 +697,7 @@ export default function EditConversionModalComponent(props: EditConversionModalC
 								type='number'
 								value={editingSegment?.slope ?? ''}
 								onChange={e => handleNumberChange(e)}
-								disabled={editingSegment?.weekPatternsId !== null}
+								disabled={editingSegment?.weekPatternsId !== -99}
 							/>
 						</FormGroup>
 						<FormGroup>
@@ -710,7 +707,7 @@ export default function EditConversionModalComponent(props: EditConversionModalC
 								type='number'
 								value={editingSegment?.intercept ?? ''}
 								onChange={e => handleNumberChange(e)}
-								disabled={editingSegment?.weekPatternsId !== null}
+								disabled={editingSegment?.weekPatternsId !== -99}
 							/>
 						</FormGroup>
 						<FormGroup>
@@ -719,7 +716,7 @@ export default function EditConversionModalComponent(props: EditConversionModalC
 								id='pattern'
 								name='pattern'
 								type='select'
-								value={editingSegment?.weekPatternsId ?? ''}
+								value={editingSegment?.weekPatternsId === -99 ? 'No Pattern' : editingSegment?.weekPatternsId ?? ''}
 								onChange={e => handlePatternChange(e)}
 							>
 								<option value='No Pattern'>No Pattern</option>
