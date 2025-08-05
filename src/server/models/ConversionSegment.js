@@ -174,6 +174,12 @@ class ConversionSegment {
 	 * @param {*} conn The connection to use.
 	 */
 	static async deleteEarlier(sourceId, destinationId, startTime, endTime, conn) {
+		if (startTime === '-infinity') {
+			const errMsg = `There is no earlier segment to update in order to delete this segment.`;
+			log.error(errMsg);
+			throw new Error(errMsg);
+		}
+
 		// update the end time of the previous segment
 		await conn.none(sqlFile('conversionSegment/update_prev_seg_end_to_curr_end.sql'), {
 			sourceId: sourceId,
@@ -200,6 +206,12 @@ class ConversionSegment {
 	 * @param {*} conn The connection to use.
 	 */
 	static async deleteLater(sourceId, destinationId, startTime, endTime, conn) {
+		if (endTime === 'infinity') {
+			const errMsg = `There is no later segment to update in order to delete this segment.`;
+			log.error(errMsg);
+			throw new Error(errMsg);
+		}
+
 		// update the start time of the next segment
 		await conn.none(sqlFile('conversionSegment/update_next_seg_start_to_curr_start.sql'), {
 			sourceId: sourceId,
