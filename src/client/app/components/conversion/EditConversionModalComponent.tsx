@@ -147,32 +147,19 @@ export default function EditConversionModalComponent(props: EditConversionModalC
 		setShowSegmentNoteModal(true);
 	};
 
-	// Handles and validates changes to datetime fields (start, end, or split)
+	// Updates datetime values (start, end, or split) based on user input
 	const handleDatetimeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-		// Validate datetime format
-		const validFormat = moment(e.target.value.trim(), 'YYYY-MM-DD HH:mm:ss', true).isValid();
-		if (!validFormat) {
-			setFieldErrors({
-				segmentTimeError: intl.formatMessage(
-					{ id: 'conversion.error.datetime.invalid' },
-					{ field: e.target.name }
-				),
-				errorField: e.target.name
-			});
-		} else if (fieldErrors.errorField === e.target.name) {
-			setFieldErrors({});
-		}
-
+		// Handle if splitting segment
+		if (e.target.name === 'splitDatetime') {
+			setActionDatetime(e.target.value);
+			setFieldErrors(prev => (prev.errorField === 'splitDatetime' ? {} : prev));
 		// Handle if editing a segment
-		if (editingSegment && (e.target.name === 'startTime' || e.target.name === 'endTime')) {
+		} else if (editingSegment && (e.target.name === 'startTime' || e.target.name === 'endTime')) {
 			setEditingSegment(prev => ({
 				...prev!,
 				[e.target.name]: e.target.value
 			}));
-		}
-		// Handle if splitting segment
-		if (e.target.name === 'splitDatetime') {
-			setActionDatetime(e.target.value);
+			setFieldErrors(prev => (prev.errorField === e.target.name? {} : prev));
 		}
 	};
 
@@ -183,8 +170,21 @@ export default function EditConversionModalComponent(props: EditConversionModalC
 		const isStartTimeValid = selectedSegment!.startTime === '-infinity' || splitTime.isAfter(moment(selectedSegment!.startTime));
 		const isEndTimeValid = selectedSegment!.endTime === 'infinity' || splitTime.isBefore(moment(selectedSegment!.endTime));
 
-		if (!isStartTimeValid || !isEndTimeValid || !isFormatValid) {
-			setFieldErrors(prev => ({ ...prev, segmentTimeError: translate('conversion.error.segment.splitTime')}));
+		if (!isFormatValid) {
+			setFieldErrors({
+				segmentTimeError: intl.formatMessage(
+					{ id: 'conversion.error.datetime.invalid' },
+					{ field: 'splitDatetime' }
+				),
+				errorField: 'splitDatetime'
+			});
+			return;
+		}
+		if (!isStartTimeValid || !isEndTimeValid) {
+			setFieldErrors({
+				segmentTimeError: translate('conversion.error.segment.splitTime'),
+				errorField: 'splitDatetime'
+			});
 			return;
 		}
 
@@ -533,10 +533,28 @@ export default function EditConversionModalComponent(props: EditConversionModalC
 	};
 
 	const handleSaveSegment = async() => {
-		// Prevent saving if start time or end time is not in valid format
-		const isStartTimeValid = moment(editingSegment?.startTime).isValid() || editingSegment?.startTime === '-infinity';
-		const isEndTimeValid = moment(editingSegment?.endTime).isValid() || editingSegment?.endTime === 'infinity';
-		if (!isStartTimeValid || !isEndTimeValid) {
+		// Prevent saving if start time or end time is not in valid format and display error message
+		const isStartTimeValid = moment(editingSegment?.startTime, 'YYYY-MM-DD HH:mm:ss', true).isValid() || editingSegment?.startTime === '-infinity';
+		const isEndTimeValid = moment(editingSegment?.endTime, 'YYYY-MM-DD HH:mm:ss', true).isValid() || editingSegment?.endTime === 'infinity';
+		if (!isStartTimeValid) {
+			setFieldErrors({
+				segmentTimeError: intl.formatMessage(
+					{ id: 'conversion.error.datetime.invalid' },
+					{ field: 'startTime' }
+				),
+				errorField: 'startTime'
+			});
+			return;
+		}
+
+		if (!isEndTimeValid) {
+			setFieldErrors({
+				segmentTimeError: intl.formatMessage(
+					{ id: 'conversion.error.datetime.invalid' },
+					{ field: 'endTime' }
+				),
+				errorField: 'endTime'
+			});
 			return;
 		}
 		// If editing a segment's time range, ensure there are no gaps or overlaps with adjacent segments,
@@ -550,22 +568,26 @@ export default function EditConversionModalComponent(props: EditConversionModalC
 			const previous = segments[index - 1];
 			const next = segments[index + 1];
 			// Check for gaps/overlaps with previous segment
-			if (previous && !moment(editingSegment.startTime).isSame(previous.endTime)) {
-				setFieldErrors(prev =>({ ...prev,
+			if (previous && !moment.utc(editingSegment.startTime, 'YYYY-MM-DD HH:mm:ss').isSame(moment.utc(previous.endTime))) {
+				setFieldErrors(prev =>({
+					...prev,
 					segmentTimeError: intl.formatMessage(
 						{ id: 'conversion.error.segment.startTimeMismatch' },
 						{ endTime: previous.endTime }
-					)
+					),
+					errorField: 'startTime'
 				}));
 				return;
 			}
 			// Check for gaps/overlaps with next segment
-			if (next && !moment(editingSegment.endTime).isSame(next.startTime)) {
-				setFieldErrors(prev =>({ ...prev,
+			if (next && !moment.utc(editingSegment.endTime, 'YYYY-MM-DD HH:mm:ss').isSame(moment.utc(next.startTime))) {
+				setFieldErrors(prev =>({
+					...prev,
 					segmentTimeError: intl.formatMessage(
 						{ id: 'conversion.error.segment.endTimeMismatch' },
 						{ startTime: next.startTime }
-					)
+					),
+					errorField: 'endTime'
 				}));
 				return;
 			}
@@ -879,6 +901,8 @@ export default function EditConversionModalComponent(props: EditConversionModalC
 												<Button style={tableButtonStyle} color='secondary' onClick={() => {
 													setEditingSegment({
 														...segment,
+														startTime: moment.utc(segment.startTime).format('YYYY-MM-DD HH:mm:ss'),
+														endTime: moment.utc(segment.endTime).format('YYYY-MM-DD HH:mm:ss'),
 														originalStartTime: segment.startTime,
 														originalEndTime: segment.endTime
 													});
@@ -894,6 +918,7 @@ export default function EditConversionModalComponent(props: EditConversionModalC
 													setActionDirection('earlier');
 													setSelectedSegment(segment);
 													setActionDatetime('');
+													setFieldErrors({});
 													setShowSplitSegmentModal(true);
 												}}
 											>
@@ -904,6 +929,7 @@ export default function EditConversionModalComponent(props: EditConversionModalC
 													setActionDirection('later');
 													setSelectedSegment(segment);
 													setActionDatetime('');
+													setFieldErrors({});
 													setShowSplitSegmentModal(true);
 												}}
 											>
