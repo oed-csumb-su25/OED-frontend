@@ -15,7 +15,6 @@ import DayViewComponent from './DayViewComponent';
 
 /**
  * Defines the daily pattern info page
- * @param props defined above
  * @returns Single day element
  */
 export default function DaysDetailComponent() {
