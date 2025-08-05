@@ -313,4 +313,80 @@ router.post('/delete', adminAuthMiddleware('delete day segment'), async (req, re
 	}
 });
 
+/**
+ * POST delete day segment after updating the next segment start time.
+ * @param {integer} id The id for the day segment to be deleted.
+ */
+router.post('/deleteAfter', adminAuthMiddleware('delete day segment'), async (req, res) => {
+	const validDaySegment = {
+		type: 'object',
+		maxProperties: 1,
+		required: ['id'],
+		properties: {
+			id: {
+				type: 'integer', 
+				minimum: 0
+			}
+		}
+	};
+
+	// Ensure day segment object is valid
+	const validatorResult = validate(req.body, validDaySegment);
+	if (!validatorResult.valid) {
+		const errMsg = `Got request to delete a day segment with invalid data, error(s): ${validatorResult.errors}`;
+		log.warn(errMsg);
+		failure(res, 400, errMsg);
+	} else {
+		const conn = getConnection();
+		try {
+			// Don't worry about checking if the day segment already exists
+			// Just try to delete it to save the extra database call, since the database will return an error anyway if the row does not exist
+			await DaySegment.deleteEarlier(req.body.id, conn);
+			success(res, 'Successfully deleted day segment and updated the next segment.');
+		} catch (err) {
+			const errMsg = `Error while deleting after day segment with error(s): ${err}`;
+			log.error(errMsg);
+			failure(res, 500, errMsg);
+		}
+	}
+});
+
+/**
+ * POST delete day segment after updating the previous segment end time.
+ * @param {integer} id The id for the day segment to be deleted.
+ */
+router.post('/deleteEarlier', adminAuthMiddleware('delete day segment'), async (req, res) => {
+	const validDaySegment = {
+		type: 'object',
+		maxProperties: 1,
+		required: ['id'],
+		properties: {
+			id: {
+				type: 'integer', 
+				minimum: 0
+			}
+		}
+	};
+
+	// Ensure day segment object is valid
+	const validatorResult = validate(req.body, validDaySegment);
+	if (!validatorResult.valid) {
+		const errMsg = `Got request to delete a day segment with invalid data, error(s): ${validatorResult.errors}`;
+		log.warn(errMsg);
+		failure(res, 400, errMsg);
+	} else {
+		const conn = getConnection();
+		try {
+			// Don't worry about checking if the day segment already exists
+			// Just try to delete it to save the extra database call, since the database will return an error anyway if the row does not exist
+			await DaySegment.deleteAfter(req.body.id, conn);
+			success(res, 'Successfully deleted day segment and updated the previous segment.');
+		} catch (err) {
+			const errMsg = `Error while deleting earlier day segment with error(s): ${err}`;
+			log.error(errMsg);
+			failure(res, 500, errMsg);
+		}
+	}
+});
+
 module.exports = router;
