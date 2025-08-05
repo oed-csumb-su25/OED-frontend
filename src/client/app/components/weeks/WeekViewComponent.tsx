@@ -25,7 +25,7 @@ export default function WeekViewComponent(props: WeekViewComponentProps): React.
 
 	return (
 		<div className="card">
-			<div className="identifier-container">{week.weekName}</div>
+			<div className="identifier-container">{week.name}</div>
 			<div className="item-container p-2">
 				{/* Only show first 30 characters so card does not get too big. Should limit to one line */}
 				<b><FormattedMessage id="note" /></b> {week.note?.slice(0, 29)}

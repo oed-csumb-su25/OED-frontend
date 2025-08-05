@@ -724,7 +724,7 @@ export default function EditConversionModalComponent(props: EditConversionModalC
 							>
 								<option value='No Pattern'>No Pattern</option>
 								{weekPatterns.map(pattern => (
-									<option key={pattern.id} value={pattern.id}>{pattern.weekName}</option>
+									<option key={pattern.id} value={pattern.id}>{pattern.name}</option>
 								))}
 							</Input>
 						</FormGroup>
@@ -895,7 +895,7 @@ export default function EditConversionModalComponent(props: EditConversionModalC
 											<td>{segment.startTime} to {segment.endTime}</td>
 											<td>{segment.weekPatternsId === null ? segment.slope : ''}</td>
 											<td>{segment.weekPatternsId === null ? segment.intercept : ''}</td>
-											<td>{weekPatterns.find(wp => wp.id === segment.weekPatternsId)?.weekName ?? ''}</td>
+											<td>{weekPatterns.find(wp => wp.id === segment.weekPatternsId)?.name ?? ''}</td>
 											<td
 												style={{ cursor: 'pointer' }}
 												onClick={() => handleNoteModal(segment)}

@@ -14,7 +14,7 @@ export interface Week {
 	/**
 	 * The name of the week
 	 */
-	weekName: string;
+	name: string;
 
 	/**
 	 * An optional note for the week

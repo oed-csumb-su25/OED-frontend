@@ -93,18 +93,18 @@ export default function EditWeekModalComponent(props: EditWeekModalComponentProp
 
 	// Validate the week name to ensure it is not empty and does not already exist
 	const isWeekNameValid = React.useMemo(() => {
-		if (weekDetails.weekName === '') {
+		if (weekDetails.name === '') {
 			setNameValidationMessageId('error.required');
 			return false;
 		}
-		if (weeks?.some(week => week.weekName.toLowerCase() === weekDetails.weekName.toLowerCase() && week.id !== weekDetails.id)) {
+		if (weeks?.some(week => week.name.toLowerCase() === weekDetails.name.toLowerCase() && week.id !== weekDetails.id)) {
 			setNameValidationMessageId('week.validation.name.exists');
 			return false;
 		}
 
 		setNameValidationMessageId(null);
 		return true;
-	}, [weekDetails.weekName, weeks, weekDetails.id]);
+	}, [weekDetails.name, weeks, weekDetails.id]);
 
 
 	// Delete confirmation dialog visibility
@@ -144,9 +144,9 @@ export default function EditWeekModalComponent(props: EditWeekModalComponentProp
 									<Input
 										id="name"
 										type="text"
-										name="weekName"
+										name="name"
 										required
-										value={weekDetails.weekName}
+										value={weekDetails.name}
 										invalid={!isWeekNameValid}
 										onChange={handleStringChange} />
 									<FormFeedback>

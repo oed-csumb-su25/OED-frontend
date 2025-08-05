@@ -24,7 +24,7 @@ export default function WeeksDetailComponent() {
 		if (!weeks) {
 			return [];
 		}
-		return [...weeks].sort((a, b) => a.weekName.toLocaleLowerCase().localeCompare(b.weekName.toLocaleLowerCase()));
+		return [...weeks].sort((a, b) => a.name.toLocaleLowerCase().localeCompare(b.name.toLocaleLowerCase()));
 	}, [weeks]);
 
 	return (

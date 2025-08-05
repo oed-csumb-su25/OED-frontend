@@ -86,19 +86,19 @@ export default function CreateWeekModalComponent(): React.ReactElement {
 
 	// Validate the week name to ensure it is not empty and does not already exist
 	const isWeekNameValid = React.useMemo(() => {
-		if (weekDetails.weekName === '') {
+		if (weekDetails.name === '') {
 			setNameValidationMessageId('error.required');
 			return false;
 		}
 
-		if (weeks?.some(week => week.weekName.toLowerCase() === weekDetails.weekName.toLowerCase())) {
+		if (weeks?.some(week => week.name.toLowerCase() === weekDetails.name.toLowerCase())) {
 			setNameValidationMessageId('week.validation.name.exists');
 			return false;
 		}
 
 		setNameValidationMessageId(null);
 		return true;
-	}, [weekDetails.weekName, weeks]);
+	}, [weekDetails.name, weeks]);
 
 	// Validate the week details to ensure all days are selected and the week name is valid
 	// This is used to enable/disable the submit button
@@ -144,9 +144,9 @@ export default function CreateWeekModalComponent(): React.ReactElement {
 									<Input
 										id="name"
 										type="text"
-										name="weekName"
+										name="name"
 										required
-										value={weekDetails.weekName}
+										value={weekDetails.name}
 										invalid={!isWeekNameValid}
 										onChange={handleStringChange}
 									/>

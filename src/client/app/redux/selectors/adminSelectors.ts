@@ -221,8 +221,8 @@ export const selectIsValidConversion = createAppSelector(
 					TODO Some of these can go away when we make the menus dynamic.
 				*/
 		const sourceId = conversionState.overallConversion.sourceId;
-    const destinationId = conversionState.overallConversion.destinationId;
-    const bidirectional = conversionState.overallConversion.bidirectional;
+		const destinationId = conversionState.overallConversion.destinationId;
+		const bidirectional = conversionState.overallConversion.bidirectional;
 
 		// The destination cannot be a meter unit.
 		if (destinationId !== -999 && unitDataById[destinationId].typeOfUnit === UnitType.meter) {
@@ -363,7 +363,7 @@ export const selectDefaultCreateDayValues = createAppSelector(
 export const selectDefaultCreateWeekValues = createAppSelector<[], Omit<Week, 'id'>>(
 	[],
 	() => ({
-		weekName: '',
+		name: '',
 		note: '',
 		sunday: -999,
 		monday: -999,
@@ -437,22 +437,22 @@ export const isValidCreateMeter = createAppSelector(
  * @returns A tuple where the first element is a boolean indicating validity, and the second is a message string.
  */
 export const selectIsValidCreateDay = createAppSelector(
-    [
-        selectAllDays,
-        (_state, patternState: { Day: { name: string } }) => patternState
-    ],
-    (days, patternState): [boolean, string] => {
-        const name = patternState.Day?.name;
-        if (!name || name.trim() === '') {
-            return [false, translate('day.create.name.required')];
-        }
-        // Check if name already exists (case-insensitive)
-        const exists = days.some(day =>
-            day.name?.toLowerCase() === name.trim().toLowerCase()
-        );
-        if (exists) {
-            return [false, translate('day.create.name.exists')];
-        }
-        return [true, 'Daily Pattern is Valid'];
-    }
+	[
+		selectAllDays,
+		(_state, patternState: { Day: { name: string } }) => patternState
+	],
+	(days, patternState): [boolean, string] => {
+		const name = patternState.Day?.name;
+		if (!name || name.trim() === '') {
+			return [false, translate('day.create.name.required')];
+		}
+		// Check if name already exists (case-insensitive)
+		const exists = days.some(day =>
+			day.name?.toLowerCase() === name.trim().toLowerCase()
+		);
+		if (exists) {
+			return [false, translate('day.create.name.exists')];
+		}
+		return [true, 'Daily Pattern is Valid'];
+	}
 );

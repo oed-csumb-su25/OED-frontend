@@ -443,7 +443,7 @@ export default function CreateConversionModalComponent() {
 							>
 								<option value={-99}>{translate('conversion.pattern.no')}</option>
 								{weeks.map(week => (
-									<option key={week.id} value={week.id}>{week.weekName}</option>
+									<option key={week.id} value={week.id}>{week.name}</option>
 								))}
 							</Input>
 						</FormGroup>
