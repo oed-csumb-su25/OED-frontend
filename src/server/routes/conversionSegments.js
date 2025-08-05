@@ -377,6 +377,118 @@ router.post('/delete', adminAuthMiddleware('delete conversion segment'), async (
 	}
 });
 
+/**
+ * POST delete conversion segment. The end date of the previous segment is updated to the end date of the segment being deleted.
+ * @param {int} sourceId The source meter's id.
+ * @param {int} destinationId The destination meter's id.
+ * @param {string} startTime The new start time of the conversion segment.
+ * @param {string} endTime The new end time of the conversion segment.
+ */
+router.post('/deleteEarlier', adminAuthMiddleware('delete conversion segment'), async (req, res) => {
+	const validConversionSegment = {
+		type: 'object',
+		maxProperties: 4,
+		required: ['sourceId', 'destinationId', 'startTime', 'endTime'],
+		properties: {
+			sourceId: {
+				type: 'integer',
+				minimum: 0
+			},
+			destinationId: {
+				type: 'integer',
+				minimum: 0
+			},
+			startTime: {
+				type: 'string'
+			},
+			endTime: {
+				type: 'string'
+			}
+		}
+	};
+	// Ensure conversion segment object is valid
+	const validatorResult = validate(req.body, validConversionSegment);
+	if (!validatorResult.valid) {
+		const errMsg = `Got request to delete a conversion segment with invalid conversion segment data, error(s): ${err}`
+		log.warn(errMsg);
+		failure(res, 400, errMsg);
+	} else {
+		const conn = getConnection();
+		try {
+			// Don't worry about checking if the conversion segment already exists
+			// Just try to delete it to save the extra database call, since the database will return an error anyway if the row does not exist
+			await ConversionSegment.deleteEarlier(
+				req.body.sourceId, 
+				req.body.destinationId, 
+				formatTimestampValue(req.body.startTime),
+				formatTimestampValue(req.body.endTime),
+				conn
+			);
+			success(res, 'Successfully deleted conversion segment and updated previous conversion segment.');
+		} catch (err) {
+			const errMsg = `Error while deleting earlier conversion segment with error(s): ${err}`
+			log.error(errMsg);
+			failure(res, 500, errMsg);
+		}
+	}
+});
+
+/**
+ * POST delete conversion segment. The start date of the following segment is updated to the start date of the segment being deleted.
+ * @param {int} sourceId The source meter's id.
+ * @param {int} destinationId The destination meter's id.
+ * @param {string} startTime The new start time of the conversion segment.
+ * @param {string} endTime The new end time of the conversion segment.
+ */
+router.post('/deleteAfter', adminAuthMiddleware('delete conversion segment'), async (req, res) => {
+	const validConversionSegment = {
+		type: 'object',
+		maxProperties: 4,
+		required: ['sourceId', 'destinationId', 'startTime', 'endTime'],
+		properties: {
+			sourceId: {
+				type: 'integer',
+				minimum: 0
+			},
+			destinationId: {
+				type: 'integer',
+				minimum: 0
+			},
+			startTime: {
+				type: 'string'
+			},
+			endTime: {
+				type: 'string'
+			}
+		}
+	};
+	// Ensure conversion segment object is valid
+	const validatorResult = validate(req.body, validConversionSegment);
+	if (!validatorResult.valid) {
+		const errMsg = `Got request to delete a conversion segment with invalid conversion segment data, error(s): ${err}`
+		log.warn(errMsg);
+		failure(res, 400, errMsg);
+	} else {
+		const conn = getConnection();
+		try {
+			// Don't worry about checking if the conversion segment already exists
+			// Just try to delete it to save the extra database call, since the database will return an error anyway if the row does not exist
+			await ConversionSegment.deleteAfter(
+				req.body.sourceId, 
+				req.body.destinationId, 
+				formatTimestampValue(req.body.startTime),
+				formatTimestampValue(req.body.endTime),
+				conn
+			);
+			success(res, 'Successfully deleted conversion segment and updated the following conversion segment.');
+		} catch (err) {
+			const errMsg = `Error while deleting after conversion segment with error(s): ${err}`
+			log.error(errMsg);
+			failure(res, 500, errMsg);
+		}
+	}
+});
+
 function formatTimestampValue(value) {
 	if (value === 'infinity' || value === '-infinity') {
 		return value;

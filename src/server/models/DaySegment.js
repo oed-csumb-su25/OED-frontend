@@ -139,6 +139,36 @@ class DaySegment {
 			id: id
 		});
 	}
+
+	/**
+	 * Update the next segment start time before deleting the current segment.
+	 * @param {*} id The day segment id.
+	 * @param {*} conn The connection to use.
+	 */
+	static async deleteAfter(id, conn) {
+		await conn.none(sqlFile('daySegment/update_next_seg_start_to_curr_start.sql'), {
+			id: id
+		});
+
+		await conn.none(sqlFile('daySegment/delete_day_segment.sql'), {
+			id: id
+		});
+	}
+
+	/**
+	 * Update the previous segment end time before deleting the current segment.
+	 * @param {*} id The day segment id.
+	 * @param {*} conn The connection to use.
+	 */
+	static async deleteEarlier(id, conn) {
+		await conn.none(sqlFile('daySegment/update_prev_seg_end_to_curr_end.sql'), {
+			id: id
+		});
+
+		await conn.none(sqlFile('daySegment/delete_day_segment.sql'), {
+			id: id
+		});
+	}
 }
 
 module.exports = DaySegment;

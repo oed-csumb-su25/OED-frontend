@@ -31,9 +31,9 @@ async function addNewUnitAndConversion(sourceId, destinationId, slope, intercept
 
 	// Create the conversion from the prefix unit to this new unit.
 	const newConversion = new Conversion(
-		sourceId, 
-		newUnit.id, 
-		false, 
+		sourceId,
+		newUnit.id,
+		false,
 		`${sourceUnit.name} → ${newUnit.name} (created by OED for unit with suffix)`);
 	await newConversion.insert(
 		null,
@@ -68,9 +68,9 @@ async function verifyConversion(expectedSlope, expectedIntercept, source, destin
 		// The destination suffix unit exists but the conversion doesn't.
 		// Create a new conversion with desired values.
 		const newConversion = new Conversion(
-			sourceId, 
-			destinationId, 
-			false, 
+			sourceId,
+			destinationId,
+			false,
 			`${source.name} → ${destination.name} (created by OED for unit with suffix)`);
 		// Insert the new conversion and segment to database
 		await newConversion.insert(

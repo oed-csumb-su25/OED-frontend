@@ -3,13 +3,13 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
  
 SELECT 
-    source_id,
-    destination_id,
-    week_patterns_id,
-    slope,
-    intercept,
-    start_time::TEXT AS start_time,
-    end_time::TEXT AS end_time,
-    note
+	source_id,
+	destination_id,
+	week_patterns_id,
+	slope,
+	intercept,
+	start_time::TEXT AS start_time,
+	end_time::TEXT AS end_time,
+	note
 FROM conversion_segments
 ORDER BY start_time::TIMESTAMP ASC;
