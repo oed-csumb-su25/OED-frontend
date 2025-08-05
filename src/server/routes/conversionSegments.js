@@ -353,7 +353,7 @@ router.post('/delete', adminAuthMiddleware('delete conversion segment'), async (
 	// Ensure conversion segment object is valid
 	const validatorResult = validate(req.body, validConversionSegment);
 	if (!validatorResult.valid) {
-		const errMsg = `Got request to delete a conversion segment with invalid conversion segment data, error(s): ${err}`
+		const errMsg = `Got request to delete a conversion segment with invalid conversion segment data, error(s): ${validatorResult.errors}`
 		log.warn(errMsg);
 		failure(res, 400, errMsg);
 	} else {
@@ -409,7 +409,7 @@ router.post('/deleteEarlier', adminAuthMiddleware('delete earlier conversion seg
 	// Ensure conversion segment object is valid
 	const validatorResult = validate(req.body, validConversionSegment);
 	if (!validatorResult.valid) {
-		const errMsg = `Got request to delete earlier conversion segment with invalid conversion segment data, error(s): ${err}`
+		const errMsg = `Got request to delete earlier conversion segment with invalid conversion segment data, error(s): ${validatorResult.errors}`
 		log.warn(errMsg);
 		failure(res, 400, errMsg);
 	} else {
@@ -465,7 +465,7 @@ router.post('/deleteLater', adminAuthMiddleware('delete later conversion segment
 	// Ensure conversion segment object is valid
 	const validatorResult = validate(req.body, validConversionSegment);
 	if (!validatorResult.valid) {
-		const errMsg = `Got request to delete later conversion segment with invalid conversion segment data, error(s): ${err}`
+		const errMsg = `Got request to delete later conversion segment with invalid conversion segment data, error(s): ${validatorResult.errors}`
 		log.warn(errMsg);
 		failure(res, 400, errMsg);
 	} else {
