@@ -74,7 +74,30 @@ export const conversionSegmentsApi = baseApi.injectEndpoints({
 				{ type: 'ConversionSegments', id: 'LIST' },
 				{ type: 'ConversionSegments', id: `${segment.sourceId}-${segment.destinationId}` }
 			]
+		}),
+		deleteConversionSegmentEarlier: builder.mutation<void, { sourceId: number; destinationId: number; startTime: string; endTime: string }>({
+			query: payload => ({
+				url: '/api/conversionSegments/deleteEarlier',
+				method: 'POST',
+				body: payload
+			}),
+			invalidatesTags: (result, error, segment) => [
+				{ type: 'ConversionSegments', id: 'LIST' },
+				{ type: 'ConversionSegments', id: `${segment.sourceId}-${segment.destinationId}` }
+			]
+		}),
+		deleteConversionSegmentLater: builder.mutation<void, { sourceId: number; destinationId: number; startTime: string; endTime: string }>({
+			query: payload => ({
+				url: '/api/conversionSegments/deleteLater',
+				method: 'POST',
+				body: payload
+			}),
+			invalidatesTags: (result, error, segment) => [
+				{ type: 'ConversionSegments', id: 'LIST' },
+				{ type: 'ConversionSegments', id: `${segment.sourceId}-${segment.destinationId}` }
+			]
 		})
+
 	})
 });
 
@@ -84,5 +107,7 @@ export const {
 	useGetConversionSegmentByKeyQuery,
 	useEditConversionSegmentMutation,
 	useAddConversionSegmentMutation,
-	useDeleteConversionSegmentMutation
+	useDeleteConversionSegmentMutation,
+	useDeleteConversionSegmentEarlierMutation,
+	useDeleteConversionSegmentLaterMutation
 } = conversionSegmentsApi;

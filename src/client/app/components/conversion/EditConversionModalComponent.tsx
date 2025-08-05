@@ -63,6 +63,8 @@ export default function EditConversionModalComponent(props: EditConversionModalC
 	const [editSegment] = conversionSegmentsApi.useEditConversionSegmentMutation();
 	const [addSegment] = conversionSegmentsApi.useAddConversionSegmentMutation();
 	const [deleteSegment] = conversionSegmentsApi.useDeleteConversionSegmentMutation();
+	const [deleteEarlier] = conversionSegmentsApi.useDeleteConversionSegmentEarlierMutation();
+	const [deleteLater] = conversionSegmentsApi.useDeleteConversionSegmentLaterMutation();
 	const getSegments = conversionSegmentsApi.useGetConversionSegmentByConversionQuery({
 		sourceId: props.conversion.sourceId,
 		destinationId: props.conversion.destinationId
@@ -231,52 +233,25 @@ export default function EditConversionModalComponent(props: EditConversionModalC
 		}
 	};
 
-	// TODO: Adjust the adjacent segment's time range to maintain continuity and avoid gaps after deleting the current segment
 	// Deletes the selected segment and updates the adjacent segment's time range
 	// to preserve continuous coverage with no time gaps or overlaps
 	const handleDeleteSegment = async () => {
 		try {
-			// Find the index of the segment selected for deletion
-			const index = segments.findIndex(seg =>
-				seg.startTime === selectedSegment!.startTime && seg.endTime === selectedSegment!.endTime
-			);
-			// Grab previous and next segments
-			const previous = segments[index - 1];
-			const next = segments[index + 1];
-
-			// If deleting earlier, update the previous segment’s end time to match the selected segment’s end time
-			if (actionDirection === 'earlier' && previous) {
-				await editSegment({
-					segment: {
-						...previous,
-						endTime: selectedSegment!.endTime
-					},
-					originalStartTime: previous.startTime,
-					originalEndTime: previous.endTime
-				});
-			}
-			// TODO: Adjust next segment to keep time continuity when deleting later
-			// If deleting later, update the next segment’s start time to match the selected segment’s start time
-			if (actionDirection === 'later' && next) {
-				await editSegment({
-					segment: {
-						...next,
-						startTime: selectedSegment!.startTime
-					},
-					originalStartTime: next.startTime,
-					originalEndTime: next.endTime
-				});
-			}
-			await deleteSegment({
+			const deleteTarget = {
 				sourceId: selectedSegment!.sourceId,
 				destinationId: selectedSegment!.destinationId,
 				startTime: selectedSegment!.startTime,
 				endTime: selectedSegment!.endTime
-			});
+			};
+			// Call the appropriate backend route based on direction
+			if (actionDirection === 'earlier') {
+				await deleteEarlier(deleteTarget);
+			} else if (actionDirection === 'later') {
+				await deleteLater(deleteTarget);
+			}
 			await refetchSegments();
 			setSelectedSegment(null);
 			setActionDirection(null);
-			// Refresh the segments list
 		} catch (error) {
 			showErrorNotification(
 				intl.formatMessage({ id: 'conversion.segment.delete.error' }),
