@@ -139,6 +139,40 @@ class DaySegment {
 			id: id
 		});
 	}
+
+	/**
+	 * Delete day segment after updating the end time of the previous segment to the end time of the deleted segment.
+	 * @param {*} id The day segment id.
+	 * @param {*} conn The connection to use.
+	 */
+	static async deleteEarlier(id, conn) {
+		// update the end time of the previous segment
+		await conn.none(sqlFile('daySegment/update_prev_seg_end_to_curr_end.sql'), {
+			id: id
+		});
+
+		// delete segment passed in
+		await conn.none(sqlFile('daySegment/delete_day_segment.sql'), {
+			id: id
+		});
+	}
+
+	/**
+	 * elete conversion segment after updating the start time of the following segment to the start time of the deleted segment.
+	 * @param {*} id The day segment id.
+	 * @param {*} conn The connection to use.
+	 */
+	static async deleteLater(id, conn) {
+		// update the start time of the following segment
+		await conn.none(sqlFile('daySegment/update_next_seg_start_to_curr_start.sql'), {
+			id: id
+		});
+
+		// delete segment passed in
+		await conn.none(sqlFile('daySegment/delete_day_segment.sql'), {
+			id: id
+		});
+	}
 }
 
 module.exports = DaySegment;

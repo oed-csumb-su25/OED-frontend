@@ -165,7 +165,57 @@ class ConversionSegment {
 		});
 	}
 
+	/**
+	 * Delete conversion segment after updating the end time of the previous segment to the end time of the deleted segment.
+	 * @param {*} sourceId The source meter's id.
+	 * @param {*} destinationId The destination meter's id.
+	 * @param {*} startTime The start time of the conversion segment.
+	 * @param {*} endTime The end time of the conversion segment.
+	 * @param {*} conn The connection to use.
+	 */
+	static async deleteEarlier(sourceId, destinationId, startTime, endTime, conn) {
+		// update the end time of the previous segment
+		await conn.none(sqlFile('conversionSegment/update_prev_seg_end_to_curr_end.sql'), {
+			sourceId: sourceId,
+			destinationId: destinationId,
+			startTime: startTime,
+			endTime: endTime
+		});
 
+		// delete segment passed in
+		await conn.none(sqlFile('conversionSegment/delete_conversion_segment.sql'), {
+			sourceId: sourceId,
+			destinationId: destinationId,
+			startTime: startTime,
+			endTime: endTime
+		});
+	}
+
+	/**
+	 * Delete conversion segment after updating the start time of the following segment to the start time of the deleted segment.
+	 * @param {*} sourceId The source meter's id.
+	 * @param {*} destinationId The destination meter's id.
+	 * @param {*} startTime The start time of the conversion segment.
+	 * @param {*} endTime The end time of the conversion segment.
+	 * @param {*} conn The connection to use.
+	 */
+	static async deleteLater(sourceId, destinationId, startTime, endTime, conn) {
+		// update the start time of the next segment
+		await conn.none(sqlFile('conversionSegment/update_next_seg_start_to_curr_start.sql'), {
+			sourceId: sourceId,
+			destinationId: destinationId,
+			startTime: startTime,
+			endTime: endTime
+		});
+
+		// delete segment passed in
+		await conn.none(sqlFile('conversionSegment/delete_conversion_segment.sql'), {
+			sourceId: sourceId,
+			destinationId: destinationId,
+			startTime: startTime,
+			endTime: endTime
+		});
+	}
 }
 
 function formatTimestampValue(value) {
