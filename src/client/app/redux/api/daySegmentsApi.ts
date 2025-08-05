@@ -2,11 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { createSelector } from '@reduxjs/toolkit';
 import { DaySegment, UpdateDaySegmentPayload } from '../../types/redux/days';
 import { baseApi } from './baseApi';
 
-// TODO: fix tags and invalidation
 export const daySegmentsApi = baseApi.injectEndpoints({
 	endpoints: builder => ({
 		getDaySegments: builder.query<DaySegment[], void>({
@@ -43,31 +41,14 @@ export const daySegmentsApi = baseApi.injectEndpoints({
 			transformErrorResponse: res => res.data,
 			invalidatesTags: (result, error, arg) => [{ type: 'DaySegments', dayId: arg.dayId }]
 		}),
-		deleteDaySegments: builder.mutation<void, { id: number }>({
+		deleteDaySegment: builder.mutation<void, DaySegment>({
 			query: ({ id }) => ({
 				url: 'api/daySegments/delete',
 				method: 'POST',
 				body: { id }
 			}),
 			transformErrorResponse: res => res.data,
-			invalidatesTags: (result, error, arg) => [{ type: 'DaySegments', id: arg.id }]
+			invalidatesTags: (result, error, arg) => [{ type: 'DaySegments', dayId: arg.dayId }]
 		})
 	})
 });
-
-export const selectDaySegmentsQueryState = daySegmentsApi.endpoints.getDaySegments.select();
-export const selectDaySegments = createSelector(
-	selectDaySegmentsQueryState,
-	({ data: daySegments = [] }) => daySegments
-);
-
-export const stableEmptyDaySegments: DaySegment[] = [];
-
-export const {
-	useGetDaySegmentsQuery,
-	useGetDaySegmentsByIdQuery,
-	useGetDaySegmentsByDayIdQuery,
-	useAddDaySegmentMutation,
-	useEditDaySegmentMutation,
-	useDeleteDaySegmentsMutation
-} = daySegmentsApi;

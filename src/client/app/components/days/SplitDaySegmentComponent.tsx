@@ -34,7 +34,7 @@ export default function SplitDaySegmentComponent(props: SplitDaySegmentComponent
 
 	const [showSplitModal, setShowSplitModal] = React.useState(false);
 
-	const [deleteDaySegmentMutation, { isLoading: isDeleting }] = daySegmentsApi.useDeleteDaySegmentsMutation();
+	const [deleteDaySegmentMutation, { isLoading: isDeleting }] = daySegmentsApi.useDeleteDaySegmentMutation();
 
 	const [addDaySegmentMutation, { isLoading: isAddSaving }] = daySegmentsApi.useAddDaySegmentMutation();
 
@@ -83,7 +83,7 @@ export default function SplitDaySegmentComponent(props: SplitDaySegmentComponent
 			endHour: props.direction === 'earlier' ? splitHour : props.daySegment.endHour
 		};
 
-		const deleteOriginalSegment = deleteDaySegmentMutation({ id: props.daySegment.id }).unwrap();
+		const deleteOriginalSegment = deleteDaySegmentMutation(props.daySegment).unwrap();
 
 		const createCopySegment = addDaySegmentMutation(copySegment).unwrap();
 		const createNewSegment = addDaySegmentMutation(newSegment).unwrap();

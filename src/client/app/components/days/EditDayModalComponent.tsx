@@ -92,7 +92,7 @@ export default function EditDayModalComponent(props: EditDayModalComponentProps)
 
 	// Pagination
 	const [page, setPage] = React.useState(1);
-	const totalPages = Math.ceil(daySegments.length ?? 1 / PER_PAGE);
+	const totalPages = Math.ceil(daySegments.length / PER_PAGE);
 	const paged = daySegments.slice((page - 1) * PER_PAGE, page * PER_PAGE);
 
 	// State to hold validation message for day name
@@ -130,7 +130,7 @@ export default function EditDayModalComponent(props: EditDayModalComponentProps)
 	};
 
 	const [editDaySegmentMutation] = daySegmentsApi.useEditDaySegmentMutation();
-	const [deleteDaySegmentMutation] = daySegmentsApi.useDeleteDaySegmentsMutation();
+	const [deleteDaySegmentMutation] = daySegmentsApi.useDeleteDaySegmentMutation();
 
 	// Function to handle deleting a segment
 	// Adjusts the neighboring segment's start or end hour accordingly
@@ -149,7 +149,7 @@ export default function EditDayModalComponent(props: EditDayModalComponentProps)
 			originalEndHour: endHour
 		};
 		const editPromise = editDaySegmentMutation(editSegment).unwrap();
-		const deletePromise = deleteDaySegmentMutation({ id: seg.id }).unwrap();
+		const deletePromise = deleteDaySegmentMutation(seg).unwrap();
 
 		Promise.all([editPromise, deletePromise])
 			.catch(error => {
@@ -204,7 +204,6 @@ export default function EditDayModalComponent(props: EditDayModalComponentProps)
 						</Row>
 
 						{/* Table */}
-						{/* TODO: internationalize */}
 						<h5 className="mt-3 mb-2"><FormattedMessage id="day.segments.table.title" /></h5>
 						<Table striped bordered>
 							<thead>
@@ -212,12 +211,12 @@ export default function EditDayModalComponent(props: EditDayModalComponentProps)
 									<th><FormattedMessage id="day.segments.table.timeRange" /></th>
 									<th><FormattedMessage id="day.segments.table.slope" /></th>
 									<th><FormattedMessage id="day.segments.table.intercept" /></th>
-									<th><FormattedMessage id="day.segments.table.note" /></th>
+									<th><FormattedMessage id="note" /></th>
 									<th><FormattedMessage id="day.segments.table.edit" /></th>
 									<th><FormattedMessage id="split.earlier" /></th>
 									<th><FormattedMessage id="split.later" /></th>
-									<th>Del ↑</th>
-									<th>Del ↓</th>
+									<th><FormattedMessage id="delete.earlier" /></th>
+									<th><FormattedMessage id="delete.later" /></th>
 								</tr>
 							</thead>
 							<tbody>
@@ -247,7 +246,7 @@ export default function EditDayModalComponent(props: EditDayModalComponentProps)
 											{/* first segment cannout delete earlier */}
 											{seg.startHour > 0 &&
 												<Button size="sm" color="danger" onClick={() => handleDeleteSegment(seg, 'earlier')}>
-													Del ↑
+													<FormattedMessage id="delete.earlier" />
 												</Button>
 											}
 										</td>
@@ -255,7 +254,7 @@ export default function EditDayModalComponent(props: EditDayModalComponentProps)
 											{/* last segment cannot delete later */}
 											{seg.endHour < 24 &&
 												<Button size="sm" color="danger" onClick={() => handleDeleteSegment(seg, 'later')}>
-													Del ↓
+													<FormattedMessage id="delete.later" />
 												</Button>
 											}
 										</td>
