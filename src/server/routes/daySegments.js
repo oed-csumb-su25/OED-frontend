@@ -1,7 +1,7 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
- 
+
 const express = require('express');
 const { log } = require('../log');
 const { getConnection } = require('../db');
@@ -14,13 +14,13 @@ const router = express.Router();
 
 function formatDaySegmentForResponse(item) {
 	return {
-		id: item.id, 
+		id: item.id,
 		dayId: item.dayId,
 		startHour: item.startHour,
 		endHour: item.endHour,
 		slope: item.slope,
 		intercept: item.intercept,
-		note: item.note, 
+		note: item.note,
 	};
 }
 
@@ -47,7 +47,7 @@ router.get('/:id', adminAuthMiddleware('get day segment by id'), async(req, res)
 		required: ['id'],
 		properties: {
 			id: {
-				type: 'string', 
+				type: 'string',
 				pattern: '^\\d+$'
 			}
 		}
@@ -80,7 +80,7 @@ router.post('/dayId', adminAuthMiddleware('get day segments by day id'), async(r
 		required: ['dayId'],
 		properties: {
 			dayId: {
-				type: 'integer', 
+				type: 'integer',
 				minimum: 0
 			}
 		}
@@ -119,7 +119,7 @@ router.post('/addDaySegment', adminAuthMiddleware('add day segment'), async (req
 		additionalProperties: false,
 		properties: {
 			dayId: {
-				type: 'integer', 
+				type: 'integer',
 				minimum: 0
 			},
 			startHour: {
@@ -199,11 +199,11 @@ router.post('/edit', adminAuthMiddleware('edit day segment'), async (req, res) =
 		required: ['id', 'dayId', 'startHour', 'endHour', 'slope', 'intercept', 'originalStartHour', 'originalEndHour'],
 		properties: {
 			id: {
-				type: 'integer', 
+				type: 'integer',
 				minimum: 0
 			},
 			dayId: {
-				type: 'integer', 
+				type: 'integer',
 				minimum: 0
 			},
 			startHour: {
@@ -236,7 +236,7 @@ router.post('/edit', adminAuthMiddleware('edit day segment'), async (req, res) =
 			originalEndHour: {
 				type: 'number',
 				minimum: 1,
-				maximum: 24		
+				maximum: 24
 			}
 		}
 	};
@@ -251,12 +251,12 @@ router.post('/edit', adminAuthMiddleware('edit day segment'), async (req, res) =
 		try {
 			await conn.tx(async t => {
 				const updatedDaySegment = new DaySegment(
-					req.body.id, 
+					req.body.id,
 					req.body.dayId,
 					req.body.startHour,
 					req.body.endHour,
 					req.body.slope,
-					req.body.intercept, 
+					req.body.intercept,
 					req.body.note
 				);
 				await updatedDaySegment.update(
@@ -277,16 +277,18 @@ router.post('/edit', adminAuthMiddleware('edit day segment'), async (req, res) =
 
 /**
  * POST delete day segment.
- * @param {integer} id The id for the day segment to be deleted.
+ * @param {integer} dayId The dayIdd for the day segment to be deleted.
+ * @param {number} startHour The start hour of the segment to delete.
+ * @param {number} endHour The end hour of the segment to delete.
  */
 router.post('/delete', adminAuthMiddleware('delete day segment'), async (req, res) => {
 	const validDaySegment = {
 		type: 'object',
 		maxProperties: 3,
-		required: ['id', 'startHour', 'endHour'],
+		required: ['dayId', 'startHour', 'endHour'],
 		properties: {
 			id: {
-				type: 'integer', 
+				type: 'integer',
 				minimum: 0
 			},
 			startHour: {
@@ -314,7 +316,7 @@ router.post('/delete', adminAuthMiddleware('delete day segment'), async (req, re
 			// Don't worry about checking if the day segment already exists
 			// Just try to delete it to save the extra database call, since the database will return an error anyway if the row does not exist
 			await DaySegment.delete(
-				req.body.id, 
+				req.body.dayId,
 				req.body.startHour,
 				req.body.endHour,
 				conn
@@ -341,7 +343,7 @@ router.post('/deleteEarlier', adminAuthMiddleware('delete earlier day segment'),
 		required: ['dayId', 'startHour', 'endHour'],
 		properties: {
 			dayId: {
-				type: 'integer', 
+				type: 'integer',
 				minimum: 0
 			},
 			startHour: {
@@ -368,9 +370,9 @@ router.post('/deleteEarlier', adminAuthMiddleware('delete earlier day segment'),
 		try {
 			await conn.tx(async t => {
 				await DaySegment.deleteEarlier(
-					req.body.dayId, 
+					req.body.dayId,
 					req.body.startHour,
-					req.body.endHour, 
+					req.body.endHour,
 					t
 				);
 			});
@@ -397,7 +399,7 @@ router.post('/deleteLater', adminAuthMiddleware('delete later day segment'), asy
 		required: ['dayId', 'startHour', 'endHour'],
 		properties: {
 			dayId: {
-				type: 'integer', 
+				type: 'integer',
 				minimum: 0
 			},
 			startHour : {
@@ -424,7 +426,7 @@ router.post('/deleteLater', adminAuthMiddleware('delete later day segment'), asy
 		try {
 			await conn.tx(async t => {
 				await DaySegment.deleteLater(
-					req.body.dayId, 
+					req.body.dayId,
 					req.body.startHour,
 					req.body.endHour,
 					t
