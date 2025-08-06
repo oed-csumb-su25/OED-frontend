@@ -15,7 +15,7 @@ import {
 	Row,
 	Table
 } from 'reactstrap';
-import { Day, DaySegment, UpdateDaySegmentPayload } from 'types/redux/days';
+import { Day, DaySegment } from 'types/redux/days';
 import { daysApi } from '../../redux/api/daysApi';
 import { daySegmentsApi } from '../../redux/api/daySegmentsApi';
 import { LocaleDataKey } from '../../translations/data';
@@ -129,29 +129,21 @@ export default function EditDayModalComponent(props: EditDayModalComponentProps)
 		setEditSegment(null);
 	};
 
-	const [editDaySegmentMutation] = daySegmentsApi.useEditDaySegmentMutation();
-	const [deleteDaySegmentMutation] = daySegmentsApi.useDeleteDaySegmentMutation();
+	const [deleteDaySegmentEarlierMutation] = daySegmentsApi.useDeleteDaySegmentEarlierMutation();
+	const [deleteDaySegmentLaterMutation] = daySegmentsApi.useDeleteDaySegmentLaterMutation();
 
-	// Function to handle deleting a segment
-	// Adjusts the neighboring segment's start or end hour accordingly
-	const handleDeleteSegment = (seg: DaySegment, direction: 'earlier' | 'later') => {
-		const index = daySegments.findIndex(s => s.id === seg.id);
-		const targetSegment = direction === 'earlier' ? daySegments[index - 1] : daySegments[index + 1];
 
-		const startHour = direction === 'later' ? seg.startHour : targetSegment.startHour;
-		const endHour = direction === 'earlier' ? seg.endHour : targetSegment.endHour;
+	// Function to handle deleting a segment and updating the end hour of the previous segment
+	const handleDeleteSegmentEarlier = (seg: DaySegment) => {
+		deleteDaySegmentEarlierMutation(seg).unwrap()
+			.catch(error => {
+				showErrorNotification(error);
+			});
+	};
 
-		const editSegment: UpdateDaySegmentPayload = {
-			...targetSegment,
-			startHour,
-			endHour,
-			originalStartHour: startHour,
-			originalEndHour: endHour
-		};
-		const editPromise = editDaySegmentMutation(editSegment).unwrap();
-		const deletePromise = deleteDaySegmentMutation(seg).unwrap();
-
-		Promise.all([editPromise, deletePromise])
+	// Function to handle deleting a segment and updating the start hour of the next segment
+	const handleDeleteSegmentLater = (seg: DaySegment) => {
+		deleteDaySegmentLaterMutation(seg).unwrap()
 			.catch(error => {
 				showErrorNotification(error);
 			});
@@ -245,7 +237,7 @@ export default function EditDayModalComponent(props: EditDayModalComponentProps)
 										<td>
 											{/* first segment cannout delete earlier */}
 											{seg.startHour > 0 &&
-												<Button size="sm" color="danger" onClick={() => handleDeleteSegment(seg, 'earlier')}>
+												<Button size="sm" color="danger" onClick={() => handleDeleteSegmentEarlier(seg)}>
 													<FormattedMessage id="delete.earlier" />
 												</Button>
 											}
@@ -253,7 +245,7 @@ export default function EditDayModalComponent(props: EditDayModalComponentProps)
 										<td>
 											{/* last segment cannot delete later */}
 											{seg.endHour < 24 &&
-												<Button size="sm" color="danger" onClick={() => handleDeleteSegment(seg, 'later')}>
+												<Button size="sm" color="danger" onClick={() => handleDeleteSegmentLater(seg)}>
 													<FormattedMessage id="delete.later" />
 												</Button>
 											}

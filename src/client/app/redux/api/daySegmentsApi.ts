@@ -42,10 +42,30 @@ export const daySegmentsApi = baseApi.injectEndpoints({
 			invalidatesTags: (result, error, arg) => [{ type: 'DaySegments', dayId: arg.dayId }]
 		}),
 		deleteDaySegment: builder.mutation<void, DaySegment>({
-			query: ({ id }) => ({
+			query: ({ dayId, startHour, endHour }) => ({
 				url: 'api/daySegments/delete',
 				method: 'POST',
-				body: { id }
+				body: { dayId, startHour, endHour }
+			}),
+			transformErrorResponse: res => res.data,
+			invalidatesTags: (result, error, arg) => [{ type: 'DaySegments', dayId: arg.dayId }]
+		}),
+		// Deletes the provided day segment and updates the end hour of the previous segment
+		deleteDaySegmentEarlier: builder.mutation<void, DaySegment>({
+			query: ({ dayId, startHour, endHour }) => ({
+				url: 'api/daySegments/deleteEarlier',
+				method: 'POST',
+				body: { dayId, startHour, endHour }
+			}),
+			transformErrorResponse: res => res.data,
+			invalidatesTags: (result, error, arg) => [{ type: 'DaySegments', dayId: arg.dayId }]
+		}),
+		// Deletes the provided day segment and updates the start hour of the next segment
+		deleteDaySegmentLater: builder.mutation<void, DaySegment>({
+			query: ({ dayId, startHour, endHour }) => ({
+				url: 'api/daySegments/deleteLater',
+				method: 'POST',
+				body: { dayId, startHour, endHour }
 			}),
 			transformErrorResponse: res => res.data,
 			invalidatesTags: (result, error, arg) => [{ type: 'DaySegments', dayId: arg.dayId }]
