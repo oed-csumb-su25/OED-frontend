@@ -29,7 +29,7 @@ export const conversionSegmentsApi = baseApi.injectEndpoints({
 		}),
 		getConversionSegmentByKey: builder.query<ConversionSegmentData, { sourceId: number; destinationId: number; startTime: string; endTime: string }>({
 			query: ({ sourceId, destinationId, startTime, endTime }) => ({
-				url: '/api/conversionSegments/segment',
+				url: '/api/conversionSegments/sourceDestinationStartEnd',
 				method: 'POST',
 				body: { sourceId, destinationId, startTime, endTime }
 			}),
@@ -74,7 +74,30 @@ export const conversionSegmentsApi = baseApi.injectEndpoints({
 				{ type: 'ConversionSegments', id: 'LIST' },
 				{ type: 'ConversionSegments', id: `${segment.sourceId}-${segment.destinationId}` }
 			]
+		}),
+		deleteConversionSegmentEarlier: builder.mutation<void, { sourceId: number; destinationId: number; startTime: string; endTime: string }>({
+			query: payload => ({
+				url: '/api/conversionSegments/deleteEarlier',
+				method: 'POST',
+				body: payload
+			}),
+			invalidatesTags: (result, error, segment) => [
+				{ type: 'ConversionSegments', id: 'LIST' },
+				{ type: 'ConversionSegments', id: `${segment.sourceId}-${segment.destinationId}` }
+			]
+		}),
+		deleteConversionSegmentLater: builder.mutation<void, { sourceId: number; destinationId: number; startTime: string; endTime: string }>({
+			query: payload => ({
+				url: '/api/conversionSegments/deleteLater',
+				method: 'POST',
+				body: payload
+			}),
+			invalidatesTags: (result, error, segment) => [
+				{ type: 'ConversionSegments', id: 'LIST' },
+				{ type: 'ConversionSegments', id: `${segment.sourceId}-${segment.destinationId}` }
+			]
 		})
+
 	})
 });
 
@@ -84,5 +107,7 @@ export const {
 	useGetConversionSegmentByKeyQuery,
 	useEditConversionSegmentMutation,
 	useAddConversionSegmentMutation,
-	useDeleteConversionSegmentMutation
+	useDeleteConversionSegmentMutation,
+	useDeleteConversionSegmentEarlierMutation,
+	useDeleteConversionSegmentLaterMutation
 } = conversionSegmentsApi;
