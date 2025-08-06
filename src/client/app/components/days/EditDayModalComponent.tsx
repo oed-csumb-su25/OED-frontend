@@ -5,15 +5,10 @@
 import * as React from 'react';
 import { FormattedMessage } from 'react-intl';
 import {
-	Button,
-	Col,
-	Container,
-	FormFeedback,
+	Button, Col, Container, FormFeedback,
 	FormGroup, Input, Label, Modal, ModalBody, ModalFooter,
-	ModalHeader,
-	Pagination, PaginationItem, PaginationLink,
-	Row,
-	Table
+	ModalHeader, Pagination, PaginationItem, PaginationLink,
+	Row, Table
 } from 'reactstrap';
 import { Day, DaySegment } from 'types/redux/days';
 import { daysApi } from '../../redux/api/daysApi';
@@ -22,6 +17,7 @@ import { LocaleDataKey } from '../../translations/data';
 import { showErrorNotification, showSuccessNotification } from '../../utils/notifications';
 import translate from '../../utils/translate';
 import ConfirmActionModalComponent from '../ConfirmActionModalComponent';
+import DeleteDaySegmentComponent from './DeleteDaySegmentComponent';
 import EditDaySegmentModalComponent from './EditDaySegmentModalComponent';
 import SplitDaySegmentComponent from './SplitDaySegmentComponent';
 
@@ -40,21 +36,6 @@ export interface EditDayModalComponentProps {
 	handleClose: () => void;
 }
 
-const PER_PAGE = 10;
-
-/**
- * Given an hour in range [0, 24], returns the time in format HH:MM{AM|PM}
- * @param hour The hour to transform
- * @returns time in format HH:MM{AM|PM}
- */
-function hourToTime(hour: number) {
-	const suffix = hour === 0 || hour === 24 ? 'AM' : hour < 12 ? 'AM' : 'PM';
-	let displayHour = hour % 12;
-	if (displayHour === 0) {
-		displayHour = 12;
-	}
-	return `${displayHour}:00 ${suffix}`;
-}
 
 /**
  * Defines a modal that allows editing of an existing day and its segments, with options to edit, split, and delete them.
@@ -91,6 +72,7 @@ export default function EditDayModalComponent(props: EditDayModalComponentProps)
 	};
 
 	// Pagination
+	const PER_PAGE = 10;
 	const [page, setPage] = React.useState(1);
 	const totalPages = Math.ceil(daySegments.length / PER_PAGE);
 	const paged = daySegments.slice((page - 1) * PER_PAGE, page * PER_PAGE);
@@ -114,6 +96,10 @@ export default function EditDayModalComponent(props: EditDayModalComponentProps)
 		return true;
 	}, [dayDetails]);
 
+	const isDayUnchanged = React.useMemo(() => {
+		return props.day.name === dayDetails.name && props.day.note === dayDetails.note;
+	}, [props.day, dayDetails]);
+
 	// State to hold the modal for editing a day segment
 	const [showEditSegmentModal, setShowEditSegmentModal] = React.useState(false);
 	const [editSegment, setEditSegment] = React.useState<DaySegment | null>(null);
@@ -127,26 +113,6 @@ export default function EditDayModalComponent(props: EditDayModalComponentProps)
 	const handleCloseEditSegmentModal = () => {
 		setShowEditSegmentModal(false);
 		setEditSegment(null);
-	};
-
-	const [deleteDaySegmentEarlierMutation] = daySegmentsApi.useDeleteDaySegmentEarlierMutation();
-	const [deleteDaySegmentLaterMutation] = daySegmentsApi.useDeleteDaySegmentLaterMutation();
-
-
-	// Function to handle deleting a segment and updating the end hour of the previous segment
-	const handleDeleteSegmentEarlier = (seg: DaySegment) => {
-		deleteDaySegmentEarlierMutation(seg).unwrap()
-			.catch(error => {
-				showErrorNotification(error);
-			});
-	};
-
-	// Function to handle deleting a segment and updating the start hour of the next segment
-	const handleDeleteSegmentLater = (seg: DaySegment) => {
-		deleteDaySegmentLaterMutation(seg).unwrap()
-			.catch(error => {
-				showErrorNotification(error);
-			});
 	};
 
 	// Delete day confirmation modal
@@ -166,7 +132,6 @@ export default function EditDayModalComponent(props: EditDayModalComponentProps)
 			});
 	};
 
-	/* ── Render ───────────────────────────────────────────── */
 	return (
 		<>
 			<Modal isOpen={props.show} toggle={props.handleClose} size="xl">
@@ -181,7 +146,7 @@ export default function EditDayModalComponent(props: EditDayModalComponentProps)
 							<Col>
 								<FormGroup>
 									<Label for="name">{translate('name')}</Label>
-									<Input id="name" name="name" required value={dayDetails.name} onChange={handleStringChange} />
+									<Input id="name" name="name" required value={dayDetails.name} onChange={handleStringChange} invalid={!isDayValid} />
 									<FormFeedback>
 										{nameValidationMessageId && <FormattedMessage id={nameValidationMessageId as string} />}
 									</FormFeedback>
@@ -194,7 +159,7 @@ export default function EditDayModalComponent(props: EditDayModalComponentProps)
 								</FormGroup>
 							</Col>
 						</Row>
-
+						<hr />
 						{/* Table */}
 						<h5 className="mt-3 mb-2"><FormattedMessage id="day.segments.table.title" /></h5>
 						<Table striped bordered>
@@ -214,13 +179,11 @@ export default function EditDayModalComponent(props: EditDayModalComponentProps)
 							<tbody>
 								{paged?.map(seg => (
 									<tr key={seg.id}>
-										<td>{hourToTime(seg.startHour)} - {hourToTime(seg.endHour)}</td>
+										<td>{seg.startHour} - {seg.endHour}</td>
 										<td>{seg.slope}</td>
 										<td>{seg.intercept}</td>
-										<td>
-											{(seg.note ?? '').length > 100
-												? (seg.note ?? '').slice(0, 100) + ' …'
-												: seg.note ?? ''}
+										<td title={seg.note}>
+											{(seg.note ?? '').length > 30 ? `${seg.note?.slice(0, 30)} ...` : seg.note || ''}
 										</td>
 										<td>
 											<Button color="secondary" size="sm" onClick={() => handleShowEditSegmentModal(seg)}>
@@ -235,19 +198,15 @@ export default function EditDayModalComponent(props: EditDayModalComponentProps)
 											{seg.endHour - seg.startHour > 1 && <SplitDaySegmentComponent daySegment={seg} direction="later" />}
 										</td>
 										<td>
-											{/* first segment cannout delete earlier */}
+											{/* first segment cannot delete earlier */}
 											{seg.startHour > 0 &&
-												<Button size="sm" color="danger" onClick={() => handleDeleteSegmentEarlier(seg)}>
-													<FormattedMessage id="delete.earlier" />
-												</Button>
+												<DeleteDaySegmentComponent daySegment={seg} direction="earlier" />
 											}
 										</td>
 										<td>
 											{/* last segment cannot delete later */}
 											{seg.endHour < 24 &&
-												<Button size="sm" color="danger" onClick={() => handleDeleteSegmentLater(seg)}>
-													<FormattedMessage id="delete.later" />
-												</Button>
+												<DeleteDaySegmentComponent daySegment={seg} direction="later" />
 											}
 										</td>
 									</tr>
@@ -286,10 +245,10 @@ export default function EditDayModalComponent(props: EditDayModalComponentProps)
 						{translate('day.delete.button')}
 					</Button>
 					<Button color="secondary" onClick={props.handleClose}>
-						<FormattedMessage id="discard.changes" />
+						<FormattedMessage id="day.edit.discard" />
 					</Button>
-					<Button color="primary" onClick={handleSubmit} disabled={!isDayValid || isSaving || isDeleting}>
-						<FormattedMessage id="save.all" />
+					<Button color="primary" onClick={handleSubmit} disabled={isDayUnchanged || !isDayValid || isSaving || isDeleting}>
+						<FormattedMessage id="day.edit.save" />
 					</Button>
 				</ModalFooter>
 
@@ -299,7 +258,7 @@ export default function EditDayModalComponent(props: EditDayModalComponentProps)
 					actionConfirmMessage={translate('day.delete.confirm')}
 					actionFunction={handleDeleteDay}
 					handleClose={() => setShowDeleteModal(false)}
-					actionConfirmText={translate('day.delete.confirm.button')}
+					actionConfirmText={translate('day.delete.button')}
 					actionRejectText={translate('cancel')}
 				/>
 			</Modal >

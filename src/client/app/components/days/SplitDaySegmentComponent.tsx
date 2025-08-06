@@ -4,7 +4,7 @@
 
 import * as React from 'react';
 import { FormattedMessage } from 'react-intl';
-import { Button, FormFeedback, Input, Modal, ModalBody, ModalFooter, ModalHeader } from 'reactstrap';
+import { Button, FormFeedback, FormGroup, Input, Label, Modal, ModalBody, ModalFooter, ModalHeader } from 'reactstrap';
 import { daySegmentsApi } from '../../redux/api/daySegmentsApi';
 import { DaySegment } from '../../types/redux/days';
 import { showErrorNotification } from '../../utils/notifications';
@@ -30,7 +30,17 @@ interface SplitDaySegmentComponentProps {
  */
 export default function SplitDaySegmentComponent(props: SplitDaySegmentComponentProps): React.ReactElement {
 
-	const [splitHour, setSplitHour] = React.useState<number>(props.daySegment.startHour + 1);
+	const [splitHour, setSplitHour] = React.useState<number>(-999);
+
+	// New segment to be created after the split
+	const [newSegment, setNewSegment] = React.useState<Omit<DaySegment, 'id'>>({
+		dayId: props.daySegment.dayId,
+		slope: 0,
+		intercept: 0,
+		note: '',
+		startHour: -999,
+		endHour: -999
+	});
 
 	const [showSplitModal, setShowSplitModal] = React.useState(false);
 
@@ -43,6 +53,19 @@ export default function SplitDaySegmentComponent(props: SplitDaySegmentComponent
 
 	const handleSplitInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 		setSplitHour(Number(e.target.value));
+	};
+
+	const handleNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+		setNewSegment(prev => ({
+			...prev,
+			[e.target.name]: Number(e.target.value)
+		}));
+	};
+	const handleStringChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+		setNewSegment(prev => ({
+			...prev,
+			[e.target.name]: e.target.value
+		}));
 	};
 
 	// Validate the split hour
@@ -58,10 +81,6 @@ export default function SplitDaySegmentComponent(props: SplitDaySegmentComponent
 	// Handle the split operation
 	// It deletes the original segment and creates two new segments based on the split hour
 	const handleSubmit = () => {
-		if (!isSplitValid) {
-			return;
-		}
-
 		// New segment based on the original segment
 		// It copies the slope and intercept from the original segment
 		// and sets the start and end hours based on the split hour
@@ -75,10 +94,8 @@ export default function SplitDaySegmentComponent(props: SplitDaySegmentComponent
 			endHour: props.direction === 'earlier' ? props.daySegment.endHour : splitHour
 		};
 
-		const newSegment: Omit<DaySegment, 'id'> = {
-			dayId: props.daySegment.dayId,
-			slope: 0,
-			intercept: 0,
+		const createSegment: Omit<DaySegment, 'id'> = {
+			...newSegment,
 			startHour: props.direction === 'earlier' ? props.daySegment.startHour : splitHour,
 			endHour: props.direction === 'earlier' ? splitHour : props.daySegment.endHour
 		};
@@ -86,7 +103,7 @@ export default function SplitDaySegmentComponent(props: SplitDaySegmentComponent
 		const deleteOriginalSegment = deleteDaySegmentMutation(props.daySegment).unwrap();
 
 		const createCopySegment = addDaySegmentMutation(copySegment).unwrap();
-		const createNewSegment = addDaySegmentMutation(newSegment).unwrap();
+		const createNewSegment = addDaySegmentMutation(createSegment).unwrap();
 
 		deleteOriginalSegment
 			.then(() =>
@@ -105,27 +122,70 @@ export default function SplitDaySegmentComponent(props: SplitDaySegmentComponent
 				<FormattedMessage id={props.direction === 'earlier' ? 'split.earlier' : 'split.later'} />
 			</Button>
 
-			<Modal isOpen={showSplitModal} toggle={handleHideSplitModal} backdrop="static" >
+			<Modal isOpen={showSplitModal} toggle={handleHideSplitModal}>
 				<ModalHeader>
 					<FormattedMessage id={props.direction === 'earlier' ? 'split.earlier' : 'split.later'} />
 				</ModalHeader>
 				<ModalBody>
-					<p><FormattedMessage id="split.hour.prompt" /></p>
-					<Input
-						id="split"
-						type="number"
-						min={props.daySegment.startHour + 1}
-						max={props.daySegment.endHour - 1}
-						step="1"
-						onChange={handleSplitInputChange}
-						placeholder={props.daySegment.startHour + 1 + ' - ' + (props.daySegment.endHour - 1)}
-						invalid={!isSplitValid}
-					/>
-					<FormFeedback>
-						{!isSplitValid && translate('split.hour.invalid')
-							.replace('{start}', String(props.daySegment.startHour + 1))
-							.replace('{end}', String(props.daySegment.endHour - 1))}
-					</FormFeedback>
+					{/* split hour */}
+					<FormGroup>
+						<Label for="split">
+							<FormattedMessage id="split.hour.prompt" />
+						</Label>
+						<Input
+							id="split"
+							type="number"
+							min={props.daySegment.startHour + 1}
+							max={props.daySegment.endHour - 1}
+							step="1"
+							onChange={handleSplitInputChange}
+							placeholder={props.daySegment.startHour + 1 + ' - ' + (props.daySegment.endHour - 1)}
+							invalid={!isSplitValid}
+						/>
+						<FormFeedback>
+							{!isSplitValid && translate('split.hour.invalid')
+								.replace('{start}', String(props.daySegment.startHour + 1))
+								.replace('{end}', String(props.daySegment.endHour - 1))}
+						</FormFeedback>
+					</FormGroup>
+					<FormGroup>
+						<Label for="segment-slope">
+							<FormattedMessage id="day.segments.table.slope" />
+						</Label>
+						<Input
+							id="segment-slope"
+							name="slope"
+							type="number"
+							required
+							value={newSegment.slope}
+							onChange={handleNumberChange}
+						/>
+					</FormGroup>
+					<FormGroup>
+						<Label for="segment-intercept">
+							<FormattedMessage id="day.segments.table.intercept" />
+						</Label>
+						<Input
+							id="segment-intercept"
+							name="intercept"
+							type="number"
+							required
+							value={newSegment.intercept}
+							onChange={handleNumberChange}
+						/>
+					</FormGroup>
+					<FormGroup>
+						<Label for="segment-note">
+							<FormattedMessage id="note" />
+						</Label>
+						<Input
+							id="segment-note"
+							name="note"
+							type="textarea"
+							value={newSegment.note}
+							onChange={handleStringChange}
+						/>
+					</FormGroup>
 				</ModalBody>
 				<ModalFooter>
 					<Button color="secondary" onClick={handleHideSplitModal}>

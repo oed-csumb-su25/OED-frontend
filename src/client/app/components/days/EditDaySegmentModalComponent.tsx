@@ -9,21 +9,6 @@ import { daySegmentsApi } from '../../redux/api/daySegmentsApi';
 import { DaySegment, UpdateDaySegmentPayload } from '../../types/redux/days';
 import { showErrorNotification } from '../../utils/notifications';
 
-
-/**
- * Given an hour in range [0, 24], returns the time in format HH:MM{AM|PM}
- * @param hour The hour to transform
- * @returns time in format HH:MM{AM|PM}
- */
-function hourToTime(hour: number) {
-	const suffix = hour === 0 || hour === 24 ? 'AM' : hour < 12 ? 'AM' : 'PM';
-	let displayHour = hour % 12;
-	if (displayHour === 0) {
-		displayHour = 12;
-	}
-	return `${displayHour}:00 ${suffix}`;
-}
-
 interface EditDaySegmentModalComponentProps {
 	/**
 	 * Whether the modal is visible or not
@@ -66,9 +51,6 @@ export default function EditDaySegmentModalComponent(props: EditDaySegmentModalC
 	};
 
 	const handleSubmit = () => {
-		if (!isSegmentValid) {
-			return;
-		}
 		editDaySegmentMutation(daySegment).unwrap()
 			.then(() => {
 				props.handleClose();
@@ -81,7 +63,7 @@ export default function EditDaySegmentModalComponent(props: EditDaySegmentModalC
 	// Validate the start hour
 	// It should be a valid hour and not conflict with existing segments
 	const isStartHourValid = React.useMemo(() => {
-		if (daySegment.startHour < 0 || daySegment.startHour >= daySegment.endHour || daySegment.startHour >= 24 || daySegment.startHour < 0) {
+		if (daySegment.startHour < 0 || daySegment.startHour >= daySegment.endHour) {
 			return false;
 		}
 		// Check if the start hour does not conflict with existing segments
@@ -97,7 +79,7 @@ export default function EditDaySegmentModalComponent(props: EditDaySegmentModalC
 	// Validate the end hour
 	// It should be a valid hour and not conflict with existing segments
 	const isEndHourValid = React.useMemo(() => {
-		if (daySegment.endHour <= daySegment.startHour || daySegment.endHour > 24 || daySegment.endHour < 0) {
+		if (daySegment.endHour <= daySegment.startHour || daySegment.endHour > 24) {
 			return false;
 		}
 		// Check if the end hour does not conflict with existing segments
@@ -115,10 +97,17 @@ export default function EditDaySegmentModalComponent(props: EditDaySegmentModalC
 		return isStartHourValid && isEndHourValid;
 	}, [daySegment.startHour, daySegment.endHour]);
 
+	const isSegmentUnchanged = React.useMemo(() => {
+		return props.daySegment.slope === daySegment.slope &&
+			props.daySegment.intercept === daySegment.intercept &&
+			props.daySegment.startHour === daySegment.startHour &&
+			props.daySegment.endHour === daySegment.endHour &&
+			props.daySegment.note === daySegment.note;
+	}, [props.daySegment, daySegment]);
 
 	return (
 		<>
-			<Modal isOpen={props.show} toggle={props.handleClose} backdrop="static">
+			<Modal isOpen={props.show} toggle={props.handleClose}>
 				<ModalHeader toggle={props.handleClose}>
 					<FormattedMessage id="edit.segment.title" />
 				</ModalHeader>
@@ -165,12 +154,8 @@ export default function EditDaySegmentModalComponent(props: EditDaySegmentModalC
 									value={daySegment.startHour}
 									onChange={handleNumberChange}
 									invalid={!isStartHourValid}
-									valid={isStartHourValid}
 									disabled={daySegment.originalStartHour === 0}
 								/>
-								<FormFeedback valid>
-									{hourToTime(daySegment.startHour)}
-								</FormFeedback>
 								<FormFeedback>
 									<FormattedMessage id="invalid.input" />
 								</FormFeedback>
@@ -189,12 +174,8 @@ export default function EditDaySegmentModalComponent(props: EditDaySegmentModalC
 									value={daySegment.endHour}
 									onChange={handleNumberChange}
 									invalid={!isEndHourValid}
-									valid={isEndHourValid}
 									disabled={daySegment.originalEndHour === 24}
 								/>
-								<FormFeedback valid>
-									{hourToTime(daySegment.endHour)}
-								</FormFeedback>
 								<FormFeedback>
 									<FormattedMessage id="invalid.input" />
 								</FormFeedback>
@@ -223,9 +204,9 @@ export default function EditDaySegmentModalComponent(props: EditDaySegmentModalC
 					<Button
 						color="primary"
 						onClick={handleSubmit}
-						disabled={!isSegmentValid || isSaving}
+						disabled={isSegmentUnchanged || !isSegmentValid || isSaving}
 					>
-						<FormattedMessage id="save.all" />
+						<FormattedMessage id="day.segments.edit.save" />
 					</Button>
 				</ModalFooter>
 			</Modal>
