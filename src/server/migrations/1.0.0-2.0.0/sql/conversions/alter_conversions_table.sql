@@ -3,6 +3,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 ALTER TABLE conversions
-    DROP COLUMN IF EXISTS slope,
-    DROP COLUMN IF EXISTS intercept
+	DROP COLUMN IF EXISTS slope,
+	DROP COLUMN IF EXISTS intercept
 ;
