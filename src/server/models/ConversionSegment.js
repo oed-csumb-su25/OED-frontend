@@ -166,23 +166,29 @@ class ConversionSegment {
 	}
 
 	/**
-	 * Updates the start date of the following segment to the start date of the current segment before deleting the current segment.
+	 * Delete conversion segment after updating the end time of the previous segment to the end time of the deleted segment.
 	 * @param {*} sourceId The source meter's id.
 	 * @param {*} destinationId The destination meter's id.
 	 * @param {*} startTime The start time of the conversion segment.
 	 * @param {*} endTime The end time of the conversion segment.
 	 * @param {*} conn The connection to use.
 	 */
-	static async deleteAfter(sourceId, destinationId, startTime, endTime, conn) {
-		// update the next segment start time
-		await conn.none(sqlFile('conversionSegment/update_next_seg_start_to_curr_start.sql'), {
+	static async deleteEarlier(sourceId, destinationId, startTime, endTime, conn) {
+		if (startTime === '-infinity') {
+			const errMsg = `There is no earlier segment to update in order to delete this segment.`;
+			log.error(errMsg);
+			throw new Error(errMsg);
+		}
+
+		// update the end time of the previous segment
+		await conn.none(sqlFile('conversionSegment/update_prev_seg_end_to_curr_end.sql'), {
 			sourceId: sourceId,
 			destinationId: destinationId,
 			startTime: startTime,
 			endTime: endTime
 		});
 
-		// delete segment
+		// delete segment passed in
 		await conn.none(sqlFile('conversionSegment/delete_conversion_segment.sql'), {
 			sourceId: sourceId,
 			destinationId: destinationId,
@@ -192,23 +198,29 @@ class ConversionSegment {
 	}
 
 	/**
-	 * Updates the previous segment end time to the current segment end time before deleting the current segment.
+	 * Delete conversion segment after updating the start time of the following segment to the start time of the deleted segment.
 	 * @param {*} sourceId The source meter's id.
 	 * @param {*} destinationId The destination meter's id.
 	 * @param {*} startTime The start time of the conversion segment.
 	 * @param {*} endTime The end time of the conversion segment.
 	 * @param {*} conn The connection to use.
 	 */
-	static async deleteEarlier(sourceId, destinationId, startTime, endTime, conn) {
-		// update the previous segment end time
-		await conn.none(sqlFile('conversionSegment/update_prev_seg_end_to_curr_end.sql'), {
+	static async deleteLater(sourceId, destinationId, startTime, endTime, conn) {
+		if (endTime === 'infinity') {
+			const errMsg = `There is no later segment to update in order to delete this segment.`;
+			log.error(errMsg);
+			throw new Error(errMsg);
+		}
+
+		// update the start time of the next segment
+		await conn.none(sqlFile('conversionSegment/update_next_seg_start_to_curr_start.sql'), {
 			sourceId: sourceId,
 			destinationId: destinationId,
 			startTime: startTime,
 			endTime: endTime
 		});
 
-		// delete segment
+		// delete segment passed in
 		await conn.none(sqlFile('conversionSegment/delete_conversion_segment.sql'), {
 			sourceId: sourceId,
 			destinationId: destinationId,

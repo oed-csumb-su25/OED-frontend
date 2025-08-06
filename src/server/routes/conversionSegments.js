@@ -353,7 +353,7 @@ router.post('/delete', adminAuthMiddleware('delete conversion segment'), async (
 	// Ensure conversion segment object is valid
 	const validatorResult = validate(req.body, validConversionSegment);
 	if (!validatorResult.valid) {
-		const errMsg = `Got request to delete a conversion segment with invalid conversion segment data, error(s): ${err}`
+		const errMsg = `Got request to delete a conversion segment with invalid conversion segment data, error(s): ${validatorResult.errors}`
 		log.warn(errMsg);
 		failure(res, 400, errMsg);
 	} else {
@@ -378,13 +378,13 @@ router.post('/delete', adminAuthMiddleware('delete conversion segment'), async (
 });
 
 /**
- * POST delete conversion segment. The end date of the previous segment is updated to the end date of the segment being deleted.
+ * POST delete conversion segment after updating the end time of the previous segment to the end time of the deleted segment.
  * @param {int} sourceId The source meter's id.
  * @param {int} destinationId The destination meter's id.
  * @param {string} startTime The new start time of the conversion segment.
  * @param {string} endTime The new end time of the conversion segment.
  */
-router.post('/deleteEarlier', adminAuthMiddleware('delete conversion segment'), async (req, res) => {
+router.post('/deleteEarlier', adminAuthMiddleware('delete earlier conversion segment'), async (req, res) => {
 	const validConversionSegment = {
 		type: 'object',
 		maxProperties: 4,
@@ -409,7 +409,7 @@ router.post('/deleteEarlier', adminAuthMiddleware('delete conversion segment'), 
 	// Ensure conversion segment object is valid
 	const validatorResult = validate(req.body, validConversionSegment);
 	if (!validatorResult.valid) {
-		const errMsg = `Got request to delete a conversion segment with invalid conversion segment data, error(s): ${err}`
+		const errMsg = `Got request to delete earlier conversion segment with invalid conversion segment data, error(s): ${validatorResult.errors}`
 		log.warn(errMsg);
 		failure(res, 400, errMsg);
 	} else {
@@ -424,7 +424,7 @@ router.post('/deleteEarlier', adminAuthMiddleware('delete conversion segment'), 
 				formatTimestampValue(req.body.endTime),
 				conn
 			);
-			success(res, 'Successfully deleted conversion segment and updated previous conversion segment.');
+			success(res, 'Successfully deleted earlier conversion segment.');
 		} catch (err) {
 			const errMsg = `Error while deleting earlier conversion segment with error(s): ${err}`
 			log.error(errMsg);
@@ -434,13 +434,13 @@ router.post('/deleteEarlier', adminAuthMiddleware('delete conversion segment'), 
 });
 
 /**
- * POST delete conversion segment. The start date of the following segment is updated to the start date of the segment being deleted.
+ * POST delete conversion segment after updating the start time of the following segment to the start time of the deleted segment.
  * @param {int} sourceId The source meter's id.
  * @param {int} destinationId The destination meter's id.
  * @param {string} startTime The new start time of the conversion segment.
  * @param {string} endTime The new end time of the conversion segment.
  */
-router.post('/deleteAfter', adminAuthMiddleware('delete conversion segment'), async (req, res) => {
+router.post('/deleteLater', adminAuthMiddleware('delete later conversion segment'), async (req, res) => {
 	const validConversionSegment = {
 		type: 'object',
 		maxProperties: 4,
@@ -465,7 +465,7 @@ router.post('/deleteAfter', adminAuthMiddleware('delete conversion segment'), as
 	// Ensure conversion segment object is valid
 	const validatorResult = validate(req.body, validConversionSegment);
 	if (!validatorResult.valid) {
-		const errMsg = `Got request to delete a conversion segment with invalid conversion segment data, error(s): ${err}`
+		const errMsg = `Got request to delete later conversion segment with invalid conversion segment data, error(s): ${validatorResult.errors}`
 		log.warn(errMsg);
 		failure(res, 400, errMsg);
 	} else {
@@ -473,16 +473,16 @@ router.post('/deleteAfter', adminAuthMiddleware('delete conversion segment'), as
 		try {
 			// Don't worry about checking if the conversion segment already exists
 			// Just try to delete it to save the extra database call, since the database will return an error anyway if the row does not exist
-			await ConversionSegment.deleteAfter(
+			await ConversionSegment.deleteLater(
 				req.body.sourceId, 
 				req.body.destinationId, 
 				formatTimestampValue(req.body.startTime),
 				formatTimestampValue(req.body.endTime),
 				conn
 			);
-			success(res, 'Successfully deleted conversion segment and updated the following conversion segment.');
+			success(res, 'Successfully deleted later conversion segment.');
 		} catch (err) {
-			const errMsg = `Error while deleting after conversion segment with error(s): ${err}`
+			const errMsg = `Error while deleting later conversion segment with error(s): ${err}`
 			log.error(errMsg);
 			failure(res, 500, errMsg);
 		}
