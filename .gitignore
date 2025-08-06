@@ -59,6 +59,3 @@ src/server/tmp/*
 
 #ui-testing screenshots
 src/cypress/screenshots/*
-
-#docker
-docker-compose.yml
