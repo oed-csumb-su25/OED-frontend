@@ -133,6 +133,8 @@ class DaySegment {
 	 * Delete the day segment associated with the id
 	 * @param {*} id The day segment id.
 	 * @param {*} conn The connection to use.
+	 * @param {*} startHour The start hour of the segment to be deleted.
+	 * @param {*} endHour The end hour of the segment to be deleted.
 	 */
 	static async delete(id, startHour, endHour, conn) {
 		await conn.none(sqlFile('daySegment/delete_day_segment.sql'), {
@@ -157,6 +159,7 @@ class DaySegment {
 		}
 		// update the end time of the previous segment
 		await conn.none(sqlFile('daySegment/update_prev_seg_end_to_curr_end.sql'), {
+			dayId: dayId,
 			startHour: startHour,
 			endHour: endHour
 		});
@@ -185,6 +188,7 @@ class DaySegment {
 
 		// update the start time of the following segment
 		await conn.none(sqlFile('daySegment/update_next_seg_start_to_curr_start.sql'), {
+			dayId: dayId,
 			startHour: startHour,
 			endHour: endHour
 		});

@@ -81,7 +81,8 @@ router.post('/addDay', adminAuthMiddleware('add day'), async (req, res) => {
 		required: ['name', 'slope', 'intercept'],
 		properties: {
 			name: {
-				type: 'string'
+				type: 'string',
+				minLength: 1
 			},
 			note: {
 				oneOf: [
@@ -153,6 +154,7 @@ router.post('/edit', adminAuthMiddleware('edit day'), async (req, res) => {
 			},
 			name: {
 				type: 'string',
+				minLength: 1
 			},
 			note: {
 				oneOf: [

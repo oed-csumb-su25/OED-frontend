@@ -92,6 +92,7 @@ router.post('/addWeek', adminAuthMiddleware('add week'), async (req, res) => {
 		properties: {
 			name: {
 				type: 'string',
+				minLength: 1
 			},
 			note: {
 				oneOf: [
@@ -100,25 +101,32 @@ router.post('/addWeek', adminAuthMiddleware('add week'), async (req, res) => {
 				]
 			},
 			sunday: {
-				type: 'number'
+				type: 'number',
+				minimum: 0
 			},
 			monday: {
-				type: 'number'
+				type: 'number',
+				minimum: 0
 			},
 			tuesday: {
-				type: 'number'
+				type: 'number',
+				minimum: 0
 			},
 			wednesday: {
-				type: 'number'
+				type: 'number',
+				minimum: 0
 			},
 			thursday: {
-				type: 'number'
+				type: 'number',
+				minimum: 0
 			},
 			friday: {
-				type: 'number'
+				type: 'number',
+				minimum: 0
 			},
 			saturday: {
-				type: 'number'
+				type: 'number',
+				minimum: 0
 			}
 		}
 	};
@@ -180,6 +188,7 @@ router.post('/edit', adminAuthMiddleware('edit week'), async (req, res) => {
 			},
 			name: {
 				type: 'string',
+				minLength: 1
 			},
 			note: {
 				oneOf: [
@@ -188,25 +197,33 @@ router.post('/edit', adminAuthMiddleware('edit week'), async (req, res) => {
 				]
 			},
 			sunday: {
-				type: 'number'
+				type: 'number',
+				minimum: 0
+				
 			},
 			monday: {
-				type: 'number'
+				type: 'number',
+				minimum: 0
 			},
 			tuesday: {
-				type: 'number'
+				type: 'number',
+				minimum: 0
 			},
 			wednesday: {
-				type: 'number'
+				type: 'number',
+				minimum: 0
 			},
 			thursday: {
-				type: 'number'
+				type: 'number',
+				minimum: 0
 			},
 			friday: {
-				type: 'number'
+				type: 'number',
+				minimum: 0
 			},
 			saturday: {
-				type: 'number'
+				type: 'number',
+				minimum: 0
 			}
 		}
 	};
@@ -252,7 +269,7 @@ router.post('/delete', adminAuthMiddleware('delete week'), async (req, res) => {
 		required: ['id'],
 		properties: {
 			id: {
-				type: 'integer', 
+				type: 'integer',
 				minimum: 0
 			}
 		}
@@ -270,7 +287,7 @@ router.post('/delete', adminAuthMiddleware('delete week'), async (req, res) => {
 			// Don't worry about checking if the week already exists
 			// Just try to delete it to save the extra database call, since the database will return an error anyway if the row does not exist
 			await Week.delete(
-				req.body.id, 
+				req.body.id,
 				conn
 			);
 			success(res, 'Successfully deleted week');
