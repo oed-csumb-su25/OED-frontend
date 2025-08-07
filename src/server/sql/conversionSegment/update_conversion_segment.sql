@@ -7,10 +7,10 @@ UPDATE conversion_segments
 	SET week_patterns_id = ${weekPatternsId},
 		slope = ${slope},
 		intercept = ${intercept},
-		start_time = ${startTime}::TIMESTAMP,
-		end_time = ${endTime}::TIMESTAMP,
+		start_time = ${startTime},
+		end_time = ${endTime},
 		note = ${note}
 	WHERE source_id = ${sourceId}
 		AND destination_id = ${destinationId}
-		AND start_time = ${originalStartTime}::TIMESTAMP
-		AND end_time = ${originalEndTime}::TIMESTAMP;
+		AND start_time = ${originalStartTime}
+		AND end_time = ${originalEndTime};

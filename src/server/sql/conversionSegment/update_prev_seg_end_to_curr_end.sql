@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
  
 UPDATE conversion_segments
-	SET end_time = ${endTime}::TIMESTAMP
+	SET end_time = ${endTime}
 	WHERE source_id = ${sourceId}
 		AND destination_id = ${destinationId}
-		AND end_time = ${startTime}::TIMESTAMP;
+		AND end_time = ${startTime};
