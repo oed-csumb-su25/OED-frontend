@@ -101,8 +101,11 @@ class DaySegment {
 			originalEndHour
 		};
 
+		const startChanged = this.startHour !== originalStartHour;
+		const endChanged = this.endHour !== originalEndHour;
+
 		// check that 0 and 24 aren't being updated
-		if ((this.startHour !== originalStartHour && originalStartHour === 0) || (this.endHour !== originalEndHour && originalEndHour === 24)) {
+		if ((startChanged && (originalStartHour === 0)) || endChanged && (originalEndHour === 24)) {
 			const errMsg = `Cannot update starting hour of 0 or ending hour of 24`;
 			log.error(errMsg);
 			throw new Error(errMsg);
@@ -110,10 +113,14 @@ class DaySegment {
 
 		return conn.tx(async t => {
 			// Check and update previous segment's end time to updated start time
-			await t.none(sqlFile('daySegment/update_prev_seg_end_to_new_start.sql'), daySegment);
+			if (startChanged) {
+				await t.none(sqlFile('daySegment/update_prev_seg_end_to_new_start.sql'), daySegment);
+			}
 
 			// Check and update next segment's start time to updated end time
-			await t.none(sqlFile('daySegment/update_next_seg_start_to_new_end.sql'), daySegment);
+			if (endChanged) {
+				await t.none(sqlFile('daySegment/update_next_seg_start_to_new_end.sql'), daySegment);
+			}
 
 			// update the current segment
 			await t.none(sqlFile('daySegment/update_day_segment.sql'), daySegment);
