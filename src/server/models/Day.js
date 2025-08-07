@@ -74,24 +74,26 @@ class Day {
 	async insert(slope, intercept, segmentNote, conn) {
 		const day = this;
 
-		// insert new day
-		const dayData = {
-			name: day.name,
-			note: day.note
-		};
-		const resp = await conn.one(sqlFile('day/insert_new_day_pattern.sql'), dayData);
-		this.id = resp.id;
+		return conn.tx(async t => {
+			// insert new day
+			const dayData = {
+				name: day.name,
+				note: day.note
+			};
+			const resp = await t.one(sqlFile('day/insert_new_day_pattern.sql'), dayData);
+			this.id = resp.id;
 
-		// insert default day segment, including the new day id
-		const daySegment = {
-			dayId: this.id,
-			startHour: 0,
-			endHour: 24,
-			slope: slope,
-			intercept: intercept,
-			note: segmentNote
-		};
-		await conn.none(sqlFile('daySegment/insert_new_day_segment.sql'), daySegment);
+			// insert default day segment, including the new day id
+			const daySegment = {
+				dayId: this.id,
+				startHour: 0,
+				endHour: 24,
+				slope: slope,
+				intercept: intercept,
+				note: segmentNote
+			};
+			await t.none(sqlFile('daySegment/insert_new_day_segment.sql'), daySegment);
+		});
 	}
 
 	/**
