@@ -90,9 +90,6 @@ class ConversionSegment {
 	 * @param {*} conn The connection to use.
 	 * @returns {Promise.<ConversionSegment>}
 	 */
-
-
-
 	static async getBySourceDestinationStartEnd(sourceId, destinationId, startTime, endTime, conn) {
 		const row = await conn.one(sqlFile('conversionSegment/get_by_source_destination_start_end.sql'), {
 			sourceId: sourceId,
@@ -136,7 +133,7 @@ class ConversionSegment {
 
 		// update the previous segment's end time to the updated start time
 		if (startChanged) {
-				await conn.none(sqlFile('conversionSegment/update_prev_seg_end_to_new_start.sql'), conversionSegment);
+			await conn.none(sqlFile('conversionSegment/update_prev_seg_end_to_new_start.sql'), conversionSegment);
 		}
 
 		// update the next segment's start time to the updated end time

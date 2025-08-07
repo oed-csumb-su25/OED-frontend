@@ -12,8 +12,8 @@ SELECT
 	end_time::TEXT AS end_time,
 	note
 FROM conversion_segments
-WHERE source_id = ${sourceId} 
-	AND destination_id = ${destinationId} 
-	AND start_time = ${startTime}::TIMESTAMP 
+WHERE source_id = ${sourceId}
+	AND destination_id = ${destinationId}
+	AND start_time = ${startTime}::TIMESTAMP
 	AND end_time = ${endTime}::TIMESTAMP
 ORDER BY start_time::TIMESTAMP ASC;

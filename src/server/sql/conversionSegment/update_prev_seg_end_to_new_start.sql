@@ -4,6 +4,6 @@
  
 UPDATE conversion_segments
 	SET end_time = ${startTime}::TIMESTAMP
-	WHERE source_id = ${sourceId} 
-		AND destination_id = ${destinationId} 
+	WHERE source_id = ${sourceId}
+		AND destination_id = ${destinationId}
 		AND end_time = ${originalStartTime}::TIMESTAMP;

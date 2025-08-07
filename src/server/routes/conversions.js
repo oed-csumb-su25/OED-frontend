@@ -125,7 +125,6 @@ router.post('/addConversion', async (req, res) => {
 		}
 	};
 	const validatorResult = validate(req.body, validConversion);
-
 	if (!validatorResult.valid) {
 		log.error(`Got request to insert conversion with invalid conversion data, errors: ${validatorResult.errors}`);
 		failure(res, 400, `Got request to insert conversion with invalid conversion data. Error(s): ${validatorResult.errors}`);

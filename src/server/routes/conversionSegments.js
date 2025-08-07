@@ -10,7 +10,6 @@ const { success, failure } = require('./response');
 const validate = require('jsonschema').validate;
 const { adminAuthMiddleware } = require('./authenticator');
 const moment = require('moment');
-const { format } = require('path');
 
 const router = express.Router();
 
@@ -272,16 +271,10 @@ router.post('/edit', adminAuthMiddleware('edit conversion segment'), async (req,
 				]
 			},
 			originalStartTime: {
-				oneOf: [
-					{type: 'string'},
-					{type: 'null'}
-				]
+				type: 'string'
 			},
 			originalEndTime: {
-				oneOf: [
-					{type: 'string'},
-					{type: 'null'}
-				]
+				type: 'string'
 			}
 		}
 	};

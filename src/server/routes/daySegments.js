@@ -278,6 +278,8 @@ router.post('/edit', adminAuthMiddleware('edit day segment'), async (req, res) =
 /**
  * POST delete day segment.
  * @param {integer} id The id for the day segment to be deleted.
+ * @param {number} startHour The start hour for the day segment to be deleted.
+ * @param {number} endHour The end hour for the day segment to be deleted.
  */
 router.post('/delete', adminAuthMiddleware('delete day segment'), async (req, res) => {
 	const validDaySegment = {
@@ -346,7 +348,8 @@ router.post('/deleteEarlier', adminAuthMiddleware('delete earlier day segment'),
 			},
 			startHour: {
 				type: 'number',
-				minimum: 1,		// if it was 0, there would be no previous segment
+				// if it was 0, there would be no previous segment
+				minimum: 1,		
 				maximum: 23
 			},
 			endHour: {
@@ -408,7 +411,8 @@ router.post('/deleteLater', adminAuthMiddleware('delete later day segment'), asy
 			endHour : {
 				type: 'number',
 				minimum: 1,
-				maximum: 23	// if it was 24, there would be no following segment
+				// if it was 24, there would be no following segment
+				maximum: 23	
 			}
 		}
 	};

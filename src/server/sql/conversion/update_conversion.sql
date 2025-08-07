@@ -4,6 +4,6 @@
 
 UPDATE conversions
 	SET
-	bidirectional = ${bidirectional},
-	note = ${note}
+		bidirectional = ${bidirectional},
+		note = ${note}
 	WHERE source_id = ${sourceId} AND destination_id = ${destinationId};

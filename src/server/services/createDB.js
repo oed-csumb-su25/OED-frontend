@@ -27,7 +27,7 @@ const { redoCik } = require('../services/graph/redoCik');
 			log.error('insertconversions failed', err);
 		}
 		try {
-		await redoCik(conn);
+			await redoCik(conn);
 		} catch(err) {
 			log.error('error redo cik', err);
 		}
