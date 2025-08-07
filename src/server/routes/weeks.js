@@ -139,21 +139,19 @@ router.post('/addWeek', adminAuthMiddleware('add week'), async (req, res) => {
 	} else {
 		const conn = getConnection();
 		try {
-			await conn.tx(async t => {
-				const newWeek = new Week(
-					undefined,
-					req.body.name,
-					req.body.note,
-					req.body.sunday,
-					req.body.monday,
-					req.body.tuesday,
-					req.body.wednesday,
-					req.body.thursday,
-					req.body.friday,
-					req.body.saturday
-				);
-				await newWeek.insert(t);
-			});
+			const newWeek = new Week(
+				undefined,
+				req.body.name,
+				req.body.note,
+				req.body.sunday,
+				req.body.monday,
+				req.body.tuesday,
+				req.body.wednesday,
+				req.body.thursday,
+				req.body.friday,
+				req.body.saturday
+			);
+			await newWeek.insert(conn);
 			success(res, `Successfully inserted week`);
 		} catch (err) {
 			const errMsg = `Error while inserting a new week with error(s): ${err}`;
