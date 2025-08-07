@@ -5,7 +5,7 @@
 const database = require('./database');
 const sqlFile = database.sqlFile;
 const { log } = require('../log');
-const moment = require('moment');
+const { momentToIsoOrInfinity } = require('../util/handleTimestampValues');
 
 class ConversionSegment {
 	/**
@@ -24,8 +24,8 @@ class ConversionSegment {
 		this.weekPatternsId = weekPatternsId;
 		this.slope = slope;
 		this.intercept = intercept;
-		this.startTime = formatTimestampValue(startTime);
-		this.endTime = formatTimestampValue(endTime);
+		this.startTime = momentToIsoOrInfinity(startTime);
+		this.endTime = momentToIsoOrInfinity(endTime);
 		this.note = note;
 	}
 
@@ -221,14 +221,6 @@ class ConversionSegment {
 			});
 		});
 	}
-}
-
-function formatTimestampValue(value) {
-	if (value === 'infinity' || value === '-infinity') {
-		return value;
-	} 
-
-	return moment(value).toISOString();
 }
 
 module.exports = ConversionSegment;
