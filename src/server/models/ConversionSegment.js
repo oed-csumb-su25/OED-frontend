@@ -121,18 +121,20 @@ class ConversionSegment {
 			throw new Error(errMsg);
 		}
 
-		// update the previous segment's end time to the updated start time
-		if (startChanged) {
-			await conn.none(sqlFile('conversionSegment/update_prev_seg_end_to_new_start.sql'), conversionSegment);
-		}
+		return conn.tx(async t => {
+			// update the previous segment's end time to the updated start time
+			if (startChanged) {
+				await t.none(sqlFile('conversionSegment/update_prev_seg_end_to_new_start.sql'), conversionSegment);
+			}
 
-		// update the next segment's start time to the updated end time
-		if (endChanged) {
-			await conn.none(sqlFile('conversionSegment/update_next_seg_start_to_new_end.sql'), conversionSegment);
-		}
+			// update the next segment's start time to the updated end time
+			if (endChanged) {
+				await t.none(sqlFile('conversionSegment/update_next_seg_start_to_new_end.sql'), conversionSegment);
+			}
 
-		// Update the current segment
-		await conn.none(sqlFile('conversionSegment/update_conversion_segment.sql'), conversionSegment);
+			// Update the current segment
+			await t.none(sqlFile('conversionSegment/update_conversion_segment.sql'), conversionSegment);
+		});
 }
 
 	/**
@@ -167,20 +169,22 @@ class ConversionSegment {
 			throw new Error(errMsg);
 		}
 
-		// update the end time of the previous segment
-		await conn.none(sqlFile('conversionSegment/update_prev_seg_end_to_curr_end.sql'), {
-			sourceId: sourceId,
-			destinationId: destinationId,
-			startTime: startTime,
-			endTime: endTime
-		});
+		return conn.tx(async t => {
+			// update the end time of the previous segment
+			await t.none(sqlFile('conversionSegment/update_prev_seg_end_to_curr_end.sql'), {
+				sourceId: sourceId,
+				destinationId: destinationId,
+				startTime: startTime,
+				endTime: endTime
+			});
 
-		// delete segment passed in
-		await conn.none(sqlFile('conversionSegment/delete_conversion_segment.sql'), {
-			sourceId: sourceId,
-			destinationId: destinationId,
-			startTime: startTime,
-			endTime: endTime
+			// delete segment passed in
+			await t.none(sqlFile('conversionSegment/delete_conversion_segment.sql'), {
+				sourceId: sourceId,
+				destinationId: destinationId,
+				startTime: startTime,
+				endTime: endTime
+			});
 		});
 	}
 
@@ -199,20 +203,22 @@ class ConversionSegment {
 			throw new Error(errMsg);
 		}
 
-		// update the start time of the next segment
-		await conn.none(sqlFile('conversionSegment/update_next_seg_start_to_curr_start.sql'), {
-			sourceId: sourceId,
-			destinationId: destinationId,
-			startTime: startTime,
-			endTime: endTime
-		});
+		return conn.tx(async t => {
+			// update the start time of the next segment
+			await t.none(sqlFile('conversionSegment/update_next_seg_start_to_curr_start.sql'), {
+				sourceId: sourceId,
+				destinationId: destinationId,
+				startTime: startTime,
+				endTime: endTime
+			});
 
-		// delete segment passed in
-		await conn.none(sqlFile('conversionSegment/delete_conversion_segment.sql'), {
-			sourceId: sourceId,
-			destinationId: destinationId,
-			startTime: startTime,
-			endTime: endTime
+			// delete segment passed in
+			await t.none(sqlFile('conversionSegment/delete_conversion_segment.sql'), {
+				sourceId: sourceId,
+				destinationId: destinationId,
+				startTime: startTime,
+				endTime: endTime
+			});
 		});
 	}
 }

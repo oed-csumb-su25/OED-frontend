@@ -184,19 +184,17 @@ router.post('/addConversionSegment', adminAuthMiddleware('add conversion segment
 	} else {
 		const conn = getConnection();
 		try {
-			await conn.tx(async t => {
-				const newConversionSegment = new ConversionSegment(
-					req.body.sourceId, 
-					req.body.destinationId, 
-					req.body.weekPatternsId, 
-					req.body.slope, 
-					req.body.intercept, 
-					formatTimestampValue(req.body.startTime),
-					formatTimestampValue(req.body.endTime),
-					req.body.note
-				);
-				await newConversionSegment.insert(t);
-			});
+			const newConversionSegment = new ConversionSegment(
+				req.body.sourceId, 
+				req.body.destinationId, 
+				req.body.weekPatternsId, 
+				req.body.slope, 
+				req.body.intercept, 
+				formatTimestampValue(req.body.startTime),
+				formatTimestampValue(req.body.endTime),
+				req.body.note
+			);
+			await newConversionSegment.insert(conn);
 			success(res, `Successfully added conversion segment`);
 		} catch (err) {
 			const errMsg = `Error adding conversion segment with error(s): ${err}`
@@ -274,24 +272,21 @@ router.post('/edit', adminAuthMiddleware('edit conversion segment'), async (req,
 	} else {
 		const conn = getConnection();
 		try {
-			await conn.tx(async t => {
-				const updatedConversionSegment = new ConversionSegment(
-					req.body.sourceId, 
-					req.body.destinationId, 
-					req.body.weekPatternsId, 
-					req.body.slope, 
-					req.body.intercept, 
-					formatTimestampValue(req.body.startTime),
-					formatTimestampValue(req.body.endTime),
-					req.body.note
-				);
-				await updatedConversionSegment.update(
-					formatTimestampValue(req.body.originalStartTime),
-					formatTimestampValue(req.body.originalEndTime),
-					t
-				);
-			});
-
+			const updatedConversionSegment = new ConversionSegment(
+				req.body.sourceId, 
+				req.body.destinationId, 
+				req.body.weekPatternsId, 
+				req.body.slope, 
+				req.body.intercept, 
+				formatTimestampValue(req.body.startTime),
+				formatTimestampValue(req.body.endTime),
+				req.body.note
+			);
+			await updatedConversionSegment.update(
+				formatTimestampValue(req.body.originalStartTime),
+				formatTimestampValue(req.body.originalEndTime),
+				conn
+			);
 			success(res, `Successfully edited conversion segment`);
 		} catch (err) {
 			const errMsg = `Error while editing conversion segment with error(s): ${err}`
