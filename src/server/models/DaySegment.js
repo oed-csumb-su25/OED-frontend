@@ -108,15 +108,16 @@ class DaySegment {
 			throw new Error(errMsg);
 		}
 
-		// Check and update previous segment's end time to updated start time
-		await conn.none(sqlFile('daySegment/update_prev_seg_end_to_new_start.sql'), daySegment);
+		return conn.tx(async t => {
+			// Check and update previous segment's end time to updated start time
+			await t.none(sqlFile('daySegment/update_prev_seg_end_to_new_start.sql'), daySegment);
 
-		// Check and update next segment's start time to updated end time
-		await conn.none(sqlFile('daySegment/update_next_seg_start_to_new_end.sql'), daySegment);
+			// Check and update next segment's start time to updated end time
+			await t.none(sqlFile('daySegment/update_next_seg_start_to_new_end.sql'), daySegment);
 
-
-		// update the current segment
-		await conn.none(sqlFile('daySegment/update_day_segment.sql'), daySegment);
+			// update the current segment
+			await t.none(sqlFile('daySegment/update_day_segment.sql'), daySegment);
+		});
 	}
 
 	/**
@@ -147,18 +148,21 @@ class DaySegment {
 			log.error(errMsg);
 			throw new Error(errMsg);
 		}
-		// update the end time of the previous segment
-		await conn.none(sqlFile('daySegment/update_prev_seg_end_to_curr_end.sql'), {
-			dayId: dayId,
-			startHour: startHour,
-			endHour: endHour
-		});
 
-		// delete segment passed in
-		await conn.none(sqlFile('daySegment/delete_day_segment.sql'), {
-			dayId: dayId,
-			startHour: startHour,
-			endHour: endHour
+		return conn.tx(async t => {
+			// update the end time of the previous segment
+			await t.none(sqlFile('daySegment/update_prev_seg_end_to_curr_end.sql'), {
+				dayId: dayId,
+				startHour: startHour,
+				endHour: endHour
+			});
+
+			// delete segment passed in
+			await t.none(sqlFile('daySegment/delete_day_segment.sql'), {
+				dayId: dayId,
+				startHour: startHour,
+				endHour: endHour
+			});
 		});
 	}
 
@@ -176,18 +180,20 @@ class DaySegment {
 			throw new Error(errMsg);
 		}
 
-		// update the start time of the following segment
-		await conn.none(sqlFile('daySegment/update_next_seg_start_to_curr_start.sql'), {
-			dayId: dayId,
-			startHour: startHour,
-			endHour: endHour
-		});
+		return conn.tx(async t => {
+			// update the start time of the following segment
+			await t.none(sqlFile('daySegment/update_next_seg_start_to_curr_start.sql'), {
+				dayId: dayId,
+				startHour: startHour,
+				endHour: endHour
+			});
 
-		// delete segment passed in
-		await conn.none(sqlFile('daySegment/delete_day_segment.sql'), {
-			dayId: dayId,
-			startHour: startHour,
-			endHour: endHour
+			// delete segment passed in
+			await t.none(sqlFile('daySegment/delete_day_segment.sql'), {
+				dayId: dayId,
+				startHour: startHour,
+				endHour: endHour
+			});
 		});
 	}
 }

@@ -145,19 +145,16 @@ router.post('/addDaySegment', adminAuthMiddleware('add day segment'), async (req
 		} else {
 			const conn = getConnection();
 			try {
-				// use transaction to ensure consistent state
-				await conn.tx(async t => {
-					const newDaySegment = new DaySegment(
-						undefined,
-						req.body.dayId,
-						req.body.startHour,
-						req.body.endHour,
-						req.body.slope,
-						req.body.intercept,
-						req.body.note
-					);
-					await newDaySegment.insert(t);
-				});
+				const newDaySegment = new DaySegment(
+					undefined,
+					req.body.dayId,
+					req.body.startHour,
+					req.body.endHour,
+					req.body.slope,
+					req.body.intercept,
+					req.body.note
+				);
+				await newDaySegment.insert(conn);
 				success(res, `Successfully added day segment`);
 			} catch (err) {
 				const errMsg = `Error while adding new day segment with error(s): ${err}`;
@@ -236,23 +233,20 @@ router.post('/edit', adminAuthMiddleware('edit day segment'), async (req, res) =
 	} else {
 		const conn = getConnection();
 		try {
-			await conn.tx(async t => {
-				const updatedDaySegment = new DaySegment(
-					req.body.id, 
-					req.body.dayId,
-					req.body.startHour,
-					req.body.endHour,
-					req.body.slope,
-					req.body.intercept, 
-					req.body.note
-				);
-				await updatedDaySegment.update(
-					req.body.originalStartHour,
-					req.body.originalEndHour,
-					t
-				);
-			});
-
+			const updatedDaySegment = new DaySegment(
+				req.body.id, 
+				req.body.dayId,
+				req.body.startHour,
+				req.body.endHour,
+				req.body.slope,
+				req.body.intercept, 
+				req.body.note
+			);
+			await updatedDaySegment.update(
+				req.body.originalStartHour,
+				req.body.originalEndHour,
+				conn
+			);
 			success(res, `Successfully edited day segment`);
 		} catch (err) {
 			const errMsg = `Error while editing day segment with error(s): ${err}`;
@@ -356,14 +350,12 @@ router.post('/deleteEarlier', adminAuthMiddleware('delete earlier day segment'),
 	} else {
 		const conn = getConnection();
 		try {
-			await conn.tx(async t => {
-				await DaySegment.deleteEarlier(
-					req.body.dayId, 
-					req.body.startHour,
-					req.body.endHour, 
-					t
-				);
-			});
+			await DaySegment.deleteEarlier(
+				req.body.dayId, 
+				req.body.startHour,
+				req.body.endHour, 
+				conn
+			);
 			success(res, 'Successfully deleted earlier day segment.');
 		} catch (err) {
 			const errMsg = `Error while deleting earlier day segment with error(s): ${err}`;
@@ -413,14 +405,12 @@ router.post('/deleteLater', adminAuthMiddleware('delete later day segment'), asy
 	} else {
 		const conn = getConnection();
 		try {
-			await conn.tx(async t => {
-				await DaySegment.deleteLater(
-					req.body.dayId, 
-					req.body.startHour,
-					req.body.endHour,
-					t
-				);
-			});
+			await DaySegment.deleteLater(
+				req.body.dayId, 
+				req.body.startHour,
+				req.body.endHour,
+				conn
+			);
 			success(res, 'Successfully deleted later day segment.');
 		} catch (err) {
 			const errMsg = `Error while deleting later day segment with error(s): ${err}`;
