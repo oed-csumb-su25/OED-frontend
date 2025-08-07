@@ -277,7 +277,7 @@ router.post('/edit', adminAuthMiddleware('edit day segment'), async (req, res) =
 
 /**
  * POST delete day segment.
- * @param {integer} id The id for the day segment to be deleted.
+ * @param {integer} dayId The day id for the day segment to be deleted.
  * @param {number} startHour The start hour for the day segment to be deleted.
  * @param {number} endHour The end hour for the day segment to be deleted.
  */
@@ -285,9 +285,9 @@ router.post('/delete', adminAuthMiddleware('delete day segment'), async (req, re
 	const validDaySegment = {
 		type: 'object',
 		maxProperties: 3,
-		required: ['id', 'startHour', 'endHour'],
+		required: ['dayId', 'startHour', 'endHour'],
 		properties: {
-			id: {
+			dayId: {
 				type: 'integer', 
 				minimum: 0
 			},
@@ -316,7 +316,7 @@ router.post('/delete', adminAuthMiddleware('delete day segment'), async (req, re
 			// Don't worry about checking if the day segment already exists
 			// Just try to delete it to save the extra database call, since the database will return an error anyway if the row does not exist
 			await DaySegment.delete(
-				req.body.id, 
+				req.body.dayId, 
 				req.body.startHour,
 				req.body.endHour,
 				conn
