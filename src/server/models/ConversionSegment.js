@@ -56,16 +56,6 @@ class ConversionSegment {
 	}
 
 	/**
-	 * Returns a promise to get all conversion segments from the database.
-	 * @param {*} conn The connection to use.
-	 * @returns {Promise.<Array.<ConversionSegment>>}
-	 */
-	static async getAll(conn) {
-		const rows = await conn.any(sqlFile('conversionSegment/get_all.sql'));
-		return rows.map(ConversionSegment.mapRow);
-	}
-
-	/**
 	 * Returns a promise to get all conversion segments with the given source id and destination id from the database. 
 	 * If the conversion segment doesn't exist then return null.
 	 * @param {*} sourceId The source meter's id.

@@ -27,19 +27,6 @@ function formatConversionSegmentForResponse(item) {
 }
 
 /**
- * GET all conversion segments.
- */
-router.get('/', adminAuthMiddleware('get all conversion segments'), async (req, res) => {
-	const conn = getConnection();
-	try {
-		const rows = await ConversionSegment.getAll(conn);
-		res.json(rows.map(formatConversionSegmentForResponse));
-	} catch (err) {
-		log.error(`Error while performing GET all conversion segments query: ${err}`, err);
-	}
-});
-
-/**
  * POST get all conversion segment(s) by source id and destination id.
  * @param {int} sourceId The source meter's id.
  * @param {int} destinationId The destination meter's id.
