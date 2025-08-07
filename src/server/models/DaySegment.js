@@ -50,16 +50,6 @@ class DaySegment {
 		);
 	}
 
-	/**
-	 * Get all DaySegment objects
-	 * @param {*} conn The database connection to use.
-	 * @returns all DaySegment objects.
-	 */
-	static async getAll(conn) {
-		const rows = await conn.any(sqlFile('daySegment/get_all.sql'));
-		return rows.map(DaySegment.mapRow);
-	}
-
 	/** 
 	 * Returns the day segment associated the id. 
 	 * If the day segment doesn't exist then return null.

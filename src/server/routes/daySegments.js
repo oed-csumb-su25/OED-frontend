@@ -25,19 +25,6 @@ function formatDaySegmentForResponse(item) {
 }
 
 /**
- * GET all day segments.
- */
-router.get('/', adminAuthMiddleware('get all day segments'), async (req, res) => {
-	const conn = getConnection();
-	try {
-		const rows = await DaySegment.getAll(conn);
-		res.json(rows.map(formatDaySegmentForResponse));
-	} catch (err) {
-		log.error(`Error while performing GET day segment details query: ${err}`);
-	}
-});
-
-/**
  * GET day segment by id
  */
 router.get('/:id', adminAuthMiddleware('get day segment by id'), async(req, res) => {
