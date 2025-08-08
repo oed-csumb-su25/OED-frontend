@@ -79,12 +79,18 @@ class DaySegment {
 	}
 
 	/**
-	 * Returns a promise to insert the day segment.
+	 * Returns a promise to insert the day segment - only segments spanning from 0 to 24 are permitted.
 	 * @param {*} conn The connection to be used
 	 * @returns {Promise.<void>}
 	 */
 	async insert(conn) {
 		const daySegment = this;
+		// check that the segment spans 0 to 24
+		if (this.startHour !== 0 || this.endHour !== 24) {
+			const errMsg = `Only time ranges spanning from 0 to 24 are allowed for insertion.`;
+			log.error(errMsg);
+			throw new Error(errMsg);
+		}
 		await conn.none(sqlFile('daySegment/insert_new_day_segment.sql'), daySegment);
 	}
 
