@@ -205,6 +205,93 @@ router.post('/addConversionSegment', adminAuthMiddleware('add conversion segment
 });
 
 /**
+ * POST split a segment in two, the earlier segment uses the new slope/intercept/pattern.
+ * @param {int} sourceId The source meter's id.
+ * @param {int} destinationId The destination meter's id.
+ * @param {int} newWeekPatternsId The id of the weekly pattern for the new conversion segment.
+ * @param {number} newSlope The slope for the new conversion segment.
+ * @param {number} newIntercept The intercept for the new conversion segment.
+ * @param {string} startTime The start time of the conversion segment.
+ * @param {string} endTime The end time of the conversion segment.
+ * @param {string} newNote Notes added by the admin for the new conversion segment.
+ * @param {string} splitTime The time to split the segment at.
+ */
+router.post('/splitEarlier', adminAuthMiddleware('add conversion segment'), async (req, res) => {
+	const validConversionSegment = {
+		type: 'object',
+		maxProperties: 9,
+		required: ['sourceId', 'destinationId', 'startTime', 'endTime', 'newSlope', 'newIntercept', 'splitTime',],
+		properties: {
+			sourceId: {
+				type: 'integer',
+				minimum: 0
+			},
+			destinationId: {
+				type: 'integer',
+				minimum: 0
+			},
+			startTime: {
+				type: 'string'
+			},
+			endTime: {
+				type: 'string'
+			},
+			newWeekPatternsId: {
+				oneOf: [
+					{type: 'integer', minimum: 0},
+					{type: 'null'}
+				]
+			},
+			newSlope: {
+				type: 'number'
+			},
+			newIntercept: {
+				type: 'number'
+			},
+			newNote: {
+				oneOf: [
+					{type: 'string'},
+					{type: 'null'}
+				]
+			},
+			splitTime: {
+				type: 'string'
+			}
+		}
+	};
+	
+	const validatorResult = validate(req.body, validConversionSegment);
+	if (!validatorResult.valid) {
+		const errMsg = `Got request to split a conversion segment earlier with invalid conversion segment data, error(s): ${validatorResult.errors}`;
+		log.warn(errMsg);
+		failure(res, 400, errMsg);
+	} else {
+		const conn = getConnection();
+		try {
+			const newConversionSegment = new ConversionSegment(
+				req.body.sourceId, 
+				req.body.destinationId,
+				momentToIsoOrInfinity(req.body.startTime),
+				momentToIsoOrInfinity(req.body.endTime)
+			);
+			await newConversionSegment.splitEarlier(
+				req.body.newWeekPatternsId,
+				req.body.newSlope,
+				req.body.newIntercept,
+				req.body.newNote,
+				momentToIsoOrInfinity(req.body.splitTime),
+				conn
+			);
+			success(res, `Successfully split conversion segment earlier`);
+		} catch (err) {
+			const errMsg = `Error splitting conversion segment earlier with error(s): ${err}`
+			log.error(errMsg);
+			failure(res, 500, errMsg);
+		}
+	}
+});
+
+/**
  * POST edit conversion segment.
  * @param {int} sourceId The source meter's id.
  * @param {int} destinationId The destination meter's id.

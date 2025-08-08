@@ -100,6 +100,56 @@ class ConversionSegment {
 	}
 
 	/**
+	 * Split a segment in two, the earlier segment uses the new slope/intercept/pattern/note
+	 * @param {*} newWeekPatternsId The id of the weekly pattern for the new conversion segment.
+	 * @param {*} newSlope The slope for the new conversion segment.
+	 * @param {*} newIntercept The intercept for the new conversion segment.
+	 * @param {*} newNote Notes added by the admin for the new conversion segment.
+	 * @param {*} splitTime The time to split the segment at.
+	 * @param {*} conn The connection to use
+	 * @returns {Promise.<void>}
+	 */
+	async splitEarlier(newWeekPatternsId, newSlope, newIntercept, newNote, splitTime, conn) {
+		return conn.tx(async t => {
+			// get all information for the original segment
+			const originalSegment = await getBySourceDestinationStartEnd(
+				this.sourceId,
+				this.destinationId,
+				this.startTime,
+				this.endTime,
+				t
+			);
+
+			// earlier segment - insert new
+			const earlierSegment = {
+				sourceId: originalSegment.sourceId,
+				destinationId: originalSegment.destinationId,
+				weekPatternsId: newWeekPatternsId,
+				slope: newSlope,
+				intercept: newIntercept,
+				startTime: originalSegment.startTime,
+				endTime: splitTime,
+				note: newNote
+			};
+			await t.none(sqlFile('conversionSegment/insert_conversion_segment.sql'), earlierSegment);
+
+			// later segment - update start time
+			const laterSegment = {
+				sourceId: originalSegment.sourceId,
+				destinationId: originalSegment.destinationId,
+				weekPatternsId: originalSegment.weekPatternsId,
+				slope: originalSegment.slope,
+				intercept: originalSegment.intercept,
+				startTime: splitTime,
+				endTime: originalSegment.endTime,
+				note: originalSegment.note
+			};
+			await t.none(sqlFile('conversionSegment/update_conversion_segment.sql'), laterSegment);
+		});
+	}
+
+
+	/**
 	 * Updates an existed conversion segment in the database.
 	 * @param {*} originalStartTime The original start time of the segment being updated.
 	 * @param {*} originalEndTime The original end time of the segment being updated.
