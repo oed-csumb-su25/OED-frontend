@@ -115,42 +115,33 @@ class ConversionSegment {
 	 * @param {*} conn The connection to use
 	 * @returns {Promise.<void>}
 	 */
-	async splitEarlier(newWeekPatternsId, newSlope, newIntercept, newNote, splitTime, conn) {
+	async splitEarlier(startTime, endTime, splitTime, conn) {
 		return conn.tx(async t => {
-			// get all information for the original segment
-			const originalSegment = await getBySourceDestinationStartEnd(
-				this.sourceId,
-				this.destinationId,
-				this.startTime,
-				this.endTime,
-				t
-			);
-
 			// earlier segment - insert new
-			const earlierSegment = {
-				sourceId: originalSegment.sourceId,
-				destinationId: originalSegment.destinationId,
-				weekPatternsId: newWeekPatternsId,
-				slope: newSlope,
-				intercept: newIntercept,
-				startTime: originalSegment.startTime,
-				endTime: splitTime,
-				note: newNote
-			};
+			const earlierSegment = this;
 			await t.none(sqlFile('conversionSegment/insert_new_conversion_segment.sql'), earlierSegment);
 
-			// later segment - update start time
-			const laterSegment = {
-				sourceId: originalSegment.sourceId,
-				destinationId: originalSegment.destinationId,
+			// later segment - get current values and update start time
+			const originalSegment = await t.one(sqlFile('conversionSegment/get_by_source_destination_start_end.sql'), {
+				sourceId: this.sourceId,
+				destinationId: this.destinationId,
+				startTime: startTime,
+				endTime: endTime
+			});
+
+			// update later segment
+			await t.none(sqlFile('conversionSegment/update_conversion_segment.sql'), {
+				sourceId: this.sourceId,
+				destinationId: this.destinationId,
 				weekPatternsId: originalSegment.weekPatternsId,
 				slope: originalSegment.slope,
 				intercept: originalSegment.intercept,
 				startTime: splitTime,
-				endTime: originalSegment.endTime,
-				note: originalSegment.note
-			};
-			await t.none(sqlFile('conversionSegment/update_conversion_segment.sql'), laterSegment);
+				endTime: endTime,
+				note: originalSegment.note,
+				originalStartTime: startTime,
+				originalEndTime: endTime
+			});
 		});
 	}
 

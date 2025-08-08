@@ -268,17 +268,19 @@ router.post('/splitEarlier', adminAuthMiddleware('split earlier conversion segme
 	} else {
 		const conn = getConnection();
 		try {
-			const newConversionSegment = new ConversionSegment(
+			const earlierSegment = new ConversionSegment(
 				req.body.sourceId, 
 				req.body.destinationId,
-				momentToIsoOrInfinity(req.body.startTime),
-				momentToIsoOrInfinity(req.body.endTime)
-			);
-			await newConversionSegment.splitEarlier(
 				req.body.newWeekPatternsId,
 				req.body.newSlope,
 				req.body.newIntercept,
-				req.body.newNote,
+				momentToIsoOrInfinity(req.body.startTime),
+				momentToIsoOrInfinity(req.body.splitTime),
+				req.body.newNote
+			);
+			await earlierSegment.splitEarlier(
+				momentToIsoOrInfinity(req.body.startTime),
+				momentToIsoOrInfinity(req.body.endTime),
 				momentToIsoOrInfinity(req.body.splitTime),
 				conn
 			);
