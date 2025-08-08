@@ -79,7 +79,7 @@ class DaySegment {
 	}
 
 	/**
-	 * Returns a promise to insert the day segment - only segments spanning from 0 to 24 are permitted.
+	 * Returns a promise to insert the day segment. Only segments spanning from 0 to 24 are permitted.
 	 * @param {*} conn The connection to be used
 	 * @returns {Promise.<void>}
 	 */

@@ -91,11 +91,17 @@ class ConversionSegment {
 	}
 
 	/**
-	 * Inserts a new conversion segment to the database.
-	 * @param {*} conn The connection to use.
+	 * Inserts a new conversion segment to the database. Only segments spanning from -infinity to infinity are permitted.
+	 * @param {*} conn The connection to be used.
 	 */
 	async insert(conn) {
 		const conversionSegment = this;
+		// check that the segment spans -infinity to infinity
+		if (this.startTime !== '-infinity' || this.endTime !== 'infinity') {
+			const errMsg = `Only time ranges spanning from -infinity to infinity are allowed for insertion.`;
+			log.error(errMsg);
+			throw new Error(errMsg);
+		}
 		await conn.none(sqlFile('conversionSegment/insert_new_conversion_segment.sql'), conversionSegment);
 	}
 
