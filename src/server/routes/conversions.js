@@ -39,12 +39,12 @@ router.post('/edit', async (req, res) => {
 		required: ['sourceId', 'destinationId', 'bidirectional'],
 		properties: {
 			sourceId: {
-				type: 'number',
+				type: 'integer',
 				// Do not allow negatives for now
 				minimum: 0
 			},
 			destinationId: {
-				type: 'number',
+				type: 'integer',
 				// Do not allow negatives for now
 				minimum: 0
 			},
@@ -89,12 +89,12 @@ router.post('/addConversion', async (req, res) => {
 		required: ['sourceId', 'destinationId', 'bidirectional', 'slope', 'intercept'],
 		properties: {
 			sourceId: {
-				type: 'number',
+				type: 'integer',
 				// Do not allow negatives for now
 				minimum: 0
 			},
 			destinationId: {
-				type: 'number',
+				type: 'integer',
 				// Do not allow negatives for now
 				minimum: 0
 			},
@@ -108,7 +108,10 @@ router.post('/addConversion', async (req, res) => {
 				]
 			},
 			weekPatternsId: {
-				type: 'number'
+				oneOf: [
+					{ type: 'integer' },
+					{ type: 'null' }
+				]
 			},
 			slope: {
 				type: 'number'
@@ -165,12 +168,12 @@ router.post('/delete', async (req, res) => {
 		required: ['sourceId', 'destinationId'],
 		properties: {
 			sourceId: {
-				type: 'number',
+				type: 'integer',
 				// Do not allow negatives for now
 				minimum: 0
 			},
 			destinationId: {
-				type: 'number',
+				type: 'integer',
 				// Do not allow negatives for now
 				minimum: 0
 			}

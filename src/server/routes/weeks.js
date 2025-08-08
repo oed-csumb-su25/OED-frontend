@@ -76,13 +76,13 @@ router.get('/:id', adminAuthMiddleware('get week by id'), async(req, res) => {
  * POST add week.
  * @param {string} name The name for the week.
  * @param {string} note The notes for the week.
- * @param {number} sunday The id for the day pattern used for sunday.
- * @param {number} monday The id for the day pattern used for monday.
- * @param {number} tuesday The id for the day pattern used for tuesday.
- * @param {number} wednesday The id for the day pattern used for wednesday.
- * @param {number} thursday The id for the day pattern used for thursday.
- * @param {number} friday The id for the day pattern used for friday.
- * @param {number} saturday The id for the day pattern used for saturday.
+ * @param {integer} sunday The id for the day pattern used for sunday.
+ * @param {integer} monday The id for the day pattern used for monday.
+ * @param {integer} tuesday The id for the day pattern used for tuesday.
+ * @param {integer} wednesday The id for the day pattern used for wednesday.
+ * @param {integer} thursday The id for the day pattern used for thursday.
+ * @param {integer} friday The id for the day pattern used for friday.
+ * @param {integer} saturday The id for the day pattern used for saturday.
  */
 router.post('/addWeek', adminAuthMiddleware('add week'), async (req, res) => {
 	const validWeek= {
@@ -101,31 +101,31 @@ router.post('/addWeek', adminAuthMiddleware('add week'), async (req, res) => {
 				]
 			},
 			sunday: {
-				type: 'number',
+				type: 'integer',
 				minimum: 0
 			},
 			monday: {
-				type: 'number',
+				type: 'integer',
 				minimum: 0
 			},
 			tuesday: {
-				type: 'number',
+				type: 'integer',
 				minimum: 0
 			},
 			wednesday: {
-				type: 'number',
+				type: 'integer',
 				minimum: 0
 			},
 			thursday: {
-				type: 'number',
+				type: 'integer',
 				minimum: 0
 			},
 			friday: {
-				type: 'number',
+				type: 'integer',
 				minimum: 0
 			},
 			saturday: {
-				type: 'number',
+				type: 'integer',
 				minimum: 0
 			}
 		}
@@ -166,13 +166,13 @@ router.post('/addWeek', adminAuthMiddleware('add week'), async (req, res) => {
  * @param {integer} id The id for the week to be edited.
  * @param {string} name The new name for the week.
  * @param {string} note The new notes for the week.
- * @param {number} sunday The new id for the day pattern used for sunday.
- * @param {number} monday The new id for the day pattern used for monday.
- * @param {number} tuesday The new id for the day pattern used for tuesday.
- * @param {number} wednesday The new id for the day pattern used for wednesday.
- * @param {number} thursday The new id for the day pattern used for thursday.
- * @param {number} friday The new id for the day pattern used for friday.
- * @param {number} saturday The new id for the day pattern used for saturday.
+ * @param {integer} sunday The new id for the day pattern used for sunday.
+ * @param {integer} monday The new id for the day pattern used for monday.
+ * @param {integer} tuesday The new id for the day pattern used for tuesday.
+ * @param {integer} wednesday The new id for the day pattern used for wednesday.
+ * @param {integer} thursday The new id for the day pattern used for thursday.
+ * @param {integer} friday The new id for the day pattern used for friday.
+ * @param {integer} saturday The new id for the day pattern used for saturday.
  */
 router.post('/edit', adminAuthMiddleware('edit week'), async (req, res) => {
 	const validWeek = {
@@ -195,32 +195,32 @@ router.post('/edit', adminAuthMiddleware('edit week'), async (req, res) => {
 				]
 			},
 			sunday: {
-				type: 'number',
+				type: 'integer',
 				minimum: 0
 				
 			},
 			monday: {
-				type: 'number',
+				type: 'integer',
 				minimum: 0
 			},
 			tuesday: {
-				type: 'number',
+				type: 'integer',
 				minimum: 0
 			},
 			wednesday: {
-				type: 'number',
+				type: 'integer',
 				minimum: 0
 			},
 			thursday: {
-				type: 'number',
+				type: 'integer',
 				minimum: 0
 			},
 			friday: {
-				type: 'number',
+				type: 'integer',
 				minimum: 0
 			},
 			saturday: {
-				type: 'number',
+				type: 'integer',
 				minimum: 0
 			}
 		}
