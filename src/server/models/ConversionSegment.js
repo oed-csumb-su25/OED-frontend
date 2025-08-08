@@ -6,6 +6,7 @@ const database = require('./database');
 const sqlFile = database.sqlFile;
 const { log } = require('../log');
 const { momentToIsoOrInfinity } = require('../util/handleTimestampValues');
+const { start } = require('repl');
 
 class ConversionSegment {
 	/**
@@ -107,10 +108,8 @@ class ConversionSegment {
 
 	/**
 	 * Split a segment in two, the earlier segment uses the new slope/intercept/pattern/note
-	 * @param {*} newWeekPatternsId The id of the weekly pattern for the new conversion segment.
-	 * @param {*} newSlope The slope for the new conversion segment.
-	 * @param {*} newIntercept The intercept for the new conversion segment.
-	 * @param {*} newNote Notes added by the admin for the new conversion segment.
+	 * @param {*} startTime When the current segment starts.
+	 * @param {*} endTime When the current segment ends.
 	 * @param {*} splitTime The time to split the segment at.
 	 * @param {*} conn The connection to use
 	 * @returns {Promise.<void>}
@@ -121,7 +120,7 @@ class ConversionSegment {
 			const earlierSegment = this;
 			await t.none(sqlFile('conversionSegment/insert_new_conversion_segment.sql'), earlierSegment);
 
-			// later segment - get current values and update start time
+			// get all original values of the segment being split
 			const originalSegment = await t.one(sqlFile('conversionSegment/get_by_source_destination_start_end.sql'), {
 				sourceId: this.sourceId,
 				destinationId: this.destinationId,
@@ -129,7 +128,7 @@ class ConversionSegment {
 				endTime: endTime
 			});
 
-			// update later segment
+			// later segment - update start time
 			await t.none(sqlFile('conversionSegment/update_conversion_segment.sql'), {
 				sourceId: this.sourceId,
 				destinationId: this.destinationId,
@@ -147,50 +146,39 @@ class ConversionSegment {
 
 	/**
 	 * Split a segment in two, the later segment uses the new slope/intercept/pattern/note
-	 * @param {*} newWeekPatternsId The id of the weekly pattern for the new conversion segment.
-	 * @param {*} newSlope The slope for the new conversion segment.
-	 * @param {*} newIntercept The intercept for the new conversion segment.
-	 * @param {*} newNote Notes added by the admin for the new conversion segment.
+	 * @param {*} startTime When the current segment starts.
+	 * @param {*} endTime When the current segment ends.
 	 * @param {*} splitTime The time to split the segment at.
 	 * @param {*} conn The connection to use
 	 * @returns {Promise.<void>}
 	 */
-	async splitLater(newWeekPatternsId, newSlope, newIntercept, newNote, splitTime, conn) {
+	async splitLater(startTime, endTime, splitTime, conn) {
 		return conn.tx(async t => {
-			// get all information for the original segment
-			const originalSegment = await getBySourceDestinationStartEnd(
-				this.sourceId,
-				this.destinationId,
-				this.startTime,
-				this.endTime,
-				t
-			);
+			// get all original values of the segment being split
+			const originalSegment = await t.one(sqlFile('conversionSegment/get_by_source_destination_start_end.sql'), {
+				sourceId: this.sourceId,
+				destinationId: this.destinationId,
+				startTime: startTime,
+				endTime: endTime
+			});
 
 			// earlier segment - update end time
-			const earlierSegment = {
-				sourceId: originalSegment.sourceId,
-				destinationId: originalSegment.destinationId,
+			await t.none(sqlFile('conversionSegment/update_conversion_segment.sql'), {
+				sourceId: this.sourceId,
+				destinationId: this.destinationId,
 				weekPatternsId: originalSegment.weekPatternsId,
 				slope: originalSegment.slope,
 				intercept: originalSegment.intercept,
-				startTime: originalSegment.startTime,
+				startTime: startTime,
 				endTime: splitTime,
-				note: originalSegment.note
-			};
-			await t.none(sqlFile('conversionSegment/update_conversion_segment.sql'), earlierSegment);
+				note: originalSegment.note,
+				originalStartTime: startTime,
+				originalEndTime: endTime
+			});
 
 			// later segment - insert new
-			const laterSegment = {
-				sourceId: originalSegment.sourceId,
-				destinationId: originalSegment.destinationId,
-				weekPatternsId: newWeekPatternsId,
-				slope: newSlope,
-				intercept: newIntercept,
-				startTime: splitTime,
-				endTime: originalSegment.endTime,
-				note: newNote
-			};
-			await t.none(sqlFile('conversionSegment/insert_conversion_segment.sql'), laterSegment);
+			const earlierSegment = this;
+			await t.none(sqlFile('conversionSegment/insert_new_conversion_segment.sql'), earlierSegment);
 		});
 	}
 

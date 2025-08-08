@@ -357,17 +357,19 @@ router.post('/splitLater', adminAuthMiddleware('split later conversion segment')
 	} else {
 		const conn = getConnection();
 		try {
-			const newConversionSegment = new ConversionSegment(
+			const laterSegment = new ConversionSegment(
 				req.body.sourceId, 
 				req.body.destinationId,
-				momentToIsoOrInfinity(req.body.startTime),
-				momentToIsoOrInfinity(req.body.endTime)
-			);
-			await newConversionSegment.splitLater(
 				req.body.newWeekPatternsId,
 				req.body.newSlope,
 				req.body.newIntercept,
-				req.body.newNote,
+				momentToIsoOrInfinity(req.body.splitTime),
+				momentToIsoOrInfinity(req.body.endTime),
+				req.body.newNote
+			);
+			await laterSegment.splitLater(
+				momentToIsoOrInfinity(req.body.startTime),
+				momentToIsoOrInfinity(req.body.endTime),
 				momentToIsoOrInfinity(req.body.splitTime),
 				conn
 			);
