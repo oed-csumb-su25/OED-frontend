@@ -182,7 +182,6 @@ class ConversionSegment {
 		});
 	}
 
-
 	/**
 	 * Updates an existed conversion segment in the database.
 	 * @param {*} originalStartTime The original start time of the segment being updated.

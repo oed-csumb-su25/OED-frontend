@@ -208,11 +208,11 @@ router.post('/addConversionSegment', adminAuthMiddleware('add conversion segment
  * POST split a segment in two, the earlier segment uses the new slope/intercept/pattern/note.
  * @param {int} sourceId The source meter's id.
  * @param {int} destinationId The destination meter's id.
+ * @param {string} startTime The start time of the conversion segment.
+ * @param {string} endTime The end time of the conversion segment.
  * @param {int} newWeekPatternsId The id of the weekly pattern for the new conversion segment.
  * @param {number} newSlope The slope for the new conversion segment.
  * @param {number} newIntercept The intercept for the new conversion segment.
- * @param {string} startTime The start time of the conversion segment.
- * @param {string} endTime The end time of the conversion segment.
  * @param {string} newNote Notes added by the admin for the new conversion segment.
  * @param {string} splitTime The time to split the segment at.
  */
@@ -297,11 +297,11 @@ router.post('/splitEarlier', adminAuthMiddleware('split earlier conversion segme
  * POST split a segment in two, the later segment uses the new slope/intercept/pattern/note.
  * @param {int} sourceId The source meter's id.
  * @param {int} destinationId The destination meter's id.
+ * @param {string} startTime The start time of the conversion segment.
+ * @param {string} endTime The end time of the conversion segment.
  * @param {int} newWeekPatternsId The id of the weekly pattern for the new conversion segment.
  * @param {number} newSlope The slope for the new conversion segment.
  * @param {number} newIntercept The intercept for the new conversion segment.
- * @param {string} startTime The start time of the conversion segment.
- * @param {string} endTime The end time of the conversion segment.
  * @param {string} newNote Notes added by the admin for the new conversion segment.
  * @param {string} splitTime The time to split the segment at.
  */
