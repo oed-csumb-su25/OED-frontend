@@ -168,7 +168,6 @@ router.post('/addDaySegment', adminAuthMiddleware('add day segment'), async (req
 /**
  * POST split day segment, the earlier segment uses the new slope/intercept/pattern/note
  * @param {integer} id The id of the day segment
- * @param {integer} newDayId The day id for the new day segment.
  * @param {number} newSlope The slope of the new day segment.
  * @param {number} newIntercept The intercept of the new day segment.
  * @param {string} newNote The notes for the new day segment.
@@ -177,16 +176,12 @@ router.post('/addDaySegment', adminAuthMiddleware('add day segment'), async (req
 router.post('/splitEarlier', adminAuthMiddleware('split earlier day segment'), async (req, res) => {
 	const validDaySegment = {
 		type: 'object',
-		maxProperties: 6,
-		required: ['id', 'newDayId', 'newSlope', 'newIntercept', 'splitTime'],
+		maxProperties: 5,
+		required: ['id', 'newSlope', 'newIntercept', 'splitTime'],
 		additionalProperties: false,
 		properties: {
 			id: {
 				type: 'integer',
-				minimum: 0
-			},
-			newDayId: {
-				type: 'integer', 
 				minimum: 0
 			},
 			newSlope: {
@@ -202,7 +197,9 @@ router.post('/splitEarlier', adminAuthMiddleware('split earlier day segment'), a
 				]
 			},
 			splitTime: {
-				type: 'string'
+				type: 'number',
+				minimum: 1,
+				maximum: 23
 			}
 		}
 	};
@@ -217,7 +214,6 @@ router.post('/splitEarlier', adminAuthMiddleware('split earlier day segment'), a
 		try {
 			await DaySegment.splitEarlier(
 				req.body.id,
-				req.body.newDayId,
 				req.body.newSlope,
 				req.body.newIntercept,
 				req.body.newNote,
@@ -270,7 +266,9 @@ router.post('/splitLater', adminAuthMiddleware('split later day segment'), async
 				]
 			},
 			splitTime: {
-				type: 'string'
+				type: 'number',
+				minimum: 1,
+				maximum: 23
 			}
 		}
 	};

@@ -6,7 +6,6 @@ const database = require('./database');
 const sqlFile = database.sqlFile;
 const { log } = require('../log');
 const { momentToIsoOrInfinity } = require('../util/handleTimestampValues');
-const { start } = require('repl');
 
 class ConversionSegment {
 	/**
