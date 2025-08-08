@@ -131,7 +131,7 @@ class ConversionSegment {
 				endTime: splitTime,
 				note: newNote
 			};
-			await t.none(sqlFile('conversionSegment/insert_conversion_segment.sql'), earlierSegment);
+			await t.none(sqlFile('conversionSegment/insert_new_conversion_segment.sql'), earlierSegment);
 
 			// later segment - update start time
 			const laterSegment = {

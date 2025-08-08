@@ -102,7 +102,7 @@ class DaySegment {
 	async splitEarlier(id, newDayId, newSlope, newIntercept, newNote, splitTime, conn) {
 		return conn.tx(async t => {
 			// get all data for the original segment
-			const originalSegment = await getByDayId(
+			const originalSegment = await getById(
 				id,
 				t
 			);
@@ -128,6 +128,49 @@ class DaySegment {
 				note: originalSegment.note
 			};
 			await t.none(sqlFile('daySegment/update_day_segment.sql'), laterSegment);
+		});
+	}
+
+	/**
+	 * Split a segment in two, the later segment uses the new slope/intercept/pattern/note
+	 * @param {*} id The id of the original day segment.
+	 * @param {*} newDayId The day id for the new day segment.
+	 * @param {*} newSlope The slope for the new day segment.
+	 * @param {*} newIntercept The intercept for the new day segment.
+	 * @param {*} newNote The note for the new day segment.
+	 * @param {*} splitTime The time to split the segment at.
+	 * @param {*} conn The connection to be used.
+	 * @returns {Promise.<void>}
+	 */
+	async splitLater(id, newDayId, newSlope, newIntercept, newNote, splitTime, conn) {
+		return conn.tx(async t => {
+			// get all data for the original segment
+			const originalSegment = await getById(
+				id,
+				t
+			);
+	
+			// earlier segment - update end time
+			const earlierSegment = {
+				dayId: originalSegment.dayId,
+				startHour: originalSegment.startHour,
+				endHour: splitTime,
+				slope: originalSegment.slope,
+				intercept: originalSegment.intercept,
+				note: originalSegment.note
+			};
+			await t.none(sqlFile('daySegment/update_new_day_segment.sql'), earlierSegment);
+	
+			// later segment - insert new
+			const laterSegment = {
+				dayId: newDayId,
+				startHour: originalSegment.startHour,
+				endHour: splitTime,
+				slope: newSlope,
+				intercept: newIntercept,
+				note: newNote
+			};
+			await t.none(sqlFile('daySegment/insert_new_day_segment.sql'), laterSegment);
 		});
 	}
 	

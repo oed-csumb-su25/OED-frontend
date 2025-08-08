@@ -166,7 +166,7 @@ router.post('/addDaySegment', adminAuthMiddleware('add day segment'), async (req
 });
 
 /**
- * POST split earlier day segment.
+ * POST split day segment, the earlier segment uses the new slope/intercept/pattern/note
  * @param {integer} id The id of the day segment
  * @param {integer} newDayId The day id for the new day segment.
  * @param {number} newSlope The slope of the new day segment.
@@ -227,6 +227,74 @@ router.post('/splitEarlier', adminAuthMiddleware('split earlier day segment'), a
 			success(res, `Successfully split day segment earlier`);
 		} catch (err) {
 			const errMsg = `Error while splitting day segment earlier with error(s): ${err}`;
+			log.error(errMsg);
+			failure(res, 500, errMsg);
+		}
+	}
+});
+
+/**
+ * POST split day segment, the later segment uses the new slope/intercept/pattern/note
+ * @param {integer} id The id of the day segment
+ * @param {integer} newDayId The day id for the new day segment.
+ * @param {number} newSlope The slope of the new day segment.
+ * @param {number} newIntercept The intercept of the new day segment.
+ * @param {string} newNote The notes for the new day segment.
+ * @param {string} splitTime The time to split the segment at.
+ */
+router.post('/splitLater', adminAuthMiddleware('split later day segment'), async (req, res) => {
+	const validDaySegment = {
+		type: 'object',
+		maxProperties: 6,
+		required: ['id', 'newDayId', 'newSlope', 'newIntercept', 'splitTime'],
+		additionalProperties: false,
+		properties: {
+			id: {
+				type: 'integer',
+				minimum: 0
+			},
+			newDayId: {
+				type: 'integer', 
+				minimum: 0
+			},
+			newSlope: {
+				type: 'number'
+			},
+			newIntercept: {
+				type: 'number'
+			},
+			newNote: {
+				oneOf: [
+					{ type: 'string' },
+					{ type: 'null' }
+				]
+			},
+			splitTime: {
+				type: 'string'
+			}
+		}
+	};
+
+	const validatorResult = validate(req.body, validDaySegment);
+	if (!validatorResult.valid) {
+		const errMsg = `Got request to split a day segment later with invalid day segment data, error(s): ${validatorResult.errors}`;
+		log.warn(errMsg);
+		failure(res, 400, errMsg);
+	} else {
+		const conn = getConnection();
+		try {
+			await DaySegment.splitLater(
+				req.body.id,
+				req.body.newDayId,
+				req.body.newSlope,
+				req.body.newIntercept,
+				req.body.newNote,
+				req.body.splitTime,
+				conn
+			);
+			success(res, `Successfully split day segment later`);
+		} catch (err) {
+			const errMsg = `Error while splitting day segment later with error(s): ${err}`;
 			log.error(errMsg);
 			failure(res, 500, errMsg);
 		}
