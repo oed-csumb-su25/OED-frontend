@@ -2,6 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+const { original } = require('@reduxjs/toolkit');
 const database = require('./database');
 const sqlFile = database.sqlFile;
 
@@ -85,6 +86,49 @@ class DaySegment {
 	async insert(conn) {
 		const daySegment = this;
 		await conn.none(sqlFile('daySegment/insert_new_day_segment.sql'), daySegment);
+	}
+
+	/**
+	 * Split a segment in two, the earlier segment uses the new slope/intercept/pattern/note
+	 * @param {*} id The id of the original day segment.
+	 * @param {*} newDayId The day id for the new day segment.
+	 * @param {*} newSlope The slope for the new day segment.
+	 * @param {*} newIntercept The intercept for the new day segment.
+	 * @param {*} newNote The note for the new day segment.
+	 * @param {*} splitTime The time to split the segment at.
+	 * @param {*} conn The connection to be used.
+	 * @returns {Promise.<void>}
+	 */
+	async splitEarlier(id, newDayId, newSlope, newIntercept, newNote, splitTime, conn) {
+		return conn.tx(async t => {
+			// get all data for the original segment
+			const originalSegment = await getByDayId(
+				id,
+				t
+			);
+
+			// earlier segment - insert new
+			const earlierSegment = {
+				dayId: newDayId,
+				startHour: originalSegment.startHour,
+				endHour: splitTime,
+				slope: newSlope,
+				intercept: newIntercept,
+				note: newNote
+			};
+			await t.none(sqlFile('daySegment/insert_new_day_segment.sql'), earlierSegment);
+
+			// later segment - update start time
+			const laterSegment = {
+				dayId: originalSegment.dayId,
+				startHour: splitTime,
+				endHour: originalSegment.endHour,
+				slope: originalSegment.slope,
+				intercept: originalSegment.intercept,
+				note: originalSegment.note
+			};
+			await t.none(sqlFile('daySegment/update_day_segment.sql'), laterSegment);
+		});
 	}
 	
 	/**
