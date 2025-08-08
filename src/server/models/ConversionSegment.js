@@ -103,6 +103,15 @@ class ConversionSegment {
 			log.error(errMsg);
 			throw new Error(errMsg);
 		}
+
+		// check it doesn't exist in the database
+		const row = await conn.any(sqlFile('conversionSegment/get_by_source_destination.sql'), conversionSegment);
+		if (row.length > 0) {
+			const errMsg = `Segment(s) exist for this conversion.`;
+			log.error(errMsg);
+			throw new Error(errMsg);
+		}
+
 		await conn.none(sqlFile('conversionSegment/insert_new_conversion_segment.sql'), conversionSegment);
 	}
 

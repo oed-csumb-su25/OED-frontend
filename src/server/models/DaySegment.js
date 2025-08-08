@@ -85,12 +85,22 @@ class DaySegment {
 	 */
 	async insert(conn) {
 		const daySegment = this;
+
 		// check that the segment spans 0 to 24
 		if (this.startHour !== 0 || this.endHour !== 24) {
 			const errMsg = `Only time ranges spanning from 0 to 24 are allowed for insertion.`;
 			log.error(errMsg);
 			throw new Error(errMsg);
 		}
+
+		// check it doesn't exist in the database
+		const row = await conn.any(sqlFile('daySegment/get_by_dayId.sql'), daySegment);
+		if (row.length > 0) {
+			const errMsg = `Segment(s) exist for this day.`;
+			log.error(errMsg);
+			throw new Error(errMsg);
+		}
+
 		await conn.none(sqlFile('daySegment/insert_new_day_segment.sql'), daySegment);
 	}
 
