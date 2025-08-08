@@ -106,7 +106,7 @@ class DaySegment {
 	}
 
 	/**
-	 * Split a segment in two, the earlier segment uses the new slope/intercept/pattern/note
+	 * Split a segment in two, the earlier segment uses the new slope/intercept/note
 	 * @param {*} id The id of the original day segment.
 	 * @param {*} newSlope The slope for the new day segment.
 	 * @param {*} newIntercept The intercept for the new day segment.
@@ -156,9 +156,8 @@ class DaySegment {
 	}
 
 	/**
-	 * Split a segment in two, the later segment uses the new slope/intercept/pattern/note
+	 * Split a segment in two, the later segment uses the new slope/intercept/note
 	 * @param {*} id The id of the original day segment.
-	 * @param {*} newDayId The day id for the new day segment.
 	 * @param {*} newSlope The slope for the new day segment.
 	 * @param {*} newIntercept The intercept for the new day segment.
 	 * @param {*} newNote The note for the new day segment.
@@ -166,42 +165,43 @@ class DaySegment {
 	 * @param {*} conn The connection to be used.
 	 * @returns {Promise.<void>}
 	 */
-	static async splitLater(id, newDayId, newSlope, newIntercept, newNote, splitTime, conn) {
+	static async splitLater(id, newSlope, newIntercept, newNote, splitTime, conn) {
 		return conn.tx(async t => {
 			// get all data for the original segment
-			const originalSegment = await getById(
-				id,
-				t
-			);
+			const originalSegment = await t.one(sqlFile('daySegment/get_by_id.sql'), {
+				id: id
+			});
 
 			// split time must be between original start and end time
-			if (!(splitTime > originalSegment.startHour && splitTime < originalSegment.endHour)) {
-				const errMsg = `The time to split the segment at must be within the range of the original segment.`;
+			if (!(splitTime > originalSegment.start_hour && splitTime < originalSegment.end_hour)) {
+				const errMsg = `The time to split the segment at must be within the range of the original segment: ${originalSegment.start_hour} and ${originalSegment.end_hour}`;
 				log.error(errMsg);
 				throw new Error(errMsg);
 			}
-	
-			// earlier segment - update end time
-			const earlierSegment = {
-				dayId: originalSegment.dayId,
-				startHour: originalSegment.startHour,
-				endHour: splitTime,
-				slope: originalSegment.slope,
-				intercept: originalSegment.intercept,
-				note: originalSegment.note
-			};
-			await t.none(sqlFile('daySegment/update_new_day_segment.sql'), earlierSegment);
-	
+
 			// later segment - insert new
 			const laterSegment = {
-				dayId: newDayId,
-				startHour: originalSegment.startHour,
-				endHour: splitTime,
+				dayId: originalSegment.day_id,
+				startHour: splitTime,
+				endHour: originalSegment.end_hour,
 				slope: newSlope,
 				intercept: newIntercept,
 				note: newNote
 			};
+
+			// console.log(earlierSegment);
 			await t.none(sqlFile('daySegment/insert_new_day_segment.sql'), laterSegment);
+
+			// earlier segment - update end time
+			await t.none(sqlFile('daySegment/update_day_segment.sql'), {
+				id: id,
+				dayId: originalSegment.day_id,
+				startHour: originalSegment.start_hour,
+				endHour: splitTime,
+				slope: originalSegment.slope,
+				intercept: originalSegment.intercept,
+				note: originalSegment.note
+			});
 		});
 	}
 	
