@@ -205,7 +205,7 @@ router.post('/addConversionSegment', adminAuthMiddleware('add conversion segment
 });
 
 /**
- * POST split a segment in two, the earlier segment uses the new slope/intercept/pattern.
+ * POST split a segment in two, the earlier segment uses the new slope/intercept/pattern/note.
  * @param {int} sourceId The source meter's id.
  * @param {int} destinationId The destination meter's id.
  * @param {int} newWeekPatternsId The id of the weekly pattern for the new conversion segment.
