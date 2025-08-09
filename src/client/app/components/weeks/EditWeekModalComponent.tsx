@@ -71,16 +71,24 @@ export default function EditWeekModalComponent(props: EditWeekModalComponentProp
 		setWeekDetails({ ...weekDetails, [e.target.name]: Number(e.target.value) });
 	};
 
+	const isWeekUnchanged = React.useMemo(() => {
+		return weekDetails.name === props.week.name &&
+			weekDetails.note === props.week.note &&
+			weekDetails.sunday === props.week.sunday &&
+			weekDetails.monday === props.week.monday &&
+			weekDetails.tuesday === props.week.tuesday &&
+			weekDetails.wednesday === props.week.wednesday &&
+			weekDetails.thursday === props.week.thursday &&
+			weekDetails.friday === props.week.friday &&
+			weekDetails.saturday === props.week.saturday;
+	}, [weekDetails, props.week]);
+
 	// Function to handle form submission. Validates the week details and submits them to the API
 	const handleSubmit = () => {
-		if (!isWeekNameValid) {
-			return;
-		}
-
+		props.handleClose();
 		editWeekMutation(weekDetails).unwrap()
 			.then(() => {
 				showSuccessNotification(translate('week.edit.success'));
-				props.handleClose();
 			})
 			.catch(error => {
 				showErrorNotification(translate('week.edit.failure') + error);
@@ -126,7 +134,7 @@ export default function EditWeekModalComponent(props: EditWeekModalComponentProp
 
 	return (
 		<>
-			<Modal isOpen={props.show} toggle={props.handleClose} backdrop="static" onClosed={resetState}>
+			<Modal isOpen={props.show} toggle={props.handleClose} onClosed={resetState}>
 				<ModalHeader toggle={props.handleClose}>
 					<FormattedMessage id="week.edit" />
 					<TooltipHelpComponent page="week-edit" />
@@ -222,7 +230,7 @@ export default function EditWeekModalComponent(props: EditWeekModalComponentProp
 					<Button
 						color="primary"
 						onClick={handleSubmit}
-						disabled={!isWeekNameValid || isSaving || isDeleting}
+						disabled={isWeekUnchanged || !isWeekNameValid || isSaving || isDeleting}
 					>
 						<FormattedMessage id="save.all" />
 					</Button>
