@@ -108,7 +108,7 @@ export default function EditDaySegmentModalComponent(props: EditDaySegmentModalC
 	return (
 		<>
 			<Modal isOpen={props.show} toggle={props.handleClose}>
-				<ModalHeader toggle={props.handleClose}>
+				<ModalHeader>
 					<FormattedMessage id="edit.segment.title" />
 				</ModalHeader>
 				<ModalBody>

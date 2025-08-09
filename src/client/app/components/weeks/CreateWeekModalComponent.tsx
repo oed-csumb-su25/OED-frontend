@@ -124,7 +124,7 @@ export default function CreateWeekModalComponent(): React.ReactElement {
 				isOpen={showModal}
 				toggle={handleCloseModal}
 			>
-				<ModalHeader toggle={handleCloseModal}>
+				<ModalHeader>
 					<FormattedMessage id="week.create" />
 					<TooltipHelpComponent page="week-create" />
 					<div style={tooltipBaseStyle}>

@@ -135,7 +135,7 @@ export default function EditWeekModalComponent(props: EditWeekModalComponentProp
 	return (
 		<>
 			<Modal isOpen={props.show} toggle={props.handleClose} onClosed={resetState}>
-				<ModalHeader toggle={props.handleClose}>
+				<ModalHeader>
 					<FormattedMessage id="week.edit" />
 					<TooltipHelpComponent page="week-edit" />
 					<div style={tooltipBaseStyle}>
