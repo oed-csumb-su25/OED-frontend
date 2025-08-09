@@ -6,7 +6,7 @@ import { baseApi } from './baseApi';
 import { ConversionSegmentData } from '../../types/redux/conversionSegments';
 
 /**
- * This file defines the segmentsApi using RTK Query.
+ * This file defines the conversionSegmentsApi using RTK Query.
  * It provides endpoints for fetching, adding, deleting, and editing conversion segments.
  * The API is injected into the baseApi created in baseApi.ts.
  */
