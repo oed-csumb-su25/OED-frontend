@@ -880,6 +880,7 @@ export default function EditConversionModalComponent(props: EditConversionModalC
 											<td
 												style={{ cursor: 'pointer' }}
 												onClick={() => handleNoteModal(segment)}
+												aria-label={segment.note}
 											>
 												{(segment.note ?? '').length > 30 ? `${segment.note.slice(0, 30)} ...` : segment.note || ''}
 											</td>
