@@ -5,18 +5,22 @@
 import * as React from 'react';
 import { FormattedMessage } from 'react-intl';
 import {
-	Button, Col, Container, FormFeedback,
+	Button,
+	Container, FormFeedback,
 	FormGroup, Input, Label, Modal, ModalBody, ModalFooter,
 	ModalHeader, Pagination, PaginationItem, PaginationLink,
-	Row, Table
+	Table
 } from 'reactstrap';
 import { Day, DaySegment } from 'types/redux/days';
 import { daysApi } from '../../redux/api/daysApi';
 import { daySegmentsApi } from '../../redux/api/daySegmentsApi';
+import { tooltipBaseStyle } from '../../styles/modalStyle';
 import { LocaleDataKey } from '../../translations/data';
 import { showErrorNotification, showSuccessNotification } from '../../utils/notifications';
 import translate from '../../utils/translate';
 import ConfirmActionModalComponent from '../ConfirmActionModalComponent';
+import TooltipHelpComponent from '../TooltipHelpComponent';
+import TooltipMarkerComponent from '../TooltipMarkerComponent';
 import DeleteDaySegmentComponent from './DeleteDaySegmentComponent';
 import EditDaySegmentModalComponent from './EditDaySegmentModalComponent';
 import SplitDaySegmentComponent from './SplitDaySegmentComponent';
@@ -36,13 +40,13 @@ export interface EditDayModalComponentProps {
 	handleClose: () => void;
 }
 
-
 /**
  * Defines a modal that allows editing of an existing day and its segments, with options to edit, split, and delete them.
  * @param props The properties for the component
  * @returns Day edit element
  */
 export default function EditDayModalComponent(props: EditDayModalComponentProps) {
+	const PER_PAGE = 10;
 
 	const [dayDetails, setDayDetails] = React.useState({ ...props.day });
 
@@ -58,21 +62,16 @@ export default function EditDayModalComponent(props: EditDayModalComponentProps)
 	};
 
 	const handleSubmit = () => {
-		if (!isDayValid) {
-			return;
-		}
-
+		props.handleClose();
 		editDayMutation(dayDetails).unwrap()
 			.then(() => {
 				showSuccessNotification(translate('day.edit.success'));
-				props.handleClose();
 			}).catch(() => {
 				showErrorNotification(translate('day.edit.error'));
 			});
 	};
 
 	// Pagination
-	const PER_PAGE = 10;
 	const [page, setPage] = React.useState(1);
 	const totalPages = Math.ceil(daySegments.length / PER_PAGE);
 	const paged = daySegments.slice((page - 1) * PER_PAGE, page * PER_PAGE);
@@ -82,7 +81,7 @@ export default function EditDayModalComponent(props: EditDayModalComponentProps)
 	const [nameValidationMessageId, setNameValidationMessageId] = React.useState<LocaleDataKey | null>(null);
 
 	// Validate the day name to ensure it is not empty and does not already exist
-	const isDayValid = React.useMemo(() => {
+	const isNameValid = React.useMemo(() => {
 		if (dayDetails.name === '') {
 			setNameValidationMessageId('day.create.name.required');
 			return false;
@@ -115,6 +114,17 @@ export default function EditDayModalComponent(props: EditDayModalComponentProps)
 		setEditSegment(null);
 	};
 
+	// State to hold the segment for showing segment notes in a modal
+	const [noteSegment, setNoteSegment] = React.useState<DaySegment | null>(null);
+	// The note modal is shown when a segment note is clicked
+	const showNoteModal = Boolean(noteSegment);
+	const handleShowNoteModal = (segment: DaySegment) => {
+		setNoteSegment(segment);
+	};
+	const handleCloseNoteModal = () => {
+		setNoteSegment(null);
+	};
+
 	// Delete day confirmation modal
 	const [showDeleteModal, setShowDeleteModal] = React.useState(false);
 	const [deleteDayMutation, { isLoading: isDeleting }] = daysApi.useDeleteDayMutation();
@@ -135,30 +145,30 @@ export default function EditDayModalComponent(props: EditDayModalComponentProps)
 	return (
 		<>
 			<Modal isOpen={props.show} toggle={props.handleClose} size="xl">
-				<ModalHeader toggle={props.handleClose}>
+				<ModalHeader>
 					<FormattedMessage id="day.edit" />
+					<TooltipHelpComponent page="day-edit" />
+					<div style={tooltipBaseStyle}>
+						<TooltipMarkerComponent page="day-edit" helpTextId="help.admin.dayedit" />
+					</div>
 				</ModalHeader>
 
 				<ModalBody>
 					<Container>
-						{/* Name and Note */}
-						<Row>
-							<Col>
-								<FormGroup>
-									<Label for="name">{translate('name')}</Label>
-									<Input id="name" name="name" required value={dayDetails.name} onChange={handleStringChange} invalid={!isDayValid} />
-									<FormFeedback>
-										{nameValidationMessageId && <FormattedMessage id={nameValidationMessageId as string} />}
-									</FormFeedback>
-								</FormGroup>
-							</Col>
-							<Col>
-								<FormGroup>
-									<Label for="note">{translate('note')}</Label>
-									<Input id="note" name="note" value={dayDetails.note} onChange={handleStringChange} />
-								</FormGroup>
-							</Col>
-						</Row>
+						{/* Name */}
+						<FormGroup>
+							<Label for="name">{translate('name')}</Label>
+							<Input id="name" name="name" required value={dayDetails.name} onChange={handleStringChange} invalid={!isNameValid} />
+							<FormFeedback>
+								{nameValidationMessageId && <FormattedMessage id={nameValidationMessageId as string} />}
+							</FormFeedback>
+						</FormGroup>
+						{/* Note */}
+						<FormGroup>
+							<Label for="note">{translate('note')}</Label>
+							<Input id="note" name="note" type="textarea" value={dayDetails.note} onChange={handleStringChange} />
+						</FormGroup>
+
 						<hr />
 						{/* Table */}
 						<h5 className="mt-3 mb-2"><FormattedMessage id="day.segments.table.title" /></h5>
@@ -182,7 +192,11 @@ export default function EditDayModalComponent(props: EditDayModalComponentProps)
 										<td>{seg.startHour} - {seg.endHour}</td>
 										<td>{seg.slope}</td>
 										<td>{seg.intercept}</td>
-										<td title={seg.note}>
+										<td
+											style={{ cursor: 'pointer' }}
+											onClick={() => handleShowNoteModal(seg)}
+											aria-label={seg.note}
+										>
 											{(seg.note ?? '').length > 30 ? `${seg.note?.slice(0, 30)} ...` : seg.note || ''}
 										</td>
 										<td>
@@ -247,7 +261,7 @@ export default function EditDayModalComponent(props: EditDayModalComponentProps)
 					<Button color="secondary" onClick={props.handleClose}>
 						<FormattedMessage id="day.edit.discard" />
 					</Button>
-					<Button color="primary" onClick={handleSubmit} disabled={isDayUnchanged || !isDayValid || isSaving || isDeleting}>
+					<Button color="primary" onClick={handleSubmit} disabled={isDayUnchanged || !isNameValid || isSaving || isDeleting}>
 						<FormattedMessage id="day.edit.save" />
 					</Button>
 				</ModalFooter>
@@ -261,6 +275,16 @@ export default function EditDayModalComponent(props: EditDayModalComponentProps)
 					actionConfirmText={translate('day.delete.button')}
 					actionRejectText={translate('cancel')}
 				/>
+
+				{/* Segment note modal */}
+				<Modal isOpen={showNoteModal} toggle={handleCloseNoteModal}>
+					<ModalHeader>
+						{noteSegment?.startHour} - {noteSegment?.endHour}
+					</ModalHeader>
+					<ModalBody>
+						{noteSegment?.note}
+					</ModalBody>
+				</Modal>
 			</Modal >
 
 			{/* Edit Day Segment modal */}
