@@ -1,6 +1,7 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
 * License, v. 2.0. If a copy of the MPL was not distributed with this
 * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 import * as moment from 'moment-timezone';
 import * as React from 'react';
 // Realize that * is already imported from react
@@ -55,8 +56,6 @@ const tableSectionDividerStyle: React.CSSProperties = {
 	position: 'relative'
 };
 
-const PER_TABLE = 10;
-
 /**
  * Defines the edit conversion modal form
  * @param props Props for the component
@@ -80,6 +79,7 @@ export default function EditConversionModalComponent(props: EditConversionModalC
 	const unitDataById = useAppSelector(selectUnitDataById);
 	const meterDataById = useAppSelector(selectMeterDataById);
 	const conversionDetails = useAppSelector(selectConversionsDetails);
+
 	// Set existing conversion values
 	const values = { ...props.conversion };
 
@@ -103,6 +103,7 @@ export default function EditConversionModalComponent(props: EditConversionModalC
 	const refetchSegments = getSegments.refetch;
 	const weekPatterns = getWeeks.data ?? [];
 
+	const PER_TABLE = 10;
 	const totalPages = Math.ceil(segments.length / PER_TABLE);
 
 	const handleStringChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -117,15 +118,15 @@ export default function EditConversionModalComponent(props: EditConversionModalC
 		setEditingSegment(prev => ({
 			...prev!,
 			[e.target.name]: Number(e.target.value), // dynamically sets either slope or intercept
-			weekPatternsId: null // reset pattern if editing slope/intercept
+			weekPatternsId: -99 // reset pattern if editing slope/intercept
 		}));
 	};
 
 	// Updates the pattern and resets slope/intercept if "No Pattern" is selected
 	const handlePatternChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-		const selectedPattern = e.target.value;
+		const selectedPattern = Number(e.target.value);
 		setEditingSegment(prev => {
-			if (selectedPattern === 'No Pattern') {
+			if (selectedPattern === -99) {
 				return {
 					...prev!,
 					weekPatternsId: -99,
@@ -135,7 +136,7 @@ export default function EditConversionModalComponent(props: EditConversionModalC
 			} else {
 				return {
 					...prev!,
-					weekPatternsId: Number(selectedPattern)
+					weekPatternsId: selectedPattern
 				};
 			}
 		});
@@ -202,7 +203,7 @@ export default function EditConversionModalComponent(props: EditConversionModalC
 			destinationId: selectedSegment!.destinationId,
 			slope: selectedSegment!.slope,
 			intercept: selectedSegment!.intercept,
-			weekPatternsId: selectedSegment!.weekPatternsId ?? null,
+			weekPatternsId: selectedSegment!.weekPatternsId,
 			note: selectedSegment!.note
 		};
 
@@ -700,10 +701,10 @@ export default function EditConversionModalComponent(props: EditConversionModalC
 								id='pattern'
 								name='pattern'
 								type='select'
-								value={editingSegment?.weekPatternsId === -99 ? 'No Pattern' : editingSegment?.weekPatternsId ?? ''}
+								value={editingSegment?.weekPatternsId ?? -99}
 								onChange={e => handlePatternChange(e)}
 							>
-								<option value='No Pattern'>No Pattern</option>
+								<option value={-99}>No Pattern</option>
 								{weekPatterns.map(pattern => (
 									<option key={pattern.id} value={pattern.id}>{pattern.name}</option>
 								))}
@@ -722,7 +723,7 @@ export default function EditConversionModalComponent(props: EditConversionModalC
 						{editingSegment &&
 							editingSegment.slope === 0 &&
 							editingSegment.intercept === 0 &&
-							editingSegment.weekPatternsId === null && (
+							editingSegment.weekPatternsId === -99 && (
 							<div style={{ color: 'orange', fontWeight: '500', marginRight: 'auto' }}>
 								<FormattedMessage
 									id='conversion.warning.segment.neutral'
@@ -874,8 +875,8 @@ export default function EditConversionModalComponent(props: EditConversionModalC
 									.map(segment => (
 										<tr key={`${segment.sourceId}-${segment.destinationId}-${segment.startTime}`}>
 											<td>{segment.startTime} to {segment.endTime}</td>
-											<td>{segment.weekPatternsId === null ? segment.slope : ''}</td>
-											<td>{segment.weekPatternsId === null ? segment.intercept : ''}</td>
+											<td>{(segment.weekPatternsId ?? -99) === -99 ? segment.slope : ''}</td>
+											<td>{(segment.weekPatternsId ?? -99) === -99 ? segment.intercept : ''}</td>
 											<td>{weekPatterns.find(wp => wp.id === segment.weekPatternsId)?.name ?? ''}</td>
 											<td
 												style={{ cursor: 'pointer' }}
@@ -887,6 +888,7 @@ export default function EditConversionModalComponent(props: EditConversionModalC
 												<Button style={tableButtonStyle} color='secondary' onClick={() => {
 													setEditingSegment({
 														...segment,
+														weekPatternsId: segment.weekPatternsId ?? -99,
 														startTime: moment.utc(segment.startTime).format('YYYY-MM-DD HH:mm:ss'),
 														endTime: moment.utc(segment.endTime).format('YYYY-MM-DD HH:mm:ss'),
 														originalStartTime: segment.startTime,

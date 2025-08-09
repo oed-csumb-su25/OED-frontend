@@ -14,7 +14,7 @@ export interface ConversionSegmentData {
 	endTime: string;
 	slope: number;
 	intercept: number;
-	weekPatternsId: number | null;
+	weekPatternsId: number;
 	note: string;
 }
 
