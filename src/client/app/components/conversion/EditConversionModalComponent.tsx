@@ -1,19 +1,27 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
 * License, v. 2.0. If a copy of the MPL was not distributed with this
 * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-import * as React from 'react';
 import * as moment from 'moment-timezone';
+import * as React from 'react';
 // Realize that * is already imported from react
 import { useState } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
-import { Button, Col, Container, FormGroup, FormFeedback, Input, Label, Modal, ModalBody, ModalFooter, ModalHeader, Row, Table,
-	PaginationItem, PaginationLink, Pagination} from 'reactstrap';
-import TooltipHelpComponent from '../TooltipHelpComponent';
+import { toast } from 'react-toastify';
+import {
+	Button, Col, Container,
+	FormFeedback,
+	FormGroup,
+	Input, Label, Modal, ModalBody, ModalFooter, ModalHeader,
+	Pagination,
+	PaginationItem, PaginationLink,
+	Row, Table
+} from 'reactstrap';
 import { conversionsApi, selectConversionsDetails } from '../../redux/api/conversionsApi';
 import { conversionSegmentsApi } from '../../redux/api/conversionSegmentsApi';
-import { weeksApi } from '../../redux/api/weeksApi';
 import { selectMeterDataById } from '../../redux/api/metersApi';
 import { selectUnitDataById } from '../../redux/api/unitsApi';
+import { weeksApi } from '../../redux/api/weeksApi';
+import { useTranslate } from '../../redux/componentHooks';
 import { useAppSelector } from '../../redux/reduxHooks';
 import '../../styles/modal.css';
 import { tooltipBaseStyle } from '../../styles/modalStyle';
@@ -22,10 +30,9 @@ import { ConversionData } from '../../types/redux/conversions';
 import { ConversionSegmentData, UpdateConversionSegmentPayload } from '../../types/redux/conversionSegments';
 import { UnitData, UnitType } from '../../types/redux/units';
 import { showErrorNotification } from '../../utils/notifications';
-import { useTranslate } from '../../redux/componentHooks';
 import ConfirmActionModalComponent from '../ConfirmActionModalComponent';
+import TooltipHelpComponent from '../TooltipHelpComponent';
 import TooltipMarkerComponent from '../TooltipMarkerComponent';
-import { toast } from 'react-toastify';
 
 interface EditConversionModalComponentProps {
 	show: boolean;
@@ -103,7 +110,7 @@ export default function EditConversionModalComponent(props: EditConversionModalC
 	};
 
 	const handleBooleanChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-		setState({...state, [e.target.name]: JSON.parse(e.target.value) });
+		setState({ ...state, [e.target.name]: JSON.parse(e.target.value) });
 	};
 
 	const handleSegmentNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -155,13 +162,13 @@ export default function EditConversionModalComponent(props: EditConversionModalC
 		if (e.target.name === 'splitDatetime') {
 			setActionDatetime(e.target.value);
 			setFieldErrors(prev => (prev.errorField === 'splitDatetime' ? {} : prev));
-		// Handle if editing a segment
+			// Handle if editing a segment
 		} else if (editingSegment && (e.target.name === 'startTime' || e.target.name === 'endTime')) {
 			setEditingSegment(prev => ({
 				...prev!,
 				[e.target.name]: e.target.value
 			}));
-			setFieldErrors(prev => (prev.errorField === e.target.name? {} : prev));
+			setFieldErrors(prev => (prev.errorField === e.target.name ? {} : prev));
 		}
 	};
 
@@ -477,7 +484,9 @@ export default function EditConversionModalComponent(props: EditConversionModalC
 			editConversion({
 				conversionData: {
 					...state,
-					bidirectional: (isMeterSource() || isSuffixUsed()) ? false : state.bidirectional }, shouldRedoCik });
+					bidirectional: (isMeterSource() || isSuffixUsed()) ? false : state.bidirectional
+				}, shouldRedoCik
+			});
 		}
 	};
 	const handleWarningCancel = () => {
@@ -503,11 +512,13 @@ export default function EditConversionModalComponent(props: EditConversionModalC
 			editConversion({
 				conversionData: {
 					...state,
-					bidirectional: (isMeterSource() || isSuffixUsed()) ? false : state.bidirectional }, shouldRedoCik });
+					bidirectional: (isMeterSource() || isSuffixUsed()) ? false : state.bidirectional
+				}, shouldRedoCik
+			});
 		}
 	};
 
-	const handleSaveSegment = async() => {
+	const handleSaveSegment = async () => {
 		// Prevent saving if start time or end time is not in valid format and display error message
 		const isStartTimeValid = moment(editingSegment?.startTime, 'YYYY-MM-DD HH:mm:ss', true).isValid() || editingSegment?.startTime === '-infinity';
 		const isEndTimeValid = moment(editingSegment?.endTime, 'YYYY-MM-DD HH:mm:ss', true).isValid() || editingSegment?.endTime === 'infinity';
@@ -544,7 +555,7 @@ export default function EditConversionModalComponent(props: EditConversionModalC
 			const next = segments[index + 1];
 			// Check for gaps/overlaps with previous segment
 			if (previous && !moment.utc(editingSegment.startTime, 'YYYY-MM-DD HH:mm:ss').isSame(moment.utc(previous.endTime))) {
-				setFieldErrors(prev =>({
+				setFieldErrors(prev => ({
 					...prev,
 					segmentTimeError: intl.formatMessage(
 						{ id: 'conversion.error.segment.startTimeMismatch' },
@@ -556,7 +567,7 @@ export default function EditConversionModalComponent(props: EditConversionModalC
 			}
 			// Check for gaps/overlaps with next segment
 			if (next && !moment.utc(editingSegment.endTime, 'YYYY-MM-DD HH:mm:ss').isSame(moment.utc(next.startTime))) {
-				setFieldErrors(prev =>({
+				setFieldErrors(prev => ({
 					...prev,
 					segmentTimeError: intl.formatMessage(
 						{ id: 'conversion.error.segment.endTimeMismatch' },
@@ -728,7 +739,7 @@ export default function EditConversionModalComponent(props: EditConversionModalC
 			{showSplitSegmentModal && (
 				<Modal isOpen={showSplitSegmentModal} toggle={() => setShowSplitSegmentModal(false)}>
 					<ModalHeader>
-						<FormattedMessage id={`conversion.table.split.${actionDirection}`}/>
+						<FormattedMessage id={`conversion.table.split.${actionDirection}`} />
 						<p style={{ fontSize: '1.1rem', color: 'black' }}>
 							{selectedSegment?.startTime} to {selectedSegment?.endTime}
 						</p>
@@ -818,12 +829,12 @@ export default function EditConversionModalComponent(props: EditConversionModalC
 							</Input>
 							{isMeterSource() && state.bidirectional === true && (
 								<FormFeedback className='d-block'>
-									<FormattedMessage id='conversion.bidirectional.disabled.meter'/>
+									<FormattedMessage id='conversion.bidirectional.disabled.meter' />
 								</FormFeedback>
 							)}
 							{isSuffixUsed() && state.bidirectional === true && (
 								<FormFeedback className='d-block'>
-									<FormattedMessage id='conversion.bidirectional.disabled.suffix'/>
+									<FormattedMessage id='conversion.bidirectional.disabled.suffix' />
 								</FormFeedback>
 							)}
 						</FormGroup>
@@ -846,16 +857,16 @@ export default function EditConversionModalComponent(props: EditConversionModalC
 						<Table striped bordered>
 							<thead>
 								<tr>
-									<th><FormattedMessage id='date.range'/></th>
-									<th><FormattedMessage id='conversion.slope'/></th>
-									<th><FormattedMessage id='conversion.intercept'/></th>
-									<th><FormattedMessage id='conversion.pattern'/></th>
-									<th><FormattedMessage id='note'/></th>
-									<th><FormattedMessage id='edit'/></th>
-									<th><FormattedMessage id='conversion.table.split.earlier'/></th>
-									<th><FormattedMessage id='conversion.table.split.later'/></th>
-									<th><FormattedMessage id='conversion.table.delete.earlier'/></th>
-									<th><FormattedMessage id='conversion.table.delete.later'/></th>
+									<th><FormattedMessage id='date.range' /></th>
+									<th><FormattedMessage id='conversion.slope' /></th>
+									<th><FormattedMessage id='conversion.intercept' /></th>
+									<th><FormattedMessage id='conversion.pattern' /></th>
+									<th><FormattedMessage id='note' /></th>
+									<th><FormattedMessage id='edit' /></th>
+									<th><FormattedMessage id='conversion.table.split.earlier' /></th>
+									<th><FormattedMessage id='conversion.table.split.later' /></th>
+									<th><FormattedMessage id='conversion.table.delete.earlier' /></th>
+									<th><FormattedMessage id='conversion.table.delete.later' /></th>
 								</tr>
 							</thead>
 							<tbody>
@@ -884,7 +895,7 @@ export default function EditConversionModalComponent(props: EditConversionModalC
 													setFieldErrors({});
 													setShowEditSegmentModal(true);
 												}}>
-													<FormattedMessage id='edit'/>
+													<FormattedMessage id='edit' />
 												</Button>
 											</td>
 											<td><Button
@@ -927,7 +938,7 @@ export default function EditConversionModalComponent(props: EditConversionModalC
 											<td><Button
 												style={tableButtonStyle}
 												color='danger'
-												disabled={segments.length === 1 ||segment.endTime === 'infinity'}
+												disabled={segments.length === 1 || segment.endTime === 'infinity'}
 												onClick={() => {
 													setActionDirection('later');
 													setSelectedSegment(segment);
@@ -990,7 +1001,7 @@ export default function EditConversionModalComponent(props: EditConversionModalC
 					<Button
 						color='primary'
 						onClick={handleSaveChanges}
-						disabled = { props.conversion.bidirectional === state.bidirectional && props.conversion.note === state.note}>
+						disabled={props.conversion.bidirectional === state.bidirectional && props.conversion.note === state.note}>
 						<FormattedMessage id='conversion.overall.save' />
 					</Button>
 				</ModalFooter>

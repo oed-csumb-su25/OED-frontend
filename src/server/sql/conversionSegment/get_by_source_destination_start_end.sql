@@ -8,12 +8,14 @@ SELECT
 	week_patterns_id,
 	slope,
 	intercept,
+	-- Cast to text to preserve '-infinity' and 'infinity values, otherwise, JavaScript will convert these values to null
 	start_time::TEXT AS start_time,
 	end_time::TEXT AS end_time,
 	note
 FROM conversion_segments
-WHERE source_id = ${sourceId} 
-	AND destination_id = ${destinationId} 
-	AND start_time = ${startTime}::TIMESTAMP 
-	AND end_time = ${endTime}::TIMESTAMP
+WHERE source_id = ${sourceId}
+	AND destination_id = ${destinationId}
+	AND start_time = ${startTime}
+	AND end_time = ${endTime}
+-- Cast back to timestamp so ordering works correctly
 ORDER BY start_time::TIMESTAMP ASC;
