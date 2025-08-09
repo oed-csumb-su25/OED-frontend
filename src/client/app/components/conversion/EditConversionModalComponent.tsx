@@ -861,7 +861,7 @@ export default function EditConversionModalComponent(props: EditConversionModalC
 									<th><FormattedMessage id='conversion.slope' /></th>
 									<th><FormattedMessage id='conversion.intercept' /></th>
 									<th><FormattedMessage id='conversion.pattern' /></th>
-									<th><FormattedMessage id='note' /></th>
+									<th><FormattedMessage id='conversion.note' /></th>
 									<th><FormattedMessage id='edit' /></th>
 									<th><FormattedMessage id='conversion.table.split.earlier' /></th>
 									<th><FormattedMessage id='conversion.table.split.later' /></th>
