@@ -104,7 +104,7 @@ export default function HeaderButtonsComponent() {
 			shouldCSVReadingsButtonDisabled: pathname === '/csvReadings',
 			shouldUnitsButtonDisabled: pathname === '/units',
 			shouldConversionsButtonDisabled: pathname === '/conversions',
-			shouldDaysButtonDisabled: pathname === '/Days',
+			shouldDaysButtonDisabled: pathname === '/days',
 			shouldWeeksButtonDisabled: pathname === '/weeks',
 			shouldLogMsgButtonDisabled: pathname === '/logmsg',
 			shouldVisualUnitMapButtonDisabled: pathname === '/visual-unit'
