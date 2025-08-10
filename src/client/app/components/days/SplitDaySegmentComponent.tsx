@@ -6,9 +6,11 @@ import * as React from 'react';
 import { FormattedMessage } from 'react-intl';
 import { Button, FormFeedback, FormGroup, Input, Label, Modal, ModalBody, ModalFooter, ModalHeader } from 'reactstrap';
 import { daySegmentsApi } from '../../redux/api/daySegmentsApi';
-import { DaySegment } from '../../types/redux/days';
+import { selectDefaultSplitDaySegmentValues } from '../../redux/selectors/adminSelectors';
+import { DaySegment, SplitDaySegmentPayload } from '../../types/redux/days';
 import { showErrorNotification } from '../../utils/notifications';
 import translate from '../../utils/translate';
+import ConfirmActionModalComponent from '../ConfirmActionModalComponent';
 
 interface SplitDaySegmentComponentProps {
 	/**
@@ -32,21 +34,19 @@ export default function SplitDaySegmentComponent(props: SplitDaySegmentComponent
 
 	const [splitHour, setSplitHour] = React.useState<number>(-999);
 
+	const defaultSegmentValues = selectDefaultSplitDaySegmentValues(props.daySegment);
+
 	// New segment to be created after the split
-	const [newSegment, setNewSegment] = React.useState<Omit<DaySegment, 'id'>>({
-		dayId: props.daySegment.dayId,
-		slope: 0,
-		intercept: 0,
-		note: '',
-		startHour: -999,
-		endHour: -999
-	});
+	const [newSegment, setNewSegment] = React.useState<SplitDaySegmentPayload>(defaultSegmentValues);
 
 	const [showSplitModal, setShowSplitModal] = React.useState(false);
 
-	const [deleteDaySegmentMutation, { isLoading: isDeleting }] = daySegmentsApi.useDeleteDaySegmentMutation();
+	// State for the warning modal
+	const [showWarningModal, setShowWarningModal] = React.useState(false);
+	const [warningMessage, setWarningMessage] = React.useState('');
 
-	const [addDaySegmentMutation, { isLoading: isAddSaving }] = daySegmentsApi.useAddDaySegmentMutation();
+	const [splitEarlierMutation] = daySegmentsApi.useSplitEarlierMutation();
+	const [splitLaterMutation] = daySegmentsApi.useSplitLaterMutation();
 
 	const handleShowSplitModal = () => setShowSplitModal(true);
 	const handleHideSplitModal = () => setShowSplitModal(false);
@@ -78,42 +78,38 @@ export default function SplitDaySegmentComponent(props: SplitDaySegmentComponent
 
 	}, [splitHour, props.daySegment, props.direction]);
 
-	// Handle the split operation
-	// It deletes the original segment and creates two new segments based on the split hour
-	const handleSubmit = () => {
-		// New segment based on the original segment
-		// It copies the slope and intercept from the original segment
-		// and sets the start and end hours based on the split hour
-		// The original segment is deleted after the new segments are created
-		const copySegment: Omit<DaySegment, 'id'> = {
-			dayId: props.daySegment.dayId,
-			slope: props.daySegment.slope,
-			intercept: props.daySegment.intercept,
-			note: props.daySegment.note,
-			startHour: props.direction === 'earlier' ? splitHour : props.daySegment.startHour,
-			endHour: props.direction === 'earlier' ? props.daySegment.endHour : splitHour
-		};
+	const doMutation = () => {
+		const mutation = props.direction === 'earlier'
+			? splitEarlierMutation
+			: splitLaterMutation;
 
-		const createSegment: Omit<DaySegment, 'id'> = {
-			...newSegment,
-			startHour: props.direction === 'earlier' ? props.daySegment.startHour : splitHour,
-			endHour: props.direction === 'earlier' ? splitHour : props.daySegment.endHour
-		};
-
-		const deleteOriginalSegment = deleteDaySegmentMutation(props.daySegment).unwrap();
-
-		const createCopySegment = addDaySegmentMutation(copySegment).unwrap();
-		const createNewSegment = addDaySegmentMutation(createSegment).unwrap();
-
-		deleteOriginalSegment
-			.then(() =>
-				Promise.all([createCopySegment, createNewSegment]))
+		handleHideSplitModal();
+		mutation({ ...newSegment, dayId: props.daySegment.dayId, splitTime: splitHour }).unwrap()
 			.then(() => {
-				handleHideSplitModal();
 			})
 			.catch(error => {
 				showErrorNotification(error);
 			});
+	};
+
+	// Handle the split operation
+	const handleSubmit = () => {
+		// Show warning modal if slope and intercept are both 0
+		if (newSegment.newSlope === 0 && newSegment.newIntercept === 0) {
+			setWarningMessage(translate('day.slope.intercept.zero'));
+			setShowWarningModal(true);
+			return;
+		}
+		doMutation();
+	};
+
+	const handleWarningCancel = () => {
+		setShowWarningModal(false);
+	};
+
+	const handleWarningConfirm = () => {
+		setShowWarningModal(false);
+		doMutation();
 	};
 
 	return (
@@ -154,10 +150,10 @@ export default function SplitDaySegmentComponent(props: SplitDaySegmentComponent
 						</Label>
 						<Input
 							id="segment-slope"
-							name="slope"
+							name="newSlope"
 							type="number"
 							required
-							value={newSegment.slope}
+							value={newSegment.newSlope}
 							onChange={handleNumberChange}
 						/>
 					</FormGroup>
@@ -167,10 +163,10 @@ export default function SplitDaySegmentComponent(props: SplitDaySegmentComponent
 						</Label>
 						<Input
 							id="segment-intercept"
-							name="intercept"
+							name="newIntercept"
 							type="number"
 							required
-							value={newSegment.intercept}
+							value={newSegment.newIntercept}
 							onChange={handleNumberChange}
 						/>
 					</FormGroup>
@@ -180,9 +176,9 @@ export default function SplitDaySegmentComponent(props: SplitDaySegmentComponent
 						</Label>
 						<Input
 							id="segment-note"
-							name="note"
+							name="newNote"
 							type="textarea"
-							value={newSegment.note}
+							value={newSegment.newNote}
 							onChange={handleStringChange}
 						/>
 					</FormGroup>
@@ -194,11 +190,21 @@ export default function SplitDaySegmentComponent(props: SplitDaySegmentComponent
 					<Button
 						color="primary"
 						onClick={handleSubmit}
-						disabled={!isSplitValid || isDeleting || isAddSaving}
+						disabled={!isSplitValid}
 					>
 						<FormattedMessage id="save.all" />
 					</Button>
 				</ModalFooter>
+
+				{/* Warning modal if slope and intercept are both zero */}
+				<ConfirmActionModalComponent
+					show={showWarningModal}
+					actionConfirmMessage={warningMessage}
+					handleClose={handleWarningCancel}
+					actionFunction={handleWarningConfirm}
+					actionConfirmText={translate('confirm.action')}
+					actionRejectText={translate('cancel')}
+				/>
 			</Modal>
 		</>
 	);

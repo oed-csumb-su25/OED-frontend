@@ -48,7 +48,10 @@ export default function CreateWeekModalComponent(): React.ReactElement {
 	const [weekDetails, setWeekDetails] = React.useState<Omit<Week, 'id'>>(defaultValues);
 
 	const handleShowModal = () => setShowModal(true);
-	const handleCloseModal = () => setShowModal(false);
+	const handleCloseModal = () => {
+		setShowModal(false);
+		resetState();
+	};
 
 	const handleStringChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 		setWeekDetails({ ...weekDetails, [e.target.name]: e.target.value });
@@ -61,18 +64,15 @@ export default function CreateWeekModalComponent(): React.ReactElement {
 	// Function to handle form submission
 	// Validates the week details and submits them to the API
 	const handleSubmit = () => {
-		if (!isWeekValid) {
-			return;
-		}
-
+		setShowModal(false);
 		addWeekMutation(weekDetails).unwrap()
 			.then(() => {
 				showSuccessNotification(translate('week.create.success'));
-				handleCloseModal();
 			})
 			.catch(error => {
 				showErrorNotification(translate('week.create.failure') + error);
 			});
+		resetState();
 	};
 
 	// Function to reset the week details to default values. Called when modal is closed.
@@ -120,14 +120,11 @@ export default function CreateWeekModalComponent(): React.ReactElement {
 				<FormattedMessage id="week.create" />
 			</Button>
 
-
 			<Modal
 				isOpen={showModal}
 				toggle={handleCloseModal}
-				backdrop="static"
-				onClosed={resetState}
 			>
-				<ModalHeader toggle={handleCloseModal}>
+				<ModalHeader>
 					<FormattedMessage id="week.create" />
 					<TooltipHelpComponent page="week-create" />
 					<div style={tooltipBaseStyle}>

@@ -6,7 +6,6 @@ export interface Day {
 	id: number;
 	name: string;
 	note: string;
-	segments: DaySegment[];
 }
 
 export interface DaySegment {
@@ -19,7 +18,38 @@ export interface DaySegment {
 	note?: string;
 }
 
+export interface CreateDayPayload {
+	/**
+	 * Day name
+	 */
+	name: string;
+	/**
+	 * Day note
+	 */
+	note?: string;
+	/**
+	 * Initial segment slope
+	 */
+	slope: number;
+	/**
+	 * Initial segment intercept
+	 */
+	intercept: number;
+	/**
+	 * Initial segment note
+	 */
+	segmentNote?: string;
+}
+
 export interface UpdateDaySegmentPayload extends DaySegment {
 	originalStartHour: number;
 	originalEndHour: number;
+}
+
+export interface SplitDaySegmentPayload {
+	id: number;
+	newSlope: number;
+	newIntercept: number;
+	newNote?: string;
+	splitTime: number;
 }

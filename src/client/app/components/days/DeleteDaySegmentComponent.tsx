@@ -5,9 +5,9 @@
 import * as React from 'react';
 import { Button } from 'reactstrap';
 import { daySegmentsApi } from '../../redux/api/daySegmentsApi';
+import { useTranslate } from '../../redux/componentHooks';
 import { DaySegment } from '../../types/redux/days';
 import { showErrorNotification } from '../../utils/notifications';
-import translate from '../../utils/translate';
 import ConfirmActionModalComponent from '../ConfirmActionModalComponent';
 
 interface DeleteDaySegmentComponentProps {
@@ -29,6 +29,7 @@ interface DeleteDaySegmentComponentProps {
  * @returns A button element
  */
 export default function DeleteDaySegmentComponent(props: DeleteDaySegmentComponentProps): React.ReactElement {
+	const translate = useTranslate();
 	const [showDeleteModal, setShowDeleteModal] = React.useState(false);
 
 	const handleShowDeleteModal = () => setShowDeleteModal(true);
@@ -41,8 +42,12 @@ export default function DeleteDaySegmentComponent(props: DeleteDaySegmentCompone
 		try {
 			if (props.direction === 'earlier') {
 				await deleteDaySegmentEarlierMutation(props.daySegment).unwrap();
-			} else {
+			} else if (props.direction === 'later') {
 				await deleteDaySegmentLaterMutation(props.daySegment).unwrap();
+			} else {
+				throw new Error(
+					translate('day.segments.delete.invalid.direction').replace('{direction}', props.direction)
+				);
 			}
 			handleHideDeleteModal();
 		} catch (error) {
@@ -53,6 +58,10 @@ export default function DeleteDaySegmentComponent(props: DeleteDaySegmentCompone
 	const deleteButtonText = props.direction === 'earlier'
 		? translate('delete.earlier') : translate('delete.later');
 
+	const deleteConfirmationMessage = props.direction === 'earlier'
+		? translate('day.segments.delete.confirm.earlier')
+		: translate('day.segments.delete.confirm.later');
+
 	return (
 		<>
 			<Button size="sm" color="danger" onClick={handleShowDeleteModal}>
@@ -62,7 +71,11 @@ export default function DeleteDaySegmentComponent(props: DeleteDaySegmentCompone
 			{/* Delete day segment confirmation modal */}
 			<ConfirmActionModalComponent
 				show={showDeleteModal}
-				actionConfirmMessage={translate('day.segments.delete.confirm')}
+				actionConfirmMessage={
+					deleteConfirmationMessage
+						.replace('{startHour}', props.daySegment.startHour.toString())
+						.replace('{endHour}', props.daySegment.endHour.toString())
+				}
 				actionFunction={handleDeleteDaySegment}
 				handleClose={handleHideDeleteModal}
 				actionConfirmText={translate('day.segments.delete.confirm.button')}
