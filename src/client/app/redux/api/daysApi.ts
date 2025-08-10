@@ -3,10 +3,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import { createSelector } from '@reduxjs/toolkit';
-import { Day } from '../../types/redux/days';
+import { CreateDayPayload, Day } from '../../types/redux/days';
 import { baseApi } from './baseApi';
 
-// Tag type for cache invalidation
 export const daysApi = baseApi.injectEndpoints({
 	endpoints: builder => ({
 		getDays: builder.query<Day[], void>({
@@ -20,28 +19,31 @@ export const daysApi = baseApi.injectEndpoints({
 			query: id => `api/days/${id}`,
 			providesTags: (result, error, id) => [{ type: 'Days', id }]
 		}),
-		addDay: builder.mutation<void, { name: string; slope: number; intercept: number; note?: string, segmentNote?: string }>({
+		addDay: builder.mutation<void, CreateDayPayload>({
 			query: Day => ({
 				url: 'api/days/addDay',
 				method: 'POST',
 				body: Day
 			}),
+			transformErrorResponse: res => res.data,
 			invalidatesTags: ['Days']
 		}),
-		editDay: builder.mutation<void, { id: number; name?: string; note?: string }>({
+		editDay: builder.mutation<void, Day>({
 			query: Day => ({
 				url: 'api/days/edit',
 				method: 'POST',
 				body: Day
 			}),
+			transformErrorResponse: res => res.data,
 			invalidatesTags: (result, error, arg) => [{ type: 'Days', id: arg.id }]
 		}),
-		deleteDay: builder.mutation<void, { id: number }>({
+		deleteDay: builder.mutation<void, Pick<Day, 'id'>>({
 			query: ({ id }) => ({
 				url: 'api/days/delete',
 				method: 'POST',
 				body: { id }
 			}),
+			transformErrorResponse: res => res.data,
 			invalidatesTags: (result, error, arg) => [{ type: 'Days', id: arg.id }]
 		})
 	})

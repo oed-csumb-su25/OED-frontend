@@ -15,7 +15,7 @@ const router = express.Router();
 function formatWeekForResponse(item) {
 	return {
 		id: item.id, 
-		weekName: item.weekName, 
+		name: item.name, 
 		note: item.note,
 		sunday: item.sunday,
 		monday: item.monday,
@@ -74,24 +74,25 @@ router.get('/:id', adminAuthMiddleware('get week by id'), async(req, res) => {
 
 /**
  * POST add week.
- * @param {string} weekName The name for the week.
+ * @param {string} name The name for the week.
  * @param {string} note The notes for the week.
- * @param {number} sunday The id for the day pattern used for sunday.
- * @param {number} monday The id for the day pattern used for monday.
- * @param {number} tuesday The id for the day pattern used for tuesday.
- * @param {number} wednesday The id for the day pattern used for wednesday.
- * @param {number} thursday The id for the day pattern used for thursday.
- * @param {number} friday The id for the day pattern used for friday.
- * @param {number} saturday The id for the day pattern used for saturday.
+ * @param {integer} sunday The id for the day pattern used for sunday.
+ * @param {integer} monday The id for the day pattern used for monday.
+ * @param {integer} tuesday The id for the day pattern used for tuesday.
+ * @param {integer} wednesday The id for the day pattern used for wednesday.
+ * @param {integer} thursday The id for the day pattern used for thursday.
+ * @param {integer} friday The id for the day pattern used for friday.
+ * @param {integer} saturday The id for the day pattern used for saturday.
  */
 router.post('/addWeek', adminAuthMiddleware('add week'), async (req, res) => {
 	const validWeek= {
 		type: 'object',
 		maxProperties: 9,
-		required: ['weekName', 'sunday','monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'],
+		required: ['name', 'sunday','monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'],
 		properties: {
-			weekName: {
+			name: {
 				type: 'string',
+				minLength: 1
 			},
 			note: {
 				oneOf: [
@@ -100,25 +101,32 @@ router.post('/addWeek', adminAuthMiddleware('add week'), async (req, res) => {
 				]
 			},
 			sunday: {
-				type: 'number'
+				type: 'integer',
+				minimum: 0
 			},
 			monday: {
-				type: 'number'
+				type: 'integer',
+				minimum: 0
 			},
 			tuesday: {
-				type: 'number'
+				type: 'integer',
+				minimum: 0
 			},
 			wednesday: {
-				type: 'number'
+				type: 'integer',
+				minimum: 0
 			},
 			thursday: {
-				type: 'number'
+				type: 'integer',
+				minimum: 0
 			},
 			friday: {
-				type: 'number'
+				type: 'integer',
+				minimum: 0
 			},
 			saturday: {
-				type: 'number'
+				type: 'integer',
+				minimum: 0
 			}
 		}
 	};
@@ -131,21 +139,19 @@ router.post('/addWeek', adminAuthMiddleware('add week'), async (req, res) => {
 	} else {
 		const conn = getConnection();
 		try {
-			await conn.tx(async t => {
-				const newWeek = new Week(
-					undefined,
-					req.body.weekName,
-					req.body.note,
-					req.body.sunday,
-					req.body.monday,
-					req.body.tuesday,
-					req.body.wednesday,
-					req.body.thursday,
-					req.body.friday,
-					req.body.saturday
-				);
-				await newWeek.insert(t);
-			});
+			const newWeek = new Week(
+				undefined,
+				req.body.name,
+				req.body.note,
+				req.body.sunday,
+				req.body.monday,
+				req.body.tuesday,
+				req.body.wednesday,
+				req.body.thursday,
+				req.body.friday,
+				req.body.saturday
+			);
+			await newWeek.insert(conn);
 			success(res, `Successfully inserted week`);
 		} catch (err) {
 			const errMsg = `Error while inserting a new week with error(s): ${err}`;
@@ -158,28 +164,29 @@ router.post('/addWeek', adminAuthMiddleware('add week'), async (req, res) => {
 /**
  * POST edit week.
  * @param {integer} id The id for the week to be edited.
- * @param {string} weekName The new name for the week.
+ * @param {string} name The new name for the week.
  * @param {string} note The new notes for the week.
- * @param {number} sunday The new id for the day pattern used for sunday.
- * @param {number} monday The new id for the day pattern used for monday.
- * @param {number} tuesday The new id for the day pattern used for tuesday.
- * @param {number} wednesday The new id for the day pattern used for wednesday.
- * @param {number} thursday The new id for the day pattern used for thursday.
- * @param {number} friday The new id for the day pattern used for friday.
- * @param {number} saturday The new id for the day pattern used for saturday.
+ * @param {integer} sunday The new id for the day pattern used for sunday.
+ * @param {integer} monday The new id for the day pattern used for monday.
+ * @param {integer} tuesday The new id for the day pattern used for tuesday.
+ * @param {integer} wednesday The new id for the day pattern used for wednesday.
+ * @param {integer} thursday The new id for the day pattern used for thursday.
+ * @param {integer} friday The new id for the day pattern used for friday.
+ * @param {integer} saturday The new id for the day pattern used for saturday.
  */
 router.post('/edit', adminAuthMiddleware('edit week'), async (req, res) => {
 	const validWeek = {
 		type: 'object',
 		maxProperties: 10,
-		required: ['id', 'weekName', 'sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'],
+		required: ['id', 'name', 'sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'],
 		properties: {
 			id: {
 				type: 'integer', 
 				minimum: 0
 			},
-			weekName: {
+			name: {
 				type: 'string',
+				minLength: 1
 			},
 			note: {
 				oneOf: [
@@ -188,25 +195,33 @@ router.post('/edit', adminAuthMiddleware('edit week'), async (req, res) => {
 				]
 			},
 			sunday: {
-				type: 'number'
+				type: 'integer',
+				minimum: 0
+				
 			},
 			monday: {
-				type: 'number'
+				type: 'integer',
+				minimum: 0
 			},
 			tuesday: {
-				type: 'number'
+				type: 'integer',
+				minimum: 0
 			},
 			wednesday: {
-				type: 'number'
+				type: 'integer',
+				minimum: 0
 			},
 			thursday: {
-				type: 'number'
+				type: 'integer',
+				minimum: 0
 			},
 			friday: {
-				type: 'number'
+				type: 'integer',
+				minimum: 0
 			},
 			saturday: {
-				type: 'number'
+				type: 'integer',
+				minimum: 0
 			}
 		}
 	};
@@ -221,7 +236,7 @@ router.post('/edit', adminAuthMiddleware('edit week'), async (req, res) => {
 		try {
 			const updatedWeek = new Week(
 				req.body.id, 
-				req.body.weekName,
+				req.body.name,
 				req.body.note,
 				req.body.sunday,
 				req.body.monday,
@@ -252,7 +267,7 @@ router.post('/delete', adminAuthMiddleware('delete week'), async (req, res) => {
 		required: ['id'],
 		properties: {
 			id: {
-				type: 'integer', 
+				type: 'integer',
 				minimum: 0
 			}
 		}
@@ -270,7 +285,7 @@ router.post('/delete', adminAuthMiddleware('delete week'), async (req, res) => {
 			// Don't worry about checking if the week already exists
 			// Just try to delete it to save the extra database call, since the database will return an error anyway if the row does not exist
 			await Week.delete(
-				req.body.id, 
+				req.body.id,
 				conn
 			);
 			success(res, 'Successfully deleted week');

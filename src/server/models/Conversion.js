@@ -66,8 +66,8 @@ class Conversion {
 	 * Inserts a new conversion to the database, along with a conversion segment.
 	 * The default conversion segment spans from -inf to inf.
 	 * @param {*} weekPatternsId The id for a weekly pattern
-	 * @param {*} slope The slope for the conversion
-	 * @param {*} intercept The intercept for the conversion
+	 * @param {*} slope The slope for the conversion segment
+	 * @param {*} intercept The intercept for the conversion segment
 	 * @param {*} segmentNote The note for the default conversion segment
 	 * @param {*} conn The connection to use.
 	 */

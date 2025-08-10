@@ -15,7 +15,6 @@ import DayViewComponent from './DayViewComponent';
 
 /**
  * Defines the daily pattern info page
- * @param props defined above
  * @returns Single day element
  */
 export default function DaysDetailComponent() {
@@ -31,7 +30,7 @@ export default function DaysDetailComponent() {
 
 	const sortedDays = React.useMemo(() => {
 		return Object.values(dayState)
-			.sort((a, b) => (a.name || '').toLowerCase().localeCompare((b.name || '').toLowerCase(), locale, { sensitivity: 'accent' }));
+			.sort((a, b) => a.name.toLowerCase().localeCompare(b.name.toLowerCase(), locale, { sensitivity: 'accent' }));
 	}, [dayState, locale]);
 
 	return (

@@ -2,17 +2,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { createSelector } from '@reduxjs/toolkit';
-import { DaySegment, UpdateDaySegmentPayload } from '../../types/redux/days';
+import { DaySegment, SplitDaySegmentPayload, UpdateDaySegmentPayload } from '../../types/redux/days';
 import { baseApi } from './baseApi';
 
-// TODO: fix tags and invalidation
 export const daySegmentsApi = baseApi.injectEndpoints({
 	endpoints: builder => ({
-		getDaySegments: builder.query<DaySegment[], void>({
-			query: () => 'api/daySegments',
-			providesTags: ['DaySegments']
-		}),
 		getDaySegmentsById: builder.query<DaySegment, number>({
 			query: id => `api/daySegments/${id}`,
 			providesTags: (result, error, id) => [{ type: 'DaySegments', id }]
@@ -34,6 +28,24 @@ export const daySegmentsApi = baseApi.injectEndpoints({
 			transformErrorResponse: res => res.data,
 			invalidatesTags: ['DaySegments']
 		}),
+		splitEarlier: builder.mutation<void, SplitDaySegmentPayload & Pick<DaySegment, 'dayId'>>({
+			query: ({ id, newSlope, newIntercept, newNote, splitTime }) => ({
+				url: 'api/daySegments/splitEarlier',
+				method: 'POST',
+				body: { id, newSlope, newIntercept, newNote, splitTime }
+			}),
+			transformErrorResponse: res => res.data,
+			invalidatesTags: (result, error, arg) => [{ type: 'DaySegments', dayId: arg.dayId }]
+		}),
+		splitLater: builder.mutation<void, SplitDaySegmentPayload & Pick<DaySegment, 'dayId'>>({
+			query: ({ id, newSlope, newIntercept, newNote, splitTime }) => ({
+				url: 'api/daySegments/splitLater',
+				method: 'POST',
+				body: { id, newSlope, newIntercept, newNote, splitTime }
+			}),
+			transformErrorResponse: res => res.data,
+			invalidatesTags: (result, error, arg) => [{ type: 'DaySegments', dayId: arg.dayId }]
+		}),
 		editDaySegment: builder.mutation<void, UpdateDaySegmentPayload>({
 			query: daySegment => ({
 				url: 'api/daySegments/edit',
@@ -43,31 +55,34 @@ export const daySegmentsApi = baseApi.injectEndpoints({
 			transformErrorResponse: res => res.data,
 			invalidatesTags: (result, error, arg) => [{ type: 'DaySegments', dayId: arg.dayId }]
 		}),
-		deleteDaySegments: builder.mutation<void, { id: number }>({
-			query: ({ id }) => ({
+		deleteDaySegment: builder.mutation<void, DaySegment>({
+			query: ({ dayId, startHour, endHour }) => ({
 				url: 'api/daySegments/delete',
 				method: 'POST',
-				body: { id }
+				body: { dayId, startHour, endHour }
 			}),
 			transformErrorResponse: res => res.data,
-			invalidatesTags: (result, error, arg) => [{ type: 'DaySegments', id: arg.id }]
+			invalidatesTags: (result, error, arg) => [{ type: 'DaySegments', dayId: arg.dayId }]
+		}),
+		// Deletes the provided day segment and updates the end hour of the previous segment
+		deleteDaySegmentEarlier: builder.mutation<void, DaySegment>({
+			query: ({ dayId, startHour, endHour }) => ({
+				url: 'api/daySegments/deleteEarlier',
+				method: 'POST',
+				body: { dayId, startHour, endHour }
+			}),
+			transformErrorResponse: res => res.data,
+			invalidatesTags: (result, error, arg) => [{ type: 'DaySegments', dayId: arg.dayId }]
+		}),
+		// Deletes the provided day segment and updates the start hour of the next segment
+		deleteDaySegmentLater: builder.mutation<void, DaySegment>({
+			query: ({ dayId, startHour, endHour }) => ({
+				url: 'api/daySegments/deleteLater',
+				method: 'POST',
+				body: { dayId, startHour, endHour }
+			}),
+			transformErrorResponse: res => res.data,
+			invalidatesTags: (result, error, arg) => [{ type: 'DaySegments', dayId: arg.dayId }]
 		})
 	})
 });
-
-export const selectDaySegmentsQueryState = daySegmentsApi.endpoints.getDaySegments.select();
-export const selectDaySegments = createSelector(
-	selectDaySegmentsQueryState,
-	({ data: daySegments = [] }) => daySegments
-);
-
-export const stableEmptyDaySegments: DaySegment[] = [];
-
-export const {
-	useGetDaySegmentsQuery,
-	useGetDaySegmentsByIdQuery,
-	useGetDaySegmentsByDayIdQuery,
-	useAddDaySegmentMutation,
-	useEditDaySegmentMutation,
-	useDeleteDaySegmentsMutation
-} = daySegmentsApi;

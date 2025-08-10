@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import { baseApi } from './baseApi';
-import { ConversionSegmentData } from '../../types/redux/conversions';
+import { ConversionSegmentData } from '../../types/redux/conversionSegments';
 
 /**
  * This file defines the segmentsApi using RTK Query.
@@ -18,39 +18,44 @@ export const conversionSegmentsApi = baseApi.injectEndpoints({
 		}),
 		getConversionSegmentByConversion: builder.query<ConversionSegmentData[], {sourceId: number; destinationId: number }>({
 			query: ({ sourceId, destinationId }) => ({
-				url: 'api/conversionSegments/sourceDestination',
+				url: '/api/conversionSegments/sourceDestination',
 				method: 'POST',
 				body: { sourceId, destinationId }
 			}),
 			providesTags: (result, error, segment) => [
 				{ type: 'ConversionSegments', id: 'LIST' },
 				{ type: 'ConversionSegments', id: `${segment.sourceId}-${segment.destinationId}` }
-			],
-			transformResponse: (response: ConversionSegmentData[]) =>
-				Array.isArray(response) ? response : response ? [response] : []
+			]
 		}),
-		getConversionSegmentByKey: builder.query<ConversionSegmentData, { sourceId: number; destinationId: number; startTime: string }>({
-			query: ({ sourceId, destinationId, startTime }) => ({
-				url: '/api/conversionSegments/segment',
+		getConversionSegmentByKey: builder.query<ConversionSegmentData, { sourceId: number; destinationId: number; startTime: string; endTime: string }>({
+			query: ({ sourceId, destinationId, startTime, endTime }) => ({
+				url: '/api/conversionSegments/sourceDestinationStartEnd',
 				method: 'POST',
-				body: { sourceId, destinationId, startTime }
+				body: { sourceId, destinationId, startTime, endTime }
 			}),
-			providesTags: (result, error, segment) => [{ type: 'ConversionSegments', id: `${segment.sourceId}-${segment.destinationId}-${segment.startTime}` }]
+			providesTags: (result, error, segment) => [{
+				type: 'ConversionSegments',
+				id: `${segment.sourceId}-${segment.destinationId}-${segment.startTime}-${segment.endTime}`
+			}]
 		}),
-		editConversionSegment: builder.mutation<void, ConversionSegmentData>({
-			query: segment => ({
+		editConversionSegment: builder.mutation<void, { segment: ConversionSegmentData; originalStartTime: string; originalEndTime: string; }>({
+			query: ({ segment, originalStartTime, originalEndTime }) => ({
 				url: '/api/conversionSegments/edit',
 				method: 'POST',
-				body: segment
+				body: {
+					...segment,
+					originalStartTime,
+					originalEndTime
+				}
 			}),
-			invalidatesTags: (result, error, segment) => [
-				{ type: 'ConversionSegments', id: `${segment.sourceId}-${segment.destinationId}` },
-				{ type: 'ConversionSegments', id: `${segment.sourceId}-${segment.destinationId}-${segment.startTime}` }
+			invalidatesTags: (result, error, { segment }) => [
+				{ type: 'ConversionSegments', id: 'LIST' },
+				{ type: 'ConversionSegments', id: `${segment.sourceId}-${segment.destinationId}` }
 			]
 		}),
 		addConversionSegment: builder.mutation<void, ConversionSegmentData>({
 			query: segment => ({
-				url: '/api/conversionSegments/add',
+				url: '/api/conversionSegments/addConversionSegment',
 				method: 'POST',
 				body: segment
 			}),
@@ -66,10 +71,33 @@ export const conversionSegmentsApi = baseApi.injectEndpoints({
 				body: payload
 			}),
 			invalidatesTags: (result, error, segment) => [
-				{ type: 'ConversionSegments', id: `${segment.sourceId}-${segment.destinationId}` },
-				{ type: 'ConversionSegments', id: `${segment.sourceId}-${segment.destinationId}-${segment.startTime}` }
+				{ type: 'ConversionSegments', id: 'LIST' },
+				{ type: 'ConversionSegments', id: `${segment.sourceId}-${segment.destinationId}` }
+			]
+		}),
+		deleteConversionSegmentEarlier: builder.mutation<void, { sourceId: number; destinationId: number; startTime: string; endTime: string }>({
+			query: payload => ({
+				url: '/api/conversionSegments/deleteEarlier',
+				method: 'POST',
+				body: payload
+			}),
+			invalidatesTags: (result, error, segment) => [
+				{ type: 'ConversionSegments', id: 'LIST' },
+				{ type: 'ConversionSegments', id: `${segment.sourceId}-${segment.destinationId}` }
+			]
+		}),
+		deleteConversionSegmentLater: builder.mutation<void, { sourceId: number; destinationId: number; startTime: string; endTime: string }>({
+			query: payload => ({
+				url: '/api/conversionSegments/deleteLater',
+				method: 'POST',
+				body: payload
+			}),
+			invalidatesTags: (result, error, segment) => [
+				{ type: 'ConversionSegments', id: 'LIST' },
+				{ type: 'ConversionSegments', id: `${segment.sourceId}-${segment.destinationId}` }
 			]
 		})
+
 	})
 });
 
@@ -79,5 +107,7 @@ export const {
 	useGetConversionSegmentByKeyQuery,
 	useEditConversionSegmentMutation,
 	useAddConversionSegmentMutation,
-	useDeleteConversionSegmentMutation
+	useDeleteConversionSegmentMutation,
+	useDeleteConversionSegmentEarlierMutation,
+	useDeleteConversionSegmentLaterMutation
 } = conversionSegmentsApi;

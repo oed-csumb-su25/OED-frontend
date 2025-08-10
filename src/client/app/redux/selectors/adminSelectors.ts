@@ -3,12 +3,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+import { createSelector } from '@reduxjs/toolkit';
 import * as moment from 'moment';
 import { selectCik, selectConversionsDetails } from '../../redux/api/conversionsApi';
 import { selectAllGroups } from '../../redux/api/groupsApi';
 import { selectAllMeters, selectMeterById } from '../../redux/api/metersApi';
 import { selectAdminPreferences } from '../../redux/slices/adminSlice';
 import { selectSelectedLanguage } from '../../redux/slices/appStateSlice';
+import { DaySegment, SplitDaySegmentPayload } from '../../types/redux/days';
 import { MeterData, MeterTimeSortType } from '../../types/redux/meters';
 import { DisableChecksType, UnitData, UnitType } from '../../types/redux/units';
 import { Week } from '../../types/redux/weeks';
@@ -221,8 +223,8 @@ export const selectIsValidConversion = createAppSelector(
 					TODO Some of these can go away when we make the menus dynamic.
 				*/
 		const sourceId = conversionState.overallConversion.sourceId;
-    const destinationId = conversionState.overallConversion.destinationId;
-    const bidirectional = conversionState.overallConversion.bidirectional;
+		const destinationId = conversionState.overallConversion.destinationId;
+		const bidirectional = conversionState.overallConversion.bidirectional;
 
 		// The destination cannot be a meter unit.
 		if (destinationId !== -999 && unitDataById[destinationId].typeOfUnit === UnitType.meter) {
@@ -359,11 +361,22 @@ export const selectDefaultCreateDayValues = createAppSelector(
 	}
 );
 
+const selectDaySegmentId = (daySegment: DaySegment) => daySegment.id;
+export const selectDefaultSplitDaySegmentValues = createSelector(
+	[selectDaySegmentId],
+	id => ({
+		id,
+		newSlope: 0,
+		newIntercept: 0,
+		newNote: '',
+		splitTime: -999
+	} as SplitDaySegmentPayload)
+);
 
 export const selectDefaultCreateWeekValues = createAppSelector<[], Omit<Week, 'id'>>(
 	[],
 	() => ({
-		weekName: '',
+		name: '',
 		note: '',
 		sunday: -999,
 		monday: -999,
@@ -437,22 +450,22 @@ export const isValidCreateMeter = createAppSelector(
  * @returns A tuple where the first element is a boolean indicating validity, and the second is a message string.
  */
 export const selectIsValidCreateDay = createAppSelector(
-    [
-        selectAllDays,
-        (_state, patternState: { Day: { name: string } }) => patternState
-    ],
-    (days, patternState): [boolean, string] => {
-        const name = patternState.Day?.name;
-        if (!name || name.trim() === '') {
-            return [false, translate('day.create.name.required')];
-        }
-        // Check if name already exists (case-insensitive)
-        const exists = days.some(day =>
-            day.name?.toLowerCase() === name.trim().toLowerCase()
-        );
-        if (exists) {
-            return [false, translate('day.create.name.exists')];
-        }
-        return [true, 'Daily Pattern is Valid'];
-    }
+	[
+		selectAllDays,
+		(_state, patternState: { Day: { name: string } }) => patternState
+	],
+	(days, patternState): [boolean, string] => {
+		const name = patternState.Day?.name;
+		if (!name || name.trim() === '') {
+			return [false, translate('day.create.name.required')];
+		}
+		// Check if name already exists (case-insensitive)
+		const exists = days.some(day =>
+			day.name?.toLowerCase() === name.trim().toLowerCase()
+		);
+		if (exists) {
+			return [false, translate('day.create.name.exists')];
+		}
+		return [true, 'Daily Pattern is Valid'];
+	}
 );

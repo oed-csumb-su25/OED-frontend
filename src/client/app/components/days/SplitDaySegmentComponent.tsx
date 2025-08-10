@@ -4,11 +4,13 @@
 
 import * as React from 'react';
 import { FormattedMessage } from 'react-intl';
-import { Button, FormFeedback, Input, Modal, ModalBody, ModalFooter, ModalHeader } from 'reactstrap';
+import { Button, FormFeedback, FormGroup, Input, Label, Modal, ModalBody, ModalFooter, ModalHeader } from 'reactstrap';
 import { daySegmentsApi } from '../../redux/api/daySegmentsApi';
-import { DaySegment } from '../../types/redux/days';
+import { useTranslate } from '../../redux/componentHooks';
+import { selectDefaultSplitDaySegmentValues } from '../../redux/selectors/adminSelectors';
+import { DaySegment, SplitDaySegmentPayload } from '../../types/redux/days';
 import { showErrorNotification } from '../../utils/notifications';
-import translate from '../../utils/translate';
+import ConfirmActionModalComponent from '../ConfirmActionModalComponent';
 
 interface SplitDaySegmentComponentProps {
 	/**
@@ -29,20 +31,42 @@ interface SplitDaySegmentComponentProps {
  * @returns A button element
  */
 export default function SplitDaySegmentComponent(props: SplitDaySegmentComponentProps): React.ReactElement {
+	const translate = useTranslate();
 
-	const [splitHour, setSplitHour] = React.useState<number>(props.daySegment.startHour + 1);
+	const [splitHour, setSplitHour] = React.useState<number>(-999);
+
+	const defaultSegmentValues = selectDefaultSplitDaySegmentValues(props.daySegment);
+
+	// New segment to be created after the split
+	const [newSegment, setNewSegment] = React.useState<SplitDaySegmentPayload>(defaultSegmentValues);
 
 	const [showSplitModal, setShowSplitModal] = React.useState(false);
 
-	const [deleteDaySegmentMutation, { isLoading: isDeleting }] = daySegmentsApi.useDeleteDaySegmentsMutation();
+	// State for the warning modal
+	const [showWarningModal, setShowWarningModal] = React.useState(false);
+	const [warningMessage, setWarningMessage] = React.useState('');
 
-	const [addDaySegmentMutation, { isLoading: isAddSaving }] = daySegmentsApi.useAddDaySegmentMutation();
+	const [splitEarlierMutation] = daySegmentsApi.useSplitEarlierMutation();
+	const [splitLaterMutation] = daySegmentsApi.useSplitLaterMutation();
 
 	const handleShowSplitModal = () => setShowSplitModal(true);
 	const handleHideSplitModal = () => setShowSplitModal(false);
 
 	const handleSplitInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 		setSplitHour(Number(e.target.value));
+	};
+
+	const handleNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+		setNewSegment(prev => ({
+			...prev,
+			[e.target.name]: Number(e.target.value)
+		}));
+	};
+	const handleStringChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+		setNewSegment(prev => ({
+			...prev,
+			[e.target.name]: e.target.value
+		}));
 	};
 
 	// Validate the split hour
@@ -55,48 +79,38 @@ export default function SplitDaySegmentComponent(props: SplitDaySegmentComponent
 
 	}, [splitHour, props.daySegment, props.direction]);
 
-	// Handle the split operation
-	// It deletes the original segment and creates two new segments based on the split hour
-	const handleSubmit = () => {
-		if (!isSplitValid) {
-			return;
-		}
+	const doMutation = () => {
+		const mutation = props.direction === 'earlier'
+			? splitEarlierMutation
+			: splitLaterMutation;
 
-		// New segment based on the original segment
-		// It copies the slope and intercept from the original segment
-		// and sets the start and end hours based on the split hour
-		// The original segment is deleted after the new segments are created
-		const copySegment: Omit<DaySegment, 'id'> = {
-			dayId: props.daySegment.dayId,
-			slope: props.daySegment.slope,
-			intercept: props.daySegment.intercept,
-			note: props.daySegment.note,
-			startHour: props.direction === 'earlier' ? splitHour : props.daySegment.startHour,
-			endHour: props.direction === 'earlier' ? props.daySegment.endHour : splitHour
-		};
-
-		const newSegment: Omit<DaySegment, 'id'> = {
-			dayId: props.daySegment.dayId,
-			slope: 0,
-			intercept: 0,
-			startHour: props.direction === 'earlier' ? props.daySegment.startHour : splitHour,
-			endHour: props.direction === 'earlier' ? splitHour : props.daySegment.endHour
-		};
-
-		const deleteOriginalSegment = deleteDaySegmentMutation({ id: props.daySegment.id }).unwrap();
-
-		const createCopySegment = addDaySegmentMutation(copySegment).unwrap();
-		const createNewSegment = addDaySegmentMutation(newSegment).unwrap();
-
-		deleteOriginalSegment
-			.then(() =>
-				Promise.all([createCopySegment, createNewSegment]))
+		handleHideSplitModal();
+		mutation({ ...newSegment, dayId: props.daySegment.dayId, splitTime: splitHour }).unwrap()
 			.then(() => {
-				handleHideSplitModal();
 			})
 			.catch(error => {
 				showErrorNotification(error);
 			});
+	};
+
+	// Handle the split operation
+	const handleSubmit = () => {
+		// Show warning modal if slope and intercept are both 0
+		if (newSegment.newSlope === 0 && newSegment.newIntercept === 0) {
+			setWarningMessage(translate('day.slope.intercept.zero'));
+			setShowWarningModal(true);
+			return;
+		}
+		doMutation();
+	};
+
+	const handleWarningCancel = () => {
+		setShowWarningModal(false);
+	};
+
+	const handleWarningConfirm = () => {
+		setShowWarningModal(false);
+		doMutation();
 	};
 
 	return (
@@ -105,27 +119,70 @@ export default function SplitDaySegmentComponent(props: SplitDaySegmentComponent
 				<FormattedMessage id={props.direction === 'earlier' ? 'split.earlier' : 'split.later'} />
 			</Button>
 
-			<Modal isOpen={showSplitModal} toggle={handleHideSplitModal} backdrop="static" >
+			<Modal isOpen={showSplitModal} toggle={handleHideSplitModal}>
 				<ModalHeader>
 					<FormattedMessage id={props.direction === 'earlier' ? 'split.earlier' : 'split.later'} />
 				</ModalHeader>
 				<ModalBody>
-					<p><FormattedMessage id="split.hour.prompt" /></p>
-					<Input
-						id="split"
-						type="number"
-						min={props.daySegment.startHour + 1}
-						max={props.daySegment.endHour - 1}
-						step="1"
-						onChange={handleSplitInputChange}
-						placeholder={props.daySegment.startHour + 1 + ' - ' + (props.daySegment.endHour - 1)}
-						invalid={!isSplitValid}
-					/>
-					<FormFeedback>
-						{!isSplitValid && translate('split.hour.invalid')
-							.replace('{start}', String(props.daySegment.startHour + 1))
-							.replace('{end}', String(props.daySegment.endHour - 1))}
-					</FormFeedback>
+					{/* split hour */}
+					<FormGroup>
+						<Label for="split">
+							<FormattedMessage id="split.hour.prompt" />
+						</Label>
+						<Input
+							id="split"
+							type="number"
+							min={props.daySegment.startHour + 1}
+							max={props.daySegment.endHour - 1}
+							step="1"
+							onChange={handleSplitInputChange}
+							placeholder={props.daySegment.startHour + 1 + ' - ' + (props.daySegment.endHour - 1)}
+							invalid={!isSplitValid}
+						/>
+						<FormFeedback>
+							{!isSplitValid && translate('split.hour.invalid')
+								.replace('{start}', String(props.daySegment.startHour + 1))
+								.replace('{end}', String(props.daySegment.endHour - 1))}
+						</FormFeedback>
+					</FormGroup>
+					<FormGroup>
+						<Label for="segment-slope">
+							<FormattedMessage id="slope" />
+						</Label>
+						<Input
+							id="segment-slope"
+							name="newSlope"
+							type="number"
+							required
+							value={newSegment.newSlope}
+							onChange={handleNumberChange}
+						/>
+					</FormGroup>
+					<FormGroup>
+						<Label for="segment-intercept">
+							<FormattedMessage id="intercept" />
+						</Label>
+						<Input
+							id="segment-intercept"
+							name="newIntercept"
+							type="number"
+							required
+							value={newSegment.newIntercept}
+							onChange={handleNumberChange}
+						/>
+					</FormGroup>
+					<FormGroup>
+						<Label for="segment-note">
+							<FormattedMessage id="note" />
+						</Label>
+						<Input
+							id="segment-note"
+							name="newNote"
+							type="textarea"
+							value={newSegment.newNote}
+							onChange={handleStringChange}
+						/>
+					</FormGroup>
 				</ModalBody>
 				<ModalFooter>
 					<Button color="secondary" onClick={handleHideSplitModal}>
@@ -134,11 +191,21 @@ export default function SplitDaySegmentComponent(props: SplitDaySegmentComponent
 					<Button
 						color="primary"
 						onClick={handleSubmit}
-						disabled={!isSplitValid || isDeleting || isAddSaving}
+						disabled={!isSplitValid}
 					>
 						<FormattedMessage id="save.all" />
 					</Button>
 				</ModalFooter>
+
+				{/* Warning modal if slope and intercept are both zero */}
+				<ConfirmActionModalComponent
+					show={showWarningModal}
+					actionConfirmMessage={warningMessage}
+					handleClose={handleWarningCancel}
+					actionFunction={handleWarningConfirm}
+					actionConfirmText={translate('confirm.action')}
+					actionRejectText={translate('cancel')}
+				/>
 			</Modal>
 		</>
 	);

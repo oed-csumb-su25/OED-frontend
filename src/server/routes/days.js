@@ -81,7 +81,8 @@ router.post('/addDay', adminAuthMiddleware('add day'), async (req, res) => {
 		required: ['name', 'slope', 'intercept'],
 		properties: {
 			name: {
-				type: 'string'
+				type: 'string',
+				minLength: 1
 			},
 			note: {
 				oneOf: [
@@ -112,20 +113,17 @@ router.post('/addDay', adminAuthMiddleware('add day'), async (req, res) => {
 	} else {
 		const conn = getConnection();
 		try {
-			// Insert 
-			await conn.tx(async t => {
-				const newDay = new Day(
-					undefined,
-					req.body.name,
-					req.body.note
-				);
-				await newDay.insert(
-					req.body.slope, 
-					req.body.intercept, 
-					req.body.segmentNote,
-					t
-				);
-			});
+			const newDay = new Day(
+				undefined,
+				req.body.name,
+				req.body.note
+			);
+			await newDay.insert(
+				req.body.slope, 
+				req.body.intercept, 
+				req.body.segmentNote,
+				conn
+			);
 			success(res, `Successfully added day`);
 		} catch (err) {
 			const errMsg = `Error adding new day with error(s): ${err}`;
@@ -153,6 +151,7 @@ router.post('/edit', adminAuthMiddleware('edit day'), async (req, res) => {
 			},
 			name: {
 				type: 'string',
+				minLength: 1
 			},
 			note: {
 				oneOf: [

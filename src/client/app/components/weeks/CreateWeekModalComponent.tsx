@@ -7,13 +7,13 @@ import { FormattedMessage } from 'react-intl';
 import { Button, Col, Container, FormFeedback, FormGroup, Input, Label, Modal, ModalBody, ModalFooter, ModalHeader, Row, Table } from 'reactstrap';
 import { daysApi } from '../../redux/api/daysApi';
 import { weeksApi } from '../../redux/api/weeksApi';
+import { useTranslate } from '../../redux/componentHooks';
 import { useAppSelector } from '../../redux/reduxHooks';
 import { selectDefaultCreateWeekValues } from '../../redux/selectors/adminSelectors';
 import { tooltipBaseStyle } from '../../styles/modalStyle';
 import { LocaleDataKey } from '../../translations/data';
 import { Week } from '../../types/redux/weeks';
 import { showErrorNotification, showSuccessNotification } from '../../utils/notifications';
-import translate from '../../utils/translate';
 import TooltipHelpComponent from '../TooltipHelpComponent';
 import TooltipMarkerComponent from '../TooltipMarkerComponent';
 
@@ -22,6 +22,8 @@ import TooltipMarkerComponent from '../TooltipMarkerComponent';
  * @returns Weekly pattern create element
  */
 export default function CreateWeekModalComponent(): React.ReactElement {
+	const translate = useTranslate();
+
 	// State to control modal visibility
 	const [showModal, setShowModal] = React.useState(false);
 
@@ -48,7 +50,10 @@ export default function CreateWeekModalComponent(): React.ReactElement {
 	const [weekDetails, setWeekDetails] = React.useState<Omit<Week, 'id'>>(defaultValues);
 
 	const handleShowModal = () => setShowModal(true);
-	const handleCloseModal = () => setShowModal(false);
+	const handleCloseModal = () => {
+		setShowModal(false);
+		resetState();
+	};
 
 	const handleStringChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 		setWeekDetails({ ...weekDetails, [e.target.name]: e.target.value });
@@ -61,18 +66,15 @@ export default function CreateWeekModalComponent(): React.ReactElement {
 	// Function to handle form submission
 	// Validates the week details and submits them to the API
 	const handleSubmit = () => {
-		if (!isWeekValid) {
-			return;
-		}
-
+		setShowModal(false);
 		addWeekMutation(weekDetails).unwrap()
 			.then(() => {
 				showSuccessNotification(translate('week.create.success'));
-				handleCloseModal();
 			})
 			.catch(error => {
 				showErrorNotification(translate('week.create.failure') + error);
 			});
+		resetState();
 	};
 
 	// Function to reset the week details to default values. Called when modal is closed.
@@ -86,19 +88,19 @@ export default function CreateWeekModalComponent(): React.ReactElement {
 
 	// Validate the week name to ensure it is not empty and does not already exist
 	const isWeekNameValid = React.useMemo(() => {
-		if (weekDetails.weekName === '') {
+		if (weekDetails.name === '') {
 			setNameValidationMessageId('error.required');
 			return false;
 		}
 
-		if (weeks?.some(week => week.weekName.toLowerCase() === weekDetails.weekName.toLowerCase())) {
+		if (weeks?.some(week => week.name.toLowerCase() === weekDetails.name.toLowerCase())) {
 			setNameValidationMessageId('week.validation.name.exists');
 			return false;
 		}
 
 		setNameValidationMessageId(null);
 		return true;
-	}, [weekDetails.weekName, weeks]);
+	}, [weekDetails.name, weeks]);
 
 	// Validate the week details to ensure all days are selected and the week name is valid
 	// This is used to enable/disable the submit button
@@ -120,14 +122,11 @@ export default function CreateWeekModalComponent(): React.ReactElement {
 				<FormattedMessage id="week.create" />
 			</Button>
 
-
 			<Modal
 				isOpen={showModal}
 				toggle={handleCloseModal}
-				backdrop="static"
-				onClosed={resetState}
 			>
-				<ModalHeader toggle={handleCloseModal}>
+				<ModalHeader>
 					<FormattedMessage id="week.create" />
 					<TooltipHelpComponent page="week-create" />
 					<div style={tooltipBaseStyle}>
@@ -144,9 +143,9 @@ export default function CreateWeekModalComponent(): React.ReactElement {
 									<Input
 										id="name"
 										type="text"
-										name="weekName"
+										name="name"
 										required
-										value={weekDetails.weekName}
+										value={weekDetails.name}
 										invalid={!isWeekNameValid}
 										onChange={handleStringChange}
 									/>
