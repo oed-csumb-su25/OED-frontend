@@ -179,9 +179,9 @@ export default function EditDayModalComponent(props: EditDayModalComponentProps)
 								<tr>
 									<th><FormattedMessage id="day.segments.table.timeRange" /></th>
 									<th><FormattedMessage id="day.segments.table.slope" /></th>
-									<th><FormattedMessage id="day.segments.table.intercept" /></th>
+									<th><FormattedMessage id="intercept" /></th>
 									<th><FormattedMessage id="note" /></th>
-									<th><FormattedMessage id="day.segments.table.edit" /></th>
+									<th><FormattedMessage id="edit" /></th>
 									<th><FormattedMessage id="split.earlier" /></th>
 									<th><FormattedMessage id="split.later" /></th>
 									<th><FormattedMessage id="delete.earlier" /></th>

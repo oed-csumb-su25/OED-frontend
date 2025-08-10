@@ -264,7 +264,7 @@ export default function CreateDayModalComponent() {
 							<Col>
 								{/* Intercept input*/}
 								<FormGroup>
-									<Label for='intercept'>{translate('conversion.intercept')}</Label>
+									<Label for='intercept'>{translate('intercept')}</Label>
 									<Input
 										id='intercept'
 										name='intercept'

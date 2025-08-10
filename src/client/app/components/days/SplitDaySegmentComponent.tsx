@@ -159,7 +159,7 @@ export default function SplitDaySegmentComponent(props: SplitDaySegmentComponent
 					</FormGroup>
 					<FormGroup>
 						<Label for="segment-intercept">
-							<FormattedMessage id="day.segments.table.intercept" />
+							<FormattedMessage id="intercept" />
 						</Label>
 						<Input
 							id="segment-intercept"

@@ -144,7 +144,7 @@ export default function EditDaySegmentModalComponent(props: EditDaySegmentModalC
 					</FormGroup>
 					<FormGroup>
 						<Label for="segment-intercept">
-							<FormattedMessage id="day.segments.table.intercept" />
+							<FormattedMessage id="intercept" />
 						</Label>
 						<Input
 							id="segment-intercept"
