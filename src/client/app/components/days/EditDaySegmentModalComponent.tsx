@@ -51,45 +51,62 @@ export default function EditDaySegmentModalComponent(props: EditDaySegmentModalC
 	};
 
 	const handleSubmit = () => {
+		props.handleClose();
 		editDaySegmentMutation(daySegment).unwrap()
 			.then(() => {
-				props.handleClose();
 			})
 			.catch(error => {
 				showErrorNotification(error);
 			});
 	};
 
+	// The segment immediately before the current segment, if it exists.
+	// Used to validate the start hour.
+	const earlierSegment = React.useMemo(() => {
+		const segmentIndex = daySegments.findIndex(s => s.id === props.daySegment.id);
+		if (segmentIndex > 0) {
+			return daySegments[segmentIndex - 1];
+		}
+		return null;
+	}, [daySegments, props.daySegment.id]);
+
+	// The segment immediately after the current segment, if it exists.
+	// Used to validate the end hour.
+	const laterSegment = React.useMemo(() => {
+		const segmentIndex = daySegments.findIndex(s => s.id === props.daySegment.id);
+		if (segmentIndex < daySegments.length - 1) {
+			return daySegments[segmentIndex + 1];
+		}
+		return null;
+	}, [daySegments, props.daySegment.id]);
+
 	// Validate the start hour
 	// It should be a valid hour and not conflict with existing segments
 	const isStartHourValid = React.useMemo(() => {
-		if (daySegment.startHour < 0 || daySegment.startHour >= daySegment.endHour) {
+		if (!Number.isInteger(daySegment.startHour) || daySegment.startHour < 0 || daySegment.startHour >= daySegment.endHour) {
 			return false;
 		}
 		// Check if the start hour does not conflict with existing segments
-		const segmentIndex = daySegments.findIndex(s => s.id === daySegment.id);
-		if (segmentIndex > 0) {
-			const earlierSegment = daySegments[segmentIndex - 1];
-			return daySegment.startHour > earlierSegment.startHour;
+		if (earlierSegment && daySegment.startHour <= earlierSegment.startHour) {
+			return false;
 		}
 
 		return true;
-	}, [daySegment.startHour, daySegment.endHour]);
+	}, [daySegment.startHour, daySegment.endHour, earlierSegment]);
 
 	// Validate the end hour
 	// It should be a valid hour and not conflict with existing segments
 	const isEndHourValid = React.useMemo(() => {
-		if (daySegment.endHour <= daySegment.startHour || daySegment.endHour > 24) {
+		if (!Number.isInteger(daySegment.endHour) || daySegment.endHour <= daySegment.startHour || daySegment.endHour > 24) {
 			return false;
 		}
 		// Check if the end hour does not conflict with existing segments
-		const segmentIndex = daySegments.findIndex(s => s.id === daySegment.id);
-		if (segmentIndex < daySegments.length - 1) {
-			const laterSegment = daySegments[segmentIndex + 1];
-			return daySegment.endHour < laterSegment.endHour;
+		if (laterSegment && daySegment.endHour >= laterSegment.endHour) {
+			return false;
 		}
+
 		return true;
-	}, [daySegment.startHour, daySegment.endHour]);
+	}, [daySegment.startHour, daySegment.endHour, laterSegment]);
 
 	// Validate the segment as a whole
 	// It should have valid start and end hours
@@ -148,7 +165,7 @@ export default function EditDaySegmentModalComponent(props: EditDaySegmentModalC
 									id="segment-start-hour"
 									name="startHour"
 									type="number"
-									min={0}
+									min={earlierSegment ? earlierSegment.startHour + 1 : 0}
 									max={daySegment.endHour - 1}
 									step="1"
 									value={daySegment.startHour}
@@ -157,7 +174,9 @@ export default function EditDaySegmentModalComponent(props: EditDaySegmentModalC
 									disabled={daySegment.originalStartHour === 0}
 								/>
 								<FormFeedback>
-									<FormattedMessage id="invalid.input" />
+									<FormattedMessage id="day.segments.edit.start.hour.invalid" values={
+										{ min: earlierSegment?.startHour ?? 0 }
+									} />
 								</FormFeedback>
 							</Col>
 							<Col>
@@ -169,7 +188,7 @@ export default function EditDaySegmentModalComponent(props: EditDaySegmentModalC
 									name="endHour"
 									type="number"
 									min={daySegment.startHour + 1}
-									max={24}
+									max={laterSegment ? laterSegment.endHour - 1 : 24}
 									step="1"
 									value={daySegment.endHour}
 									onChange={handleNumberChange}
@@ -177,7 +196,9 @@ export default function EditDaySegmentModalComponent(props: EditDaySegmentModalC
 									disabled={daySegment.originalEndHour === 24}
 								/>
 								<FormFeedback>
-									<FormattedMessage id="invalid.input" />
+									<FormattedMessage id="day.segments.edit.end.hour.invalid" values={
+										{ max: laterSegment?.endHour ?? 24 }
+									} />
 								</FormFeedback>
 							</Col>
 						</Row>
