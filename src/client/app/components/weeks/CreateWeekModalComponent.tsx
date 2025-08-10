@@ -7,13 +7,13 @@ import { FormattedMessage } from 'react-intl';
 import { Button, Col, Container, FormFeedback, FormGroup, Input, Label, Modal, ModalBody, ModalFooter, ModalHeader, Row, Table } from 'reactstrap';
 import { daysApi } from '../../redux/api/daysApi';
 import { weeksApi } from '../../redux/api/weeksApi';
+import { useTranslate } from '../../redux/componentHooks';
 import { useAppSelector } from '../../redux/reduxHooks';
 import { selectDefaultCreateWeekValues } from '../../redux/selectors/adminSelectors';
 import { tooltipBaseStyle } from '../../styles/modalStyle';
 import { LocaleDataKey } from '../../translations/data';
 import { Week } from '../../types/redux/weeks';
 import { showErrorNotification, showSuccessNotification } from '../../utils/notifications';
-import translate from '../../utils/translate';
 import TooltipHelpComponent from '../TooltipHelpComponent';
 import TooltipMarkerComponent from '../TooltipMarkerComponent';
 
@@ -22,6 +22,8 @@ import TooltipMarkerComponent from '../TooltipMarkerComponent';
  * @returns Weekly pattern create element
  */
 export default function CreateWeekModalComponent(): React.ReactElement {
+	const translate = useTranslate();
+
 	// State to control modal visibility
 	const [showModal, setShowModal] = React.useState(false);
 

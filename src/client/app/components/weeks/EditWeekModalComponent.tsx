@@ -7,11 +7,11 @@ import { FormattedMessage } from 'react-intl';
 import { Button, Col, Container, FormFeedback, FormGroup, Input, Label, Modal, ModalBody, ModalFooter, ModalHeader, Row, Table } from 'reactstrap';
 import { daysApi } from '../../redux/api/daysApi';
 import { weeksApi } from '../../redux/api/weeksApi';
+import { useTranslate } from '../../redux/componentHooks';
 import { tooltipBaseStyle } from '../../styles/modalStyle';
 import { LocaleDataKey } from '../../translations/data';
 import { Week } from '../../types/redux/weeks';
 import { showErrorNotification, showSuccessNotification } from '../../utils/notifications';
-import translate from '../../utils/translate';
 import ConfirmActionModalComponent from '../ConfirmActionModalComponent';
 import TooltipHelpComponent from '../TooltipHelpComponent';
 import TooltipMarkerComponent from '../TooltipMarkerComponent';
@@ -39,6 +39,7 @@ interface EditWeekModalComponentProps {
  * @returns Weekly pattern edit element
  */
 export default function EditWeekModalComponent(props: EditWeekModalComponentProps): React.ReactElement {
+	const translate = useTranslate();
 
 	// State to hold the week details being edited. Initialized with the week passed in through props
 	const [weekDetails, setWeekDetails] = React.useState({ ...props.week });
