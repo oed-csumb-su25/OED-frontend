@@ -178,7 +178,7 @@ export default function EditDayModalComponent(props: EditDayModalComponentProps)
 							<thead>
 								<tr>
 									<th><FormattedMessage id="day.segments.table.timeRange" /></th>
-									<th><FormattedMessage id="day.segments.table.slope" /></th>
+									<th><FormattedMessage id="slope" /></th>
 									<th><FormattedMessage id="intercept" /></th>
 									<th><FormattedMessage id="note" /></th>
 									<th><FormattedMessage id="edit" /></th>

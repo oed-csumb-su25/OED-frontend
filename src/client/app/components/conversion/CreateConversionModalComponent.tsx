@@ -6,19 +6,19 @@ import * as React from 'react';
 import { useState } from 'react';
 import { FormattedMessage } from 'react-intl';
 import { Button, Col, Container, FormFeedback, FormGroup, Input, Label, Modal, ModalBody, ModalFooter, ModalHeader, Row } from 'reactstrap';
-import TooltipHelpComponent from '../TooltipHelpComponent';
 import { conversionsApi } from '../../redux/api/conversionsApi';
+import { weeksApi } from '../../redux/api/weeksApi';
+import { useTranslate } from '../../redux/componentHooks';
 import { useAppSelector } from '../../redux/reduxHooks';
 import { selectDefaultCreateConversionValues, selectIsValidConversion } from '../../redux/selectors/adminSelectors';
 import '../../styles/modal.css';
 import { tooltipBaseStyle } from '../../styles/modalStyle';
 import { TrueFalseType } from '../../types/items';
-import { showErrorNotification, showSuccessNotification } from '../../utils/notifications';
-import { useTranslate } from '../../redux/componentHooks';
-import TooltipMarkerComponent from '../TooltipMarkerComponent';
-import ConfirmActionModalComponent from '../ConfirmActionModalComponent';
 import { UnitType } from '../../types/redux/units';
-import { weeksApi } from '../../redux/api/weeksApi';
+import { showErrorNotification, showSuccessNotification } from '../../utils/notifications';
+import ConfirmActionModalComponent from '../ConfirmActionModalComponent';
+import TooltipHelpComponent from '../TooltipHelpComponent';
+import TooltipMarkerComponent from '../TooltipMarkerComponent';
 
 /**
  * Defines the create conversion modal form
@@ -407,7 +407,7 @@ export default function CreateConversionModalComponent() {
 							<Col>
 								{/* Slope input*/}
 								<FormGroup>
-									<Label for='slope'>{translate('conversion.slope')}</Label>
+									<Label for='slope'>{translate('slope')}</Label>
 									<Input
 										id='slope'
 										name='slope'

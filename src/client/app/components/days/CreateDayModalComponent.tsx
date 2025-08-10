@@ -252,7 +252,7 @@ export default function CreateDayModalComponent() {
 							<Col>
 								{/* Slope input*/}
 								<FormGroup>
-									<Label for='slope'>{translate('conversion.slope')}</Label>
+									<Label for='slope'>{translate('slope')}</Label>
 									<Input
 										id='slope'
 										name='slope'

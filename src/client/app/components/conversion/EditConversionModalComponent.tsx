@@ -675,7 +675,7 @@ export default function EditConversionModalComponent(props: EditConversionModalC
 							</FormFeedback>
 						</FormGroup>
 						<FormGroup>
-							<Label for='slope'>{translate('conversion.slope')}</Label>
+							<Label for='slope'>{translate('slope')}</Label>
 							<Input
 								name='slope'
 								type='number'
@@ -858,7 +858,7 @@ export default function EditConversionModalComponent(props: EditConversionModalC
 							<thead>
 								<tr>
 									<th><FormattedMessage id='date.range' /></th>
-									<th><FormattedMessage id='conversion.slope' /></th>
+									<th><FormattedMessage id='slope' /></th>
 									<th><FormattedMessage id='intercept' /></th>
 									<th><FormattedMessage id='conversion.pattern' /></th>
 									<th><FormattedMessage id='note' /></th>

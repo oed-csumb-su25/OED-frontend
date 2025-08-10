@@ -146,7 +146,7 @@ export default function SplitDaySegmentComponent(props: SplitDaySegmentComponent
 					</FormGroup>
 					<FormGroup>
 						<Label for="segment-slope">
-							<FormattedMessage id="day.segments.table.slope" />
+							<FormattedMessage id="slope" />
 						</Label>
 						<Input
 							id="segment-slope"
