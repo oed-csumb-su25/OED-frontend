@@ -277,7 +277,7 @@ export default function EditDayModalComponent(props: EditDayModalComponentProps)
 				/>
 
 				{/* Segment note modal */}
-				<Modal isOpen={showNoteModal} toggle={handleCloseNoteModal}>
+				<Modal isOpen={showNoteModal} toggle={handleCloseNoteModal} centered>
 					<ModalHeader>
 						{noteSegment?.startHour} - {noteSegment?.endHour}
 					</ModalHeader>
