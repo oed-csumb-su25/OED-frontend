@@ -45,11 +45,7 @@ interface EditConversionModalComponentProps {
 	handleClose: () => void;
 }
 
-const tableButtonStyle: React.CSSProperties = {
-	fontSize: '0.9rem'
-};
-
-const tableSectionDividerStyle: React.CSSProperties = {
+const modalSectionDividerStyle: React.CSSProperties = {
 	borderTop: '1px solid gray',
 	left: '-2rem',
 	width: '100vw',
@@ -850,7 +846,7 @@ export default function EditConversionModalComponent(props: EditConversionModalC
 								placeholder='Note'
 								onChange={e => handleStringChange(e)} />
 						</FormGroup>
-						<hr style={tableSectionDividerStyle} />
+						<hr style={modalSectionDividerStyle} />
 						<h5 className='mt-4'><FormattedMessage id='conversion.segments.table' /></h5>
 						<p style={{ fontSize: '1rem', color: 'gray', fontWeight: '500' }}>
 							<FormattedMessage id="conversion.segments.table.subtitle" />
@@ -885,7 +881,7 @@ export default function EditConversionModalComponent(props: EditConversionModalC
 												{(segment.note ?? '').length > 30 ? `${segment.note.slice(0, 30)} ...` : segment.note || ''}
 											</td>
 											<td>
-												<Button style={tableButtonStyle} color='secondary' onClick={() => {
+												<Button color='secondary' onClick={() => {
 													setEditingSegment({
 														...segment,
 														weekPatternsId: segment.weekPatternsId ?? -99,
@@ -901,7 +897,7 @@ export default function EditConversionModalComponent(props: EditConversionModalC
 												</Button>
 											</td>
 											<td><Button
-												style={tableButtonStyle}
+												color='secondary'
 												onClick={() => {
 													setActionDirection('earlier');
 													setSelectedSegment(segment);
@@ -912,7 +908,7 @@ export default function EditConversionModalComponent(props: EditConversionModalC
 											>
 												<FormattedMessage id='split.earlier' /></Button></td>
 											<td><Button
-												style={tableButtonStyle}
+												color='secondary'
 												onClick={() => {
 													setActionDirection('later');
 													setSelectedSegment(segment);
@@ -923,7 +919,6 @@ export default function EditConversionModalComponent(props: EditConversionModalC
 											>
 												<FormattedMessage id='split.later' /></Button></td>
 											<td><Button
-												style={tableButtonStyle}
 												color='danger'
 												disabled={segments.length === 1 || segment.startTime === '-infinity'}
 												onClick={() => {
@@ -938,7 +933,6 @@ export default function EditConversionModalComponent(props: EditConversionModalC
 											>
 												<FormattedMessage id='delete.earlier' /></Button></td>
 											<td><Button
-												style={tableButtonStyle}
 												color='danger'
 												disabled={segments.length === 1 || segment.endTime === 'infinity'}
 												onClick={() => {
