@@ -22,3 +22,11 @@ export interface UpdateDaySegmentPayload extends DaySegment {
 	originalStartHour: number;
 	originalEndHour: number;
 }
+
+export interface SplitDaySegmentPayload {
+	id: number;
+	newSlope: number;
+	newIntercept: number;
+	newNote?: string;
+	splitTime: number;
+}

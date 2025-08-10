@@ -2,15 +2,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { DaySegment, UpdateDaySegmentPayload } from '../../types/redux/days';
+import { DaySegment, SplitDaySegmentPayload, UpdateDaySegmentPayload } from '../../types/redux/days';
 import { baseApi } from './baseApi';
 
 export const daySegmentsApi = baseApi.injectEndpoints({
 	endpoints: builder => ({
-		getDaySegments: builder.query<DaySegment[], void>({
-			query: () => 'api/daySegments',
-			providesTags: ['DaySegments']
-		}),
 		getDaySegmentsById: builder.query<DaySegment, number>({
 			query: id => `api/daySegments/${id}`,
 			providesTags: (result, error, id) => [{ type: 'DaySegments', id }]
@@ -31,6 +27,24 @@ export const daySegmentsApi = baseApi.injectEndpoints({
 			}),
 			transformErrorResponse: res => res.data,
 			invalidatesTags: ['DaySegments']
+		}),
+		splitEarlier: builder.mutation<void, SplitDaySegmentPayload & Pick<DaySegment, 'dayId'>>({
+			query: ({ id, newSlope, newIntercept, newNote, splitTime }) => ({
+				url: 'api/daySegments/splitEarlier',
+				method: 'POST',
+				body: { id, newSlope, newIntercept, newNote, splitTime }
+			}),
+			transformErrorResponse: res => res.data,
+			invalidatesTags: (result, error, arg) => [{ type: 'DaySegments', dayId: arg.dayId }]
+		}),
+		splitLater: builder.mutation<void, SplitDaySegmentPayload & Pick<DaySegment, 'dayId'>>({
+			query: ({ id, newSlope, newIntercept, newNote, splitTime }) => ({
+				url: 'api/daySegments/splitLater',
+				method: 'POST',
+				body: { id, newSlope, newIntercept, newNote, splitTime }
+			}),
+			transformErrorResponse: res => res.data,
+			invalidatesTags: (result, error, arg) => [{ type: 'DaySegments', dayId: arg.dayId }]
 		}),
 		editDaySegment: builder.mutation<void, UpdateDaySegmentPayload>({
 			query: daySegment => ({
