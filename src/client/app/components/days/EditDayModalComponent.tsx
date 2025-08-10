@@ -14,10 +14,10 @@ import {
 import { Day, DaySegment } from 'types/redux/days';
 import { daysApi } from '../../redux/api/daysApi';
 import { daySegmentsApi } from '../../redux/api/daySegmentsApi';
+import { useTranslate } from '../../redux/componentHooks';
 import { tooltipBaseStyle } from '../../styles/modalStyle';
 import { LocaleDataKey } from '../../translations/data';
 import { showErrorNotification, showSuccessNotification } from '../../utils/notifications';
-import translate from '../../utils/translate';
 import ConfirmActionModalComponent from '../ConfirmActionModalComponent';
 import TooltipHelpComponent from '../TooltipHelpComponent';
 import TooltipMarkerComponent from '../TooltipMarkerComponent';
@@ -48,6 +48,8 @@ export interface EditDayModalComponentProps {
 export default function EditDayModalComponent(props: EditDayModalComponentProps) {
 	const PER_PAGE = 10;
 
+	const translate = useTranslate();
+
 	const [dayDetails, setDayDetails] = React.useState({ ...props.day });
 
 	const { data: daySegments = [] } = daySegmentsApi.useGetDaySegmentsByDayIdQuery(props.day.id);
@@ -66,8 +68,8 @@ export default function EditDayModalComponent(props: EditDayModalComponentProps)
 		editDayMutation(dayDetails).unwrap()
 			.then(() => {
 				showSuccessNotification(translate('day.edit.success'));
-			}).catch(() => {
-				showErrorNotification(translate('day.edit.error'));
+			}).catch(error => {
+				showErrorNotification(`${translate('day.edit.error')} ${error}`);
 			});
 	};
 
@@ -137,8 +139,8 @@ export default function EditDayModalComponent(props: EditDayModalComponentProps)
 				showSuccessNotification(translate('day.delete.success'));
 				props.handleClose();
 			})
-			.catch(() => {
-				showErrorNotification(translate('day.delete.error'));
+			.catch(error => {
+				showErrorNotification(`${translate('day.delete.error')} ${error}`);
 			});
 	};
 
