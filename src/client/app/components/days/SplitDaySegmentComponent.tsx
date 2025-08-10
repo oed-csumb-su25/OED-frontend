@@ -6,10 +6,10 @@ import * as React from 'react';
 import { FormattedMessage } from 'react-intl';
 import { Button, FormFeedback, FormGroup, Input, Label, Modal, ModalBody, ModalFooter, ModalHeader } from 'reactstrap';
 import { daySegmentsApi } from '../../redux/api/daySegmentsApi';
+import { useTranslate } from '../../redux/componentHooks';
 import { selectDefaultSplitDaySegmentValues } from '../../redux/selectors/adminSelectors';
 import { DaySegment, SplitDaySegmentPayload } from '../../types/redux/days';
 import { showErrorNotification } from '../../utils/notifications';
-import translate from '../../utils/translate';
 import ConfirmActionModalComponent from '../ConfirmActionModalComponent';
 
 interface SplitDaySegmentComponentProps {
@@ -31,6 +31,7 @@ interface SplitDaySegmentComponentProps {
  * @returns A button element
  */
 export default function SplitDaySegmentComponent(props: SplitDaySegmentComponentProps): React.ReactElement {
+	const translate = useTranslate();
 
 	const [splitHour, setSplitHour] = React.useState<number>(-999);
 
