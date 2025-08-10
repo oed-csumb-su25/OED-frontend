@@ -131,7 +131,7 @@ export default function EditDaySegmentModalComponent(props: EditDaySegmentModalC
 				<ModalBody>
 					<FormGroup>
 						<Label for="segment-slope">
-							<FormattedMessage id="day.segments.table.slope" />
+							<FormattedMessage id="slope" />
 						</Label>
 						<Input
 							id="segment-slope"
@@ -144,7 +144,7 @@ export default function EditDaySegmentModalComponent(props: EditDaySegmentModalC
 					</FormGroup>
 					<FormGroup>
 						<Label for="segment-intercept">
-							<FormattedMessage id="day.segments.table.intercept" />
+							<FormattedMessage id="intercept" />
 						</Label>
 						<Input
 							id="segment-intercept"

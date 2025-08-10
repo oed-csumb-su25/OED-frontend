@@ -3,13 +3,10 @@
 * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import * as React from 'react';
-// Realize that * is already imported from react
-import { useState } from 'react';
 import { FormattedMessage } from 'react-intl';
 import { Button } from 'reactstrap';
 import { Day } from 'types/redux/days';
 import '../../styles/card-page.css';
-//import { useTranslate } from '../../redux/componentHooks';
 import EditDailyPatternModalComponent from './EditDayModalComponent';
 
 interface DayViewComponentProps {
@@ -23,7 +20,7 @@ interface DayViewComponentProps {
  */
 export default function DayViewComponent(props: DayViewComponentProps) {
 	// Edit Modal Show
-	const [showEditModal, setShowEditModal] = useState(false);
+	const [showEditModal, setShowEditModal] = React.useState(false);
 
 	const handleShow = () => {
 		setShowEditModal(true);
