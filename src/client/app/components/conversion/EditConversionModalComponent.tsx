@@ -7,7 +7,6 @@ import * as React from 'react';
 // Realize that * is already imported from react
 import { useState } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
-import { toast } from 'react-toastify';
 import {
 	Button, Col, Container,
 	FormFeedback,
@@ -96,7 +95,6 @@ export default function EditConversionModalComponent(props: EditConversionModalC
 
 	// Extract data and utilities from query hooks for easier usage
 	const segments = getSegments.data ?? [];
-	const refetchSegments = getSegments.refetch;
 	const weekPatterns = getWeeks.data ?? [];
 
 	const PER_TABLE = 10;
@@ -226,14 +224,10 @@ export default function EditConversionModalComponent(props: EditConversionModalC
 			setSelectedSegment(null);
 			setActionDirection(null);
 			setActionDatetime('');
-			await refetchSegments();
 		} catch (error) {
 			showErrorNotification(
-				intl.formatMessage({ id: 'conversion.segment.split.error' }),
-				toast.POSITION.TOP_RIGHT,
-				5000
+				intl.formatMessage({ id: 'conversion.segment.split.error' })
 			);
-			await refetchSegments();
 		}
 	};
 
@@ -253,16 +247,12 @@ export default function EditConversionModalComponent(props: EditConversionModalC
 			} else if (actionDirection === 'later') {
 				await deleteLater(deleteTarget);
 			}
-			await refetchSegments();
 			setSelectedSegment(null);
 			setActionDirection(null);
 		} catch (error) {
 			showErrorNotification(
-				intl.formatMessage({ id: 'conversion.segment.delete.error' }),
-				toast.POSITION.TOP_RIGHT,
-				5000
+				intl.formatMessage({ id: 'conversion.segment.delete.error' })
 			);
-			await refetchSegments();
 		}
 	};
 	/* End State */
@@ -587,12 +577,8 @@ export default function EditConversionModalComponent(props: EditConversionModalC
 				setShowEditSegmentModal(false);
 			} catch (error) {
 				showErrorNotification(
-					intl.formatMessage({ id: 'conversion.segment.save.error' }),
-					toast.POSITION.TOP_RIGHT,
-					5000
+					intl.formatMessage({ id: 'conversion.segment.save.error' })
 				);
-			} finally {
-				await refetchSegments();
 			}
 		}
 	};
