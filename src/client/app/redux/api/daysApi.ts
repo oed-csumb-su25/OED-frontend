@@ -25,6 +25,7 @@ export const daysApi = baseApi.injectEndpoints({
 				method: 'POST',
 				body: Day
 			}),
+			transformErrorResponse: res => res.data,
 			invalidatesTags: ['Days']
 		}),
 		editDay: builder.mutation<void, Day>({
@@ -33,6 +34,7 @@ export const daysApi = baseApi.injectEndpoints({
 				method: 'POST',
 				body: Day
 			}),
+			transformErrorResponse: res => res.data,
 			invalidatesTags: (result, error, arg) => [{ type: 'Days', id: arg.id }]
 		}),
 		deleteDay: builder.mutation<void, Pick<Day, 'id'>>({
@@ -41,6 +43,7 @@ export const daysApi = baseApi.injectEndpoints({
 				method: 'POST',
 				body: { id }
 			}),
+			transformErrorResponse: res => res.data,
 			invalidatesTags: (result, error, arg) => [{ type: 'Days', id: arg.id }]
 		})
 	})
