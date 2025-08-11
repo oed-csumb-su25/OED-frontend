@@ -388,6 +388,38 @@ export const selectDefaultCreateWeekValues = createAppSelector<[], Omit<Week, 'i
 	})
 );
 
+/**
+ * Validates the creation of a new daily pattern.
+ * - Ensures the day name is not blank.
+ * - Ensures the day name does not already exist in the list of days.
+ * Returns a tuple: [isValid, message].
+ * @param _state The Redux state (unused in this selector).
+ * @param patternState The full pattern state object.
+ * @param patternState.Day The Day object containing the name of the daily pattern.
+ * @param patternState.Day.name The name of the daily pattern to validate.
+ * @returns A tuple where the first element is a boolean indicating validity, and the second is a message string.
+ */
+export const selectIsValidCreateDay = createAppSelector(
+	[
+		selectAllDays,
+		(_state, patternState: { Day: { name: string } }) => patternState
+	],
+	(days, patternState): [boolean, string] => {
+		const name = patternState.Day?.name;
+		if (!name || name === '') {
+			return [false, translate('day.create.name.required')];
+		}
+		// Check if name already exists
+		const exists = days.some(day =>
+			day.name === name
+		);
+		if (exists) {
+			return [false, translate('day.create.name.exists')];
+		}
+		return [true, 'Daily Pattern is Valid'];
+	}
+);
+
 /* Create Meter Validation:
 	Name cannot be blank
 	Area must be positive or zero
@@ -435,37 +467,5 @@ export const isValidCreateMeter = createAppSelector(
 			(meterDetails.maxError >= 0 && meterDetails.maxError <= MAX_ERRORS);
 		return { meterIsValid, defaultGraphicUnitIsValid };
 
-	}
-);
-
-/**
- * Validates the creation of a new daily pattern.
- * - Ensures the day name is not blank.
- * - Ensures the day name does not already exist (case-insensitive) in the list of days.
- * Returns a tuple: [isValid, message].
- * @param _state The Redux state (unused in this selector).
- * @param patternState The full pattern state object.
- * @param patternState.Day The Day object containing the name of the daily pattern.
- * @param patternState.Day.name The name of the daily pattern to validate.
- * @returns A tuple where the first element is a boolean indicating validity, and the second is a message string.
- */
-export const selectIsValidCreateDay = createAppSelector(
-	[
-		selectAllDays,
-		(_state, patternState: { Day: { name: string } }) => patternState
-	],
-	(days, patternState): [boolean, string] => {
-		const name = patternState.Day?.name;
-		if (!name || name.trim() === '') {
-			return [false, translate('day.create.name.required')];
-		}
-		// Check if name already exists (case-insensitive)
-		const exists = days.some(day =>
-			day.name?.toLowerCase() === name.trim().toLowerCase()
-		);
-		if (exists) {
-			return [false, translate('day.create.name.exists')];
-		}
-		return [true, 'Daily Pattern is Valid'];
 	}
 );
