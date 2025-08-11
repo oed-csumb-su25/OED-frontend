@@ -435,6 +435,25 @@ export default function EditConversionModalComponent(props: EditConversionModalC
 		// Close the warning modal
 		setShowWarningModal(false);
 
+		// If this warning is for a neutral segment edit
+		// perform the save and exit early to avoid closing the Edit Conversion Modal
+		if (editingSegment) {
+			try {
+				await editSegment({
+					segment: editingSegment,
+					originalStartTime: editingSegment.originalStartTime,
+					originalEndTime: editingSegment.originalEndTime
+				}).unwrap();
+				showSuccessNotification(translate('conversion.segment.save.success'));
+				setShowEditSegmentModal(false);
+				setSelectedSegment(null);
+				setEditingSegment(null);
+			} catch (error) {
+				showErrorNotification(translate('conversion.segment.save.error'));
+			}
+			return;
+		}
+
 		// If this warning is for a segment delete (earlier/later),
 		// perform the delete and exit early to avoid closing the Edit Conversion Modal
 		if (selectedSegment && actionDirection) {
@@ -551,6 +570,14 @@ export default function EditConversionModalComponent(props: EditConversionModalC
 				}));
 				return;
 			}
+			// Warn the user if they are saving a "neutral" segment (no pattern, slope=0, intercept=0),
+			// since it will not impact conversion results and may be unintended.
+			if (editingSegment.slope === 0 && editingSegment.intercept === 0 && editingSegment.weekPatternsId === -99) {
+				setWarningMessage(intl.formatMessage({ id: 'conversion.warning.segment.neutral' }));
+				setSelectedSegment(editingSegment);
+				setShowWarningModal(true);
+				return;
+			}
 		}
 		// If a segment is being edited, send the updated data to the backend
 		// and close the edit segment modal if the request succeeds.
@@ -561,7 +588,10 @@ export default function EditConversionModalComponent(props: EditConversionModalC
 					originalStartTime: editingSegment.originalStartTime,
 					originalEndTime: editingSegment.originalEndTime
 				}).unwrap();
+				showSuccessNotification(translate('conversion.segment.save.success'));
 				setShowEditSegmentModal(false);
+				setSelectedSegment(null);
+				setEditingSegment(null);
 			} catch (error) {
 				showErrorNotification(translate('conversion.segment.save.error'));
 			}
@@ -687,16 +717,6 @@ export default function EditConversionModalComponent(props: EditConversionModalC
 						</FormGroup>
 					</ModalBody>
 					<ModalFooter>
-						{editingSegment &&
-							editingSegment.slope === 0 &&
-							editingSegment.intercept === 0 &&
-							editingSegment.weekPatternsId === -99 && (
-							<div style={{ color: 'orange', fontWeight: '500', marginRight: 'auto' }}>
-								<FormattedMessage
-									id='conversion.warning.segment.neutral'
-								/>
-							</div>
-						)}
 						<Button color='secondary' onClick={() => setShowEditSegmentModal(false)}><FormattedMessage id='cancel' /></Button>
 						<Button color='primary' onClick={handleSaveSegment}>
 							<FormattedMessage id='save.all' />
@@ -856,8 +876,12 @@ export default function EditConversionModalComponent(props: EditConversionModalC
 													setEditingSegment({
 														...segment,
 														weekPatternsId: segment.weekPatternsId ?? -99,
-														startTime: moment.utc(segment.startTime).format('YYYY-MM-DD HH:mm:ss'),
-														endTime: moment.utc(segment.endTime).format('YYYY-MM-DD HH:mm:ss'),
+														startTime: (segment.startTime === '-infinity' || segment.startTime === 'infinity')
+															? segment.startTime
+															: moment.utc(segment.startTime).format('YYYY-MM-DD HH:mm:ss'),
+														endTime: (segment.endTime === '-infinity' || segment.endTime === 'infinity')
+															? segment.endTime
+															: moment.utc(segment.endTime).format('YYYY-MM-DD HH:mm:ss'),
 														originalStartTime: segment.startTime,
 														originalEndTime: segment.endTime
 													});

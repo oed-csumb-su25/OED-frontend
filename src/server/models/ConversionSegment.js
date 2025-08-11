@@ -296,16 +296,15 @@ class ConversionSegment {
 		}
 
 		return conn.tx(async t => {
-			// update the start time of the next segment
-			await t.none(sqlFile('conversionSegment/update_next_seg_start_to_curr_start.sql'), {
+			// delete segment passed in
+			await t.none(sqlFile('conversionSegment/delete_conversion_segment.sql'), {
 				sourceId: sourceId,
 				destinationId: destinationId,
 				startTime: startTime,
 				endTime: endTime
 			});
-
-			// delete segment passed in
-			await t.none(sqlFile('conversionSegment/delete_conversion_segment.sql'), {
+			// update the start time of the next segment
+			await t.none(sqlFile('conversionSegment/update_next_seg_start_to_curr_start.sql'), {
 				sourceId: sourceId,
 				destinationId: destinationId,
 				startTime: startTime,
