@@ -914,34 +914,44 @@ export default function EditConversionModalComponent(props: EditConversionModalC
 												}}
 											>
 												<FormattedMessage id='split.later' /></Button></td>
-											<td><Button
-												color='danger'
-												disabled={segments.length === 1 || segment.startTime === '-infinity'}
-												onClick={() => {
-													setActionDirection('earlier');
-													setSelectedSegment(segment);
-													setWarningMessage(intl.formatMessage(
-														{ id: 'conversion.delete.segment.earlier' },
-														{ start: segment.startTime, end: segment.endTime }
-													));
-													setShowWarningModal(true);
-												}}
-											>
-												<FormattedMessage id='delete.earlier' /></Button></td>
-											<td><Button
-												color='danger'
-												disabled={segments.length === 1 || segment.endTime === 'infinity'}
-												onClick={() => {
-													setActionDirection('later');
-													setSelectedSegment(segment);
-													setWarningMessage(intl.formatMessage(
-														{ id: 'conversion.delete.segment.later' },
-														{ start: segment.startTime, end: segment.endTime }
-													));
-													setShowWarningModal(true);
-												}}
-											>
-												<FormattedMessage id='delete.later' /></Button></td>
+											<td>
+												{segments.length !== 1 && segment.startTime !== '-infinity' && (
+													<Button
+														color='danger'
+														size='sm'
+														onClick={() => {
+															setActionDirection('earlier');
+															setSelectedSegment(segment);
+															setWarningMessage(intl.formatMessage(
+																{ id: 'conversion.delete.segment.earlier' },
+																{ start: segment.startTime, end: segment.endTime }
+															));
+															setShowWarningModal(true);
+														}}
+													>
+														<FormattedMessage id='delete.earlier' />
+													</Button>
+												)}
+											</td>
+											<td>
+												{segments.length !== 1 && segment.endTime !== 'infinity' && (
+													<Button
+														color='danger'
+														size='sm'
+														onClick={() => {
+															setActionDirection('later');
+															setSelectedSegment(segment);
+															setWarningMessage(intl.formatMessage(
+																{ id: 'conversion.delete.segment.later' },
+																{ start: segment.startTime, end: segment.endTime }
+															));
+															setShowWarningModal(true);
+														}}
+													>
+														<FormattedMessage id='delete.later' />
+													</Button>
+												)}
+											</td>
 										</tr>
 									))}
 							</tbody>
