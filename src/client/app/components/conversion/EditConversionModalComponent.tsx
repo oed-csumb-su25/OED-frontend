@@ -62,8 +62,8 @@ export default function EditConversionModalComponent(props: EditConversionModalC
 	const [editConversion] = conversionsApi.useEditConversionMutation();
 	const [deleteConversion] = conversionsApi.useDeleteConversionMutation();
 	const [editSegment] = conversionSegmentsApi.useEditConversionSegmentMutation();
-	const [addSegment] = conversionSegmentsApi.useAddConversionSegmentMutation();
-	const [deleteSegment] = conversionSegmentsApi.useDeleteConversionSegmentMutation();
+	const [splitEarlier] = conversionSegmentsApi.useSplitConversionSegmentEarlierMutation();
+	const [splitLater] = conversionSegmentsApi.useSplitConversionSegmentLaterMutation();
 	const [deleteEarlier] = conversionSegmentsApi.useDeleteConversionSegmentEarlierMutation();
 	const [deleteLater] = conversionSegmentsApi.useDeleteConversionSegmentLaterMutation();
 	const getSegments = conversionSegmentsApi.useGetConversionSegmentByConversionQuery({
@@ -192,34 +192,23 @@ export default function EditConversionModalComponent(props: EditConversionModalC
 			return;
 		}
 
-		const segmentFields = {
-			sourceId: selectedSegment!.sourceId,
-			destinationId: selectedSegment!.destinationId,
-			slope: selectedSegment!.slope,
-			intercept: selectedSegment!.intercept,
-			weekPatternsId: selectedSegment!.weekPatternsId,
-			note: selectedSegment!.note
-		};
-
 		try {
-			// 1. Add both new segments first
-			await addSegment({
-				...segmentFields,
-				startTime: selectedSegment!.startTime,
-				endTime: actionDatetime
-			});
-			await addSegment({
-				...segmentFields,
-				startTime: actionDatetime,
-				endTime: selectedSegment!.endTime
-			});
-			// 2. Only after both succeed, delete the original
-			await deleteSegment({
+			const splitTarget = {
 				sourceId: selectedSegment!.sourceId,
 				destinationId: selectedSegment!.destinationId,
 				startTime: selectedSegment!.startTime,
-				endTime: selectedSegment!.endTime
-			});
+				endTime: selectedSegment!.endTime,
+				newSlope: selectedSegment!.slope,
+				newIntercept: selectedSegment!.intercept,
+				newWeekPatternsId: selectedSegment!.weekPatternsId !== -99 ? selectedSegment!.weekPatternsId : null,
+				newNote: selectedSegment!.note ?? null,
+				splitTime: actionDatetime
+			};
+			if (actionDirection === 'earlier') {
+				await splitEarlier(splitTarget);
+			} else if (actionDirection === 'later') {
+				await splitLater(splitTarget);
+			}
 			setShowSplitSegmentModal(false);
 			setSelectedSegment(null);
 			setActionDirection(null);

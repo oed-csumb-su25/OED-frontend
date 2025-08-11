@@ -124,10 +124,6 @@ class ConversionSegment {
 	 */
 	async splitEarlier(startTime, endTime, splitTime, conn) {
 		return conn.tx(async t => {
-			// earlier segment - insert new
-			const earlierSegment = this;
-			await t.none(sqlFile('conversionSegment/insert_new_conversion_segment.sql'), earlierSegment);
-
 			// get all original values of the segment being split
 			const originalSegment = await t.one(sqlFile('conversionSegment/get_by_source_destination_start_end.sql'), {
 				sourceId: this.sourceId,
@@ -149,6 +145,11 @@ class ConversionSegment {
 				originalStartTime: startTime,
 				originalEndTime: endTime
 			});
+
+			// earlier segment - insert new
+			const earlierSegment = this;
+			await t.none(sqlFile('conversionSegment/insert_new_conversion_segment.sql'), earlierSegment);
+
 		});
 	}
 
