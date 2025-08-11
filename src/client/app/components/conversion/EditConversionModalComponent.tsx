@@ -29,7 +29,7 @@ import { TrueFalseType } from '../../types/items';
 import { ConversionData } from '../../types/redux/conversions';
 import { ConversionSegmentData, UpdateConversionSegmentPayload } from '../../types/redux/conversionSegments';
 import { UnitData, UnitType } from '../../types/redux/units';
-import { showErrorNotification } from '../../utils/notifications';
+import { showErrorNotification, showSuccessNotification } from '../../utils/notifications';
 import ConfirmActionModalComponent from '../ConfirmActionModalComponent';
 import TooltipHelpComponent from '../TooltipHelpComponent';
 import TooltipMarkerComponent from '../TooltipMarkerComponent';
@@ -205,10 +205,13 @@ export default function EditConversionModalComponent(props: EditConversionModalC
 				splitTime: actionDatetime
 			};
 			if (actionDirection === 'earlier') {
-				await splitEarlier(splitTarget);
+				await splitEarlier(splitTarget).unwrap();
 			} else if (actionDirection === 'later') {
-				await splitLater(splitTarget);
+				await splitLater(splitTarget).unwrap();
 			}
+			showSuccessNotification(
+				intl.formatMessage({ id: 'conversion.segment.split.success' })
+			);
 			setShowSplitSegmentModal(false);
 			setSelectedSegment(null);
 			setActionDirection(null);
@@ -232,10 +235,13 @@ export default function EditConversionModalComponent(props: EditConversionModalC
 			};
 			// Call the appropriate backend route based on direction
 			if (actionDirection === 'earlier') {
-				await deleteEarlier(deleteTarget);
+				await deleteEarlier(deleteTarget).unwrap();
 			} else if (actionDirection === 'later') {
-				await deleteLater(deleteTarget);
+				await deleteLater(deleteTarget).unwrap();
 			}
+			showSuccessNotification(
+				intl.formatMessage({ id: 'conversion.segment.delete.success'})
+			);
 			setSelectedSegment(null);
 			setActionDirection(null);
 		} catch (error) {
