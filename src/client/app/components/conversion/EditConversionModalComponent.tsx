@@ -1,12 +1,12 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
 * License, v. 2.0. If a copy of the MPL was not distributed with this
 * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 import * as moment from 'moment-timezone';
 import * as React from 'react';
 // Realize that * is already imported from react
 import { useState } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
-import { toast } from 'react-toastify';
 import {
 	Button, Col, Container,
 	FormFeedback,
@@ -29,7 +29,7 @@ import { TrueFalseType } from '../../types/items';
 import { ConversionData } from '../../types/redux/conversions';
 import { ConversionSegmentData, UpdateConversionSegmentPayload } from '../../types/redux/conversionSegments';
 import { UnitData, UnitType } from '../../types/redux/units';
-import { showErrorNotification } from '../../utils/notifications';
+import { showErrorNotification, showSuccessNotification } from '../../utils/notifications';
 import ConfirmActionModalComponent from '../ConfirmActionModalComponent';
 import TooltipHelpComponent from '../TooltipHelpComponent';
 import TooltipMarkerComponent from '../TooltipMarkerComponent';
@@ -44,18 +44,12 @@ interface EditConversionModalComponentProps {
 	handleClose: () => void;
 }
 
-const tableButtonStyle: React.CSSProperties = {
-	fontSize: '0.9rem'
-};
-
-const tableSectionDividerStyle: React.CSSProperties = {
+const modalSectionDividerStyle: React.CSSProperties = {
 	borderTop: '1px solid gray',
 	left: '-2rem',
 	width: '100vw',
 	position: 'relative'
 };
-
-const PER_TABLE = 10;
 
 /**
  * Defines the edit conversion modal form
@@ -68,8 +62,8 @@ export default function EditConversionModalComponent(props: EditConversionModalC
 	const [editConversion] = conversionsApi.useEditConversionMutation();
 	const [deleteConversion] = conversionsApi.useDeleteConversionMutation();
 	const [editSegment] = conversionSegmentsApi.useEditConversionSegmentMutation();
-	const [addSegment] = conversionSegmentsApi.useAddConversionSegmentMutation();
-	const [deleteSegment] = conversionSegmentsApi.useDeleteConversionSegmentMutation();
+	const [splitEarlier] = conversionSegmentsApi.useSplitConversionSegmentEarlierMutation();
+	const [splitLater] = conversionSegmentsApi.useSplitConversionSegmentLaterMutation();
 	const [deleteEarlier] = conversionSegmentsApi.useDeleteConversionSegmentEarlierMutation();
 	const [deleteLater] = conversionSegmentsApi.useDeleteConversionSegmentLaterMutation();
 	const getSegments = conversionSegmentsApi.useGetConversionSegmentByConversionQuery({
@@ -80,6 +74,7 @@ export default function EditConversionModalComponent(props: EditConversionModalC
 	const unitDataById = useAppSelector(selectUnitDataById);
 	const meterDataById = useAppSelector(selectMeterDataById);
 	const conversionDetails = useAppSelector(selectConversionsDetails);
+
 	// Set existing conversion values
 	const values = { ...props.conversion };
 
@@ -100,9 +95,9 @@ export default function EditConversionModalComponent(props: EditConversionModalC
 
 	// Extract data and utilities from query hooks for easier usage
 	const segments = getSegments.data ?? [];
-	const refetchSegments = getSegments.refetch;
 	const weekPatterns = getWeeks.data ?? [];
 
+	const PER_TABLE = 10;
 	const totalPages = Math.ceil(segments.length / PER_TABLE);
 
 	const handleStringChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -117,15 +112,15 @@ export default function EditConversionModalComponent(props: EditConversionModalC
 		setEditingSegment(prev => ({
 			...prev!,
 			[e.target.name]: Number(e.target.value), // dynamically sets either slope or intercept
-			weekPatternsId: null // reset pattern if editing slope/intercept
+			weekPatternsId: -99 // reset pattern if editing slope/intercept
 		}));
 	};
 
 	// Updates the pattern and resets slope/intercept if "No Pattern" is selected
 	const handlePatternChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-		const selectedPattern = e.target.value;
+		const selectedPattern = Number(e.target.value);
 		setEditingSegment(prev => {
-			if (selectedPattern === 'No Pattern') {
+			if (selectedPattern === -99) {
 				return {
 					...prev!,
 					weekPatternsId: -99,
@@ -135,7 +130,7 @@ export default function EditConversionModalComponent(props: EditConversionModalC
 			} else {
 				return {
 					...prev!,
-					weekPatternsId: Number(selectedPattern)
+					weekPatternsId: selectedPattern
 				};
 			}
 		});
@@ -197,46 +192,30 @@ export default function EditConversionModalComponent(props: EditConversionModalC
 			return;
 		}
 
-		const segmentFields = {
-			sourceId: selectedSegment!.sourceId,
-			destinationId: selectedSegment!.destinationId,
-			slope: selectedSegment!.slope,
-			intercept: selectedSegment!.intercept,
-			weekPatternsId: selectedSegment!.weekPatternsId ?? null,
-			note: selectedSegment!.note
-		};
-
 		try {
-			// 1. Add both new segments first
-			await addSegment({
-				...segmentFields,
-				startTime: selectedSegment!.startTime,
-				endTime: actionDatetime
-			});
-			await addSegment({
-				...segmentFields,
-				startTime: actionDatetime,
-				endTime: selectedSegment!.endTime
-			});
-			// 2. Only after both succeed, delete the original
-			await deleteSegment({
+			const splitTarget = {
 				sourceId: selectedSegment!.sourceId,
 				destinationId: selectedSegment!.destinationId,
 				startTime: selectedSegment!.startTime,
-				endTime: selectedSegment!.endTime
-			});
+				endTime: selectedSegment!.endTime,
+				newSlope: selectedSegment!.slope,
+				newIntercept: selectedSegment!.intercept,
+				newWeekPatternsId: selectedSegment!.weekPatternsId !== -99 ? selectedSegment!.weekPatternsId : null,
+				newNote: selectedSegment!.note ?? null,
+				splitTime: actionDatetime
+			};
+			if (actionDirection === 'earlier') {
+				await splitEarlier(splitTarget).unwrap();
+			} else if (actionDirection === 'later') {
+				await splitLater(splitTarget).unwrap();
+			}
+			showSuccessNotification(translate('conversion.segment.split.success'));
 			setShowSplitSegmentModal(false);
 			setSelectedSegment(null);
 			setActionDirection(null);
 			setActionDatetime('');
-			await refetchSegments();
 		} catch (error) {
-			showErrorNotification(
-				intl.formatMessage({ id: 'conversion.segment.split.error' }),
-				toast.POSITION.TOP_RIGHT,
-				5000
-			);
-			await refetchSegments();
+			showErrorNotification(translate('conversion.segment.split.error'));
 		}
 	};
 
@@ -252,20 +231,15 @@ export default function EditConversionModalComponent(props: EditConversionModalC
 			};
 			// Call the appropriate backend route based on direction
 			if (actionDirection === 'earlier') {
-				await deleteEarlier(deleteTarget);
+				await deleteEarlier(deleteTarget).unwrap();
 			} else if (actionDirection === 'later') {
-				await deleteLater(deleteTarget);
+				await deleteLater(deleteTarget).unwrap();
 			}
-			await refetchSegments();
+			showSuccessNotification(translate('conversion.segment.delete.success'));
 			setSelectedSegment(null);
 			setActionDirection(null);
 		} catch (error) {
-			showErrorNotification(
-				intl.formatMessage({ id: 'conversion.segment.delete.error' }),
-				toast.POSITION.TOP_RIGHT,
-				5000
-			);
-			await refetchSegments();
+			showErrorNotification(translate('conversion.segment.delete.error'));
 		}
 	};
 	/* End State */
@@ -461,6 +435,25 @@ export default function EditConversionModalComponent(props: EditConversionModalC
 		// Close the warning modal
 		setShowWarningModal(false);
 
+		// If this warning is for a neutral segment edit
+		// perform the save and exit early to avoid closing the Edit Conversion Modal
+		if (editingSegment) {
+			try {
+				await editSegment({
+					segment: editingSegment,
+					originalStartTime: editingSegment.originalStartTime,
+					originalEndTime: editingSegment.originalEndTime
+				}).unwrap();
+				showSuccessNotification(translate('conversion.segment.save.success'));
+				setShowEditSegmentModal(false);
+				setSelectedSegment(null);
+				setEditingSegment(null);
+			} catch (error) {
+				showErrorNotification(translate('conversion.segment.save.error'));
+			}
+			return;
+		}
+
 		// If this warning is for a segment delete (earlier/later),
 		// perform the delete and exit early to avoid closing the Edit Conversion Modal
 		if (selectedSegment && actionDirection) {
@@ -577,6 +570,14 @@ export default function EditConversionModalComponent(props: EditConversionModalC
 				}));
 				return;
 			}
+			// Warn the user if they are saving a "neutral" segment (no pattern, slope=0, intercept=0),
+			// since it will not impact conversion results and may be unintended.
+			if (editingSegment.slope === 0 && editingSegment.intercept === 0 && editingSegment.weekPatternsId === -99) {
+				setWarningMessage(intl.formatMessage({ id: 'conversion.warning.segment.neutral' }));
+				setSelectedSegment(editingSegment);
+				setShowWarningModal(true);
+				return;
+			}
 		}
 		// If a segment is being edited, send the updated data to the backend
 		// and close the edit segment modal if the request succeeds.
@@ -586,16 +587,13 @@ export default function EditConversionModalComponent(props: EditConversionModalC
 					segment: editingSegment,
 					originalStartTime: editingSegment.originalStartTime,
 					originalEndTime: editingSegment.originalEndTime
-				});
+				}).unwrap();
+				showSuccessNotification(translate('conversion.segment.save.success'));
 				setShowEditSegmentModal(false);
+				setSelectedSegment(null);
+				setEditingSegment(null);
 			} catch (error) {
-				showErrorNotification(
-					intl.formatMessage({ id: 'conversion.segment.save.error' }),
-					toast.POSITION.TOP_RIGHT,
-					5000
-				);
-			} finally {
-				await refetchSegments();
+				showErrorNotification(translate('conversion.segment.save.error'));
 			}
 		}
 	};
@@ -700,10 +698,10 @@ export default function EditConversionModalComponent(props: EditConversionModalC
 								id='pattern'
 								name='pattern'
 								type='select'
-								value={editingSegment?.weekPatternsId === -99 ? 'No Pattern' : editingSegment?.weekPatternsId ?? ''}
+								value={editingSegment?.weekPatternsId ?? -99}
 								onChange={e => handlePatternChange(e)}
 							>
-								<option value='No Pattern'>No Pattern</option>
+								<option value={-99}>No Pattern</option>
 								{weekPatterns.map(pattern => (
 									<option key={pattern.id} value={pattern.id}>{pattern.name}</option>
 								))}
@@ -719,16 +717,6 @@ export default function EditConversionModalComponent(props: EditConversionModalC
 						</FormGroup>
 					</ModalBody>
 					<ModalFooter>
-						{editingSegment &&
-							editingSegment.slope === 0 &&
-							editingSegment.intercept === 0 &&
-							editingSegment.weekPatternsId === null && (
-							<div style={{ color: 'orange', fontWeight: '500', marginRight: 'auto' }}>
-								<FormattedMessage
-									id='conversion.warning.segment.neutral'
-								/>
-							</div>
-						)}
 						<Button color='secondary' onClick={() => setShowEditSegmentModal(false)}><FormattedMessage id='cancel' /></Button>
 						<Button color='primary' onClick={handleSaveSegment}>
 							<FormattedMessage id='save.all' />
@@ -849,7 +837,7 @@ export default function EditConversionModalComponent(props: EditConversionModalC
 								placeholder='Note'
 								onChange={e => handleStringChange(e)} />
 						</FormGroup>
-						<hr style={tableSectionDividerStyle} />
+						<hr style={modalSectionDividerStyle} />
 						<h5 className='mt-4'><FormattedMessage id='conversion.segments.table' /></h5>
 						<p style={{ fontSize: '1rem', color: 'gray', fontWeight: '500' }}>
 							<FormattedMessage id="conversion.segments.table.subtitle" />
@@ -861,7 +849,7 @@ export default function EditConversionModalComponent(props: EditConversionModalC
 									<th><FormattedMessage id='slope' /></th>
 									<th><FormattedMessage id='intercept' /></th>
 									<th><FormattedMessage id='conversion.pattern' /></th>
-									<th><FormattedMessage id='note' /></th>
+									<th><FormattedMessage id='conversion.note' /></th>
 									<th><FormattedMessage id='edit' /></th>
 									<th><FormattedMessage id='conversion.table.split.earlier' /></th>
 									<th><FormattedMessage id='conversion.table.split.later' /></th>
@@ -874,8 +862,8 @@ export default function EditConversionModalComponent(props: EditConversionModalC
 									.map(segment => (
 										<tr key={`${segment.sourceId}-${segment.destinationId}-${segment.startTime}`}>
 											<td>{segment.startTime} to {segment.endTime}</td>
-											<td>{segment.weekPatternsId === null ? segment.slope : ''}</td>
-											<td>{segment.weekPatternsId === null ? segment.intercept : ''}</td>
+											<td>{(segment.weekPatternsId ?? -99) === -99 ? segment.slope : ''}</td>
+											<td>{(segment.weekPatternsId ?? -99) === -99 ? segment.intercept : ''}</td>
 											<td>{weekPatterns.find(wp => wp.id === segment.weekPatternsId)?.name ?? ''}</td>
 											<td
 												style={{ cursor: 'pointer' }}
@@ -885,11 +873,16 @@ export default function EditConversionModalComponent(props: EditConversionModalC
 												{(segment.note ?? '').length > 30 ? `${segment.note.slice(0, 30)} ...` : segment.note || ''}
 											</td>
 											<td>
-												<Button style={tableButtonStyle} color='secondary' onClick={() => {
+												<Button color='secondary' onClick={() => {
 													setEditingSegment({
 														...segment,
-														startTime: moment.utc(segment.startTime).format('YYYY-MM-DD HH:mm:ss'),
-														endTime: moment.utc(segment.endTime).format('YYYY-MM-DD HH:mm:ss'),
+														weekPatternsId: segment.weekPatternsId ?? -99,
+														startTime: (segment.startTime === '-infinity' || segment.startTime === 'infinity')
+															? segment.startTime
+															: moment.utc(segment.startTime).format('YYYY-MM-DD HH:mm:ss'),
+														endTime: (segment.endTime === '-infinity' || segment.endTime === 'infinity')
+															? segment.endTime
+															: moment.utc(segment.endTime).format('YYYY-MM-DD HH:mm:ss'),
 														originalStartTime: segment.startTime,
 														originalEndTime: segment.endTime
 													});
@@ -900,7 +893,7 @@ export default function EditConversionModalComponent(props: EditConversionModalC
 												</Button>
 											</td>
 											<td><Button
-												style={tableButtonStyle}
+												color='secondary'
 												onClick={() => {
 													setActionDirection('earlier');
 													setSelectedSegment(segment);
@@ -911,7 +904,7 @@ export default function EditConversionModalComponent(props: EditConversionModalC
 											>
 												<FormattedMessage id='split.earlier' /></Button></td>
 											<td><Button
-												style={tableButtonStyle}
+												color='secondary'
 												onClick={() => {
 													setActionDirection('later');
 													setSelectedSegment(segment);
@@ -922,7 +915,6 @@ export default function EditConversionModalComponent(props: EditConversionModalC
 											>
 												<FormattedMessage id='split.later' /></Button></td>
 											<td><Button
-												style={tableButtonStyle}
 												color='danger'
 												disabled={segments.length === 1 || segment.startTime === '-infinity'}
 												onClick={() => {
@@ -937,7 +929,6 @@ export default function EditConversionModalComponent(props: EditConversionModalC
 											>
 												<FormattedMessage id='delete.earlier' /></Button></td>
 											<td><Button
-												style={tableButtonStyle}
 												color='danger'
 												disabled={segments.length === 1 || segment.endTime === 'infinity'}
 												onClick={() => {

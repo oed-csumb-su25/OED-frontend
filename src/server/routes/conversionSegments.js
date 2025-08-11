@@ -410,10 +410,7 @@ router.post('/edit', adminAuthMiddleware('edit conversion segment'), async (req,
 				minimum: 0
 			},
 			weekPatternsId: {
-				oneOf: [
-					{type: 'integer', minimum: 0},
-					{type: 'null'}
-				]
+				type: 'integer'
 			},
 			slope: {
 				type: 'number'
@@ -453,7 +450,7 @@ router.post('/edit', adminAuthMiddleware('edit conversion segment'), async (req,
 			const updatedConversionSegment = new ConversionSegment(
 				req.body.sourceId, 
 				req.body.destinationId, 
-				req.body.weekPatternsId, 
+				req.body.weekPatternsId === -99 ? null : req.body.weekPatternsId,
 				req.body.slope, 
 				req.body.intercept, 
 				momentToIsoOrInfinity(req.body.startTime),
