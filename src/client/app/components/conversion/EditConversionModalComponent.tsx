@@ -209,17 +209,13 @@ export default function EditConversionModalComponent(props: EditConversionModalC
 			} else if (actionDirection === 'later') {
 				await splitLater(splitTarget).unwrap();
 			}
-			showSuccessNotification(
-				intl.formatMessage({ id: 'conversion.segment.split.success' })
-			);
+			showSuccessNotification(translate('conversion.segment.split.success'));
 			setShowSplitSegmentModal(false);
 			setSelectedSegment(null);
 			setActionDirection(null);
 			setActionDatetime('');
 		} catch (error) {
-			showErrorNotification(
-				intl.formatMessage({ id: 'conversion.segment.split.error' })
-			);
+			showErrorNotification(translate('conversion.segment.split.error'));
 		}
 	};
 
@@ -239,15 +235,11 @@ export default function EditConversionModalComponent(props: EditConversionModalC
 			} else if (actionDirection === 'later') {
 				await deleteLater(deleteTarget).unwrap();
 			}
-			showSuccessNotification(
-				intl.formatMessage({ id: 'conversion.segment.delete.success'})
-			);
+			showSuccessNotification(translate('conversion.segment.delete.success'));
 			setSelectedSegment(null);
 			setActionDirection(null);
 		} catch (error) {
-			showErrorNotification(
-				intl.formatMessage({ id: 'conversion.segment.delete.error' })
-			);
+			showErrorNotification(translate('conversion.segment.delete.error'));
 		}
 	};
 	/* End State */
@@ -568,12 +560,10 @@ export default function EditConversionModalComponent(props: EditConversionModalC
 					segment: editingSegment,
 					originalStartTime: editingSegment.originalStartTime,
 					originalEndTime: editingSegment.originalEndTime
-				});
+				}).unwrap();
 				setShowEditSegmentModal(false);
 			} catch (error) {
-				showErrorNotification(
-					intl.formatMessage({ id: 'conversion.segment.save.error' })
-				);
+				showErrorNotification(translate('conversion.segment.save.error'));
 			}
 		}
 	};
