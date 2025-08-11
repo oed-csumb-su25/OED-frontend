@@ -6,7 +6,7 @@ import { baseApi } from './baseApi';
 import { ConversionSegmentData } from '../../types/redux/conversionSegments';
 
 /**
- * This file defines the segmentsApi using RTK Query.
+ * This file defines the conversionSegmentsApi using RTK Query.
  * It provides endpoints for fetching, adding, deleting, and editing conversion segments.
  * The API is injected into the baseApi created in baseApi.ts.
  */
@@ -64,6 +64,50 @@ export const conversionSegmentsApi = baseApi.injectEndpoints({
 				{ type: 'ConversionSegments', id: `${segment.sourceId}-${segment.destinationId}` }
 			]
 		}),
+		splitConversionSegmentEarlier: builder.mutation<void, {
+			sourceId: number;
+			destinationId: number;
+			startTime: string;
+			endTime: string;
+			newSlope: number;
+			newIntercept: number;
+			newWeekPatternsId?: number | null;
+			newNote?: string | null;
+			splitTime: string;
+		}>({
+			query: payload => ({
+				url: '/api/conversionSegments/splitEarlier',
+				method: 'POST',
+				body: payload
+			}),
+			invalidatesTags: (result, error, segment) => [
+				{ type: 'ConversionSegments', id: 'LIST' },
+				{ type: 'ConversionSegments', id: `${segment.sourceId}-${segment.destinationId}` }
+			]
+		}),
+
+		splitConversionSegmentLater: builder.mutation<void, {
+			sourceId: number;
+			destinationId: number;
+			startTime: string;
+			endTime: string;
+			newSlope: number;
+			newIntercept: number;
+			newWeekPatternsId?: number | null;
+			newNote?: string | null;
+			splitTime: string;
+		}>({
+			query: payload => ({
+				url: '/api/conversionSegments/splitLater',
+				method: 'POST',
+				body: payload
+			}),
+			invalidatesTags: (result, error, segment) => [
+				{ type: 'ConversionSegments', id: 'LIST' },
+				{ type: 'ConversionSegments', id: `${segment.sourceId}-${segment.destinationId}` }
+			]
+		}),
+
 		deleteConversionSegment: builder.mutation<void,{ sourceId: number; destinationId: number; startTime: string, endTime: string; }>({
 			query: payload => ({
 				url: '/api/conversionSegments/delete',
@@ -107,6 +151,8 @@ export const {
 	useGetConversionSegmentByKeyQuery,
 	useEditConversionSegmentMutation,
 	useAddConversionSegmentMutation,
+	useSplitConversionSegmentEarlierMutation,
+	useSplitConversionSegmentLaterMutation,
 	useDeleteConversionSegmentMutation,
 	useDeleteConversionSegmentEarlierMutation,
 	useDeleteConversionSegmentLaterMutation
