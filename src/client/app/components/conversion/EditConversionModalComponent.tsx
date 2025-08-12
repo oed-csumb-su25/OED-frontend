@@ -198,10 +198,10 @@ export default function EditConversionModalComponent(props: EditConversionModalC
 				destinationId: selectedSegment!.destinationId,
 				startTime: selectedSegment!.startTime,
 				endTime: selectedSegment!.endTime,
-				newSlope: selectedSegment!.slope,
-				newIntercept: selectedSegment!.intercept,
-				newWeekPatternsId: selectedSegment!.weekPatternsId !== -99 ? selectedSegment!.weekPatternsId : null,
-				newNote: selectedSegment!.note ?? null,
+				newSlope: editingSegment!.slope,
+				newIntercept: editingSegment!.intercept,
+				newWeekPatternsId: editingSegment!.weekPatternsId !== -99 ? editingSegment!.weekPatternsId : null,
+				newNote: editingSegment!.note ?? null,
 				splitTime: actionDatetime
 			};
 			if (actionDirection === 'earlier') {
@@ -733,18 +733,61 @@ export default function EditConversionModalComponent(props: EditConversionModalC
 						</p>
 					</ModalHeader>
 					<ModalBody>
-						<p>
-							<FormattedMessage id='conversion.split.datetime.prompt' />
-						</p>
-						<Input
-							type='text'
-							name='splitDatetime'
-							value={actionDatetime}
-							placeholder='YYYY-MM-DD HH:MM:SS (defaults to 00:00:00)'
-							onChange={e => handleDatetimeChange(e)}
-							invalid={!!fieldErrors.segmentTimeError}
-						/>
-						<FormFeedback className='d-block'>{fieldErrors.segmentTimeError}</FormFeedback>
+						<FormGroup>
+							<Label for='splitDatetime'><FormattedMessage id='conversion.split.datetime.prompt' /></Label>
+							<Input
+								type='text'
+								name='splitDatetime'
+								value={actionDatetime}
+								placeholder='YYYY-MM-DD HH:MM:SS'
+								onChange={e => handleDatetimeChange(e)}
+								invalid={!!fieldErrors.segmentTimeError}
+							/>
+							<FormFeedback className='d-block'>{fieldErrors.segmentTimeError}</FormFeedback>
+						</FormGroup>
+						<FormGroup>
+							<Label for='slope'><FormattedMessage id='slope' /></Label>
+							<Input
+								name='slope'
+								type='number'
+								value={editingSegment?.slope ?? ''}
+								onChange={e => handleSegmentNumberChange(e)}
+								disabled={editingSegment?.weekPatternsId !== -99}
+							/>
+						</FormGroup>
+						<FormGroup>
+							<Label for='intercept'><FormattedMessage id='intercept' /></Label>
+							<Input
+								name='intercept'
+								type='number'
+								value={editingSegment?.intercept ?? ''}
+								onChange={e => handleSegmentNumberChange(e)}
+								disabled={editingSegment?.weekPatternsId !== -99}
+							/>
+						</FormGroup>
+						<FormGroup>
+							<Label for='pattern'><FormattedMessage id='conversion.pattern' /></Label>
+							<Input
+								id='pattern'
+								name='pattern'
+								type='select'
+								value={editingSegment?.weekPatternsId ?? -99}
+								onChange={e => handlePatternChange(e)}
+							>
+								<option value={-99}>No Pattern</option>
+								{weekPatterns.map(pattern => (
+									<option key={pattern.id} value={pattern.id}>{pattern.name}</option>
+								))}
+							</Input>
+						</FormGroup>
+						<FormGroup>
+							<Label for='note'><FormattedMessage id='note' /></Label>
+							<Input
+								type='textarea'
+								value={editingSegment?.note ?? ''}
+								onChange={e => handleSegmentNoteChange(e)}
+							/>
+						</FormGroup>
 					</ModalBody>
 					<ModalFooter>
 						<Button color='secondary' onClick={() => setShowSplitSegmentModal(false)}>
@@ -899,6 +942,17 @@ export default function EditConversionModalComponent(props: EditConversionModalC
 													setSelectedSegment(segment);
 													setActionDatetime('');
 													setFieldErrors({});
+													setEditingSegment({
+														...segment,
+														slope: segment.slope ?? 0,
+														intercept: segment.intercept ?? 0,
+														weekPatternsId: segment.weekPatternsId ?? -99,
+														note: segment.note ?? '',
+														sourceId: segment.sourceId,
+														destinationId: segment.destinationId,
+														originalStartTime: segment.startTime,
+														originalEndTime: segment.endTime
+													});
 													setShowSplitSegmentModal(true);
 												}}
 											>
@@ -910,6 +964,17 @@ export default function EditConversionModalComponent(props: EditConversionModalC
 													setSelectedSegment(segment);
 													setActionDatetime('');
 													setFieldErrors({});
+													setEditingSegment({
+														...segment,
+														slope: segment.slope ?? 0,
+														intercept: segment.intercept ?? 0,
+														weekPatternsId: segment.weekPatternsId ?? -99,
+														note: segment.note ?? '',
+														sourceId: segment.sourceId,
+														destinationId: segment.destinationId,
+														originalStartTime: segment.startTime,
+														originalEndTime: segment.endTime
+													});
 													setShowSplitSegmentModal(true);
 												}}
 											>
