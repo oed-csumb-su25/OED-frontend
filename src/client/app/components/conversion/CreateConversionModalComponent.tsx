@@ -64,6 +64,34 @@ export default function CreateConversionModalComponent() {
 		destinationOptions: defaultValues.destinationOptions,
 		weeklyPatterns: defaultValues.weeklyPattern
 	});
+
+	const resetState = () => {
+		setConversionState(getInitialConversionState());
+	};
+
+	const submitConversion = () => {
+		// Close modal first to avoid repeat clicks
+		setShowModal(false);
+		const weekPatternsId = Number(conversionState.initialConversion.pattern);
+		const payload = {
+			sourceId: conversionState.overallConversion.sourceId,
+			destinationId: conversionState.overallConversion.destinationId,
+			bidirectional: (isMeterSource() || isSuffixUsed()) ? false : conversionState.overallConversion.bidirectional,
+			note: conversionState.overallConversion.note,
+			slope: conversionState.initialConversion.slope,
+			intercept: conversionState.initialConversion.intercept,
+			weekPatternsId,
+			segmentNote: conversionState.initialConversion.segmentNote
+		};
+		addConversionMutation(payload).unwrap()
+			.then(() => {
+				showSuccessNotification(translate('conversion.create.success'));
+			})
+			.catch(error => {
+				showErrorNotification(translate('conversion.create.failure') + error);
+			});
+		resetState();
+	};
 	/* End Utility Functions */
 
 	/* State */
@@ -175,32 +203,10 @@ export default function CreateConversionModalComponent() {
 		}));
 	};
 
-	const resetState = () => {
-		setConversionState(getInitialConversionState());
-	};
-
 	const handleWarningConfirm = () => {
 		//Close the warning modal
 		setShowWarningModal(false);
-		const weekPatternsId = Number(conversionState.initialConversion.pattern);
-		const payload = {
-			sourceId: conversionState.overallConversion.sourceId,
-			destinationId: conversionState.overallConversion.destinationId,
-			bidirectional: (isMeterSource() || isSuffixUsed()) ? false : conversionState.overallConversion.bidirectional,
-			note: conversionState.overallConversion.note,
-			slope: conversionState.initialConversion.slope,
-			intercept: conversionState.initialConversion.intercept,
-			weekPatternsId,
-			segmentNote: conversionState.initialConversion.segmentNote
-		};
-		addConversionMutation(payload).unwrap()
-			.then(() => {
-				showSuccessNotification(translate('week.create.success'));
-			})
-			.catch(error => {
-				showErrorNotification(translate('week.create.failure') + error);
-			});
-		resetState();
+		submitConversion();
 	};
 
 	const handleClose = () => {
@@ -227,27 +233,7 @@ export default function CreateConversionModalComponent() {
 			setWarningMessage(translate('conversion.slope.intercept.zero'));
 			setShowWarningModal(true);
 		} else if (validConversion) {
-			// Close modal first to avoid repeat clicks
-			setShowModal(false);
-			const weekPatternsId = Number(conversionState.initialConversion.pattern);
-			const payload = {
-				sourceId: conversionState.overallConversion.sourceId,
-				destinationId: conversionState.overallConversion.destinationId,
-				bidirectional: (isMeterSource() || isSuffixUsed()) ? false : conversionState.overallConversion.bidirectional,
-				note: conversionState.overallConversion.note,
-				slope: conversionState.initialConversion.slope,
-				intercept: conversionState.initialConversion.intercept,
-				weekPatternsId,
-				segmentNote: conversionState.initialConversion.segmentNote
-			};
-			addConversionMutation(payload).unwrap()
-				.then(() => {
-					showSuccessNotification(translate('conversion.create.success'));
-				})
-				.catch(error => {
-					showErrorNotification(translate('conversion.create.failure') + error);
-				});
-			resetState();
+			submitConversion();
 		} else {
 			showErrorNotification(reason);
 		}
@@ -426,7 +412,7 @@ export default function CreateConversionModalComponent() {
 						</FormGroup>
 						{/* Note input for initial conversion*/}
 						<FormGroup>
-							<Label for='note'>{translate('note')}</Label>
+							<Label for='segmentNote'>{translate('segment.note')}</Label>
 							<Input
 								id='initialConversionNote'
 								name='initialConversionNote'
@@ -438,7 +424,7 @@ export default function CreateConversionModalComponent() {
 				</ModalBody>
 				<ModalFooter>
 					{
-						// Todo looks kind of bad make a better visible notification
+						// TODO looks kind of bad make a better visible notification
 						!validConversion && <p>{reason}</p>
 					}
 
