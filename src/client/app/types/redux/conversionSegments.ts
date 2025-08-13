@@ -28,7 +28,12 @@ export interface UpdateConversionSegmentPayload extends ConversionSegmentData {
 	originalEndTime: string;
 }
 
-// TODO add comment
+/**
+ * Payload used when splitting a conversion segment into two.
+ * Includes the original segment details (source, destination, start/end time),
+ * the split point (`splitTime`), and values for the new segment that will be created
+ * after the split (slope, intercept, week pattern, and optional note).
+ */
 export interface SplitConversionSegmentPayload {
 	sourceId: number;
 	destinationId: number;
