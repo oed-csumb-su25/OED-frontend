@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import { baseApi } from './baseApi';
-import { ConversionSegmentData } from '../../types/redux/conversionSegments';
+import { ConversionSegmentData, SplitConversionSegmentPayload } from '../../types/redux/conversionSegments';
 
 /**
  * This file defines the conversionSegmentsApi using RTK Query.
@@ -64,17 +64,7 @@ export const conversionSegmentsApi = baseApi.injectEndpoints({
 				{ type: 'ConversionSegments', id: `${segment.sourceId}-${segment.destinationId}` }
 			]
 		}),
-		splitConversionSegmentEarlier: builder.mutation<void, {
-			sourceId: number;
-			destinationId: number;
-			startTime: string;
-			endTime: string;
-			newSlope: number;
-			newIntercept: number;
-			newWeekPatternsId?: number | null;
-			newNote?: string | null;
-			splitTime: string;
-		}>({
+		splitConversionSegmentEarlier: builder.mutation<void, SplitConversionSegmentPayload>({
 			query: payload => ({
 				url: '/api/conversionSegments/splitEarlier',
 				method: 'POST',
@@ -86,17 +76,7 @@ export const conversionSegmentsApi = baseApi.injectEndpoints({
 			]
 		}),
 
-		splitConversionSegmentLater: builder.mutation<void, {
-			sourceId: number;
-			destinationId: number;
-			startTime: string;
-			endTime: string;
-			newSlope: number;
-			newIntercept: number;
-			newWeekPatternsId?: number | null;
-			newNote?: string | null;
-			splitTime: string;
-		}>({
+		splitConversionSegmentLater: builder.mutation<void, SplitConversionSegmentPayload>({
 			query: payload => ({
 				url: '/api/conversionSegments/splitLater',
 				method: 'POST',

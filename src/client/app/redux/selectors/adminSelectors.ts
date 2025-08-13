@@ -11,6 +11,7 @@ import { selectAllMeters, selectMeterById } from '../../redux/api/metersApi';
 import { selectAdminPreferences } from '../../redux/slices/adminSlice';
 import { selectSelectedLanguage } from '../../redux/slices/appStateSlice';
 import { DaySegment, SplitDaySegmentPayload } from '../../types/redux/days';
+import { ConversionSegmentData, SplitConversionSegmentPayload } from '../../types/redux/conversionSegments';
 import { MeterData, MeterTimeSortType } from '../../types/redux/meters';
 import { DisableChecksType, UnitData, UnitType } from '../../types/redux/units';
 import { Week } from '../../types/redux/weeks';
@@ -360,6 +361,22 @@ export const selectDefaultCreateDayValues = createAppSelector(
 		return defaultValues;
 	}
 );
+
+export const selectDefaultSplitConversionSegmentValues = createSelector(
+  [(segment: ConversionSegmentData) => segment],
+  (segment): SplitConversionSegmentPayload => ({
+    splitTime: '',
+    sourceId: segment.sourceId,
+    destinationId: segment.destinationId,
+    startTime: segment.startTime,
+    endTime: segment.endTime,
+    newSlope: segment.slope ?? 0,
+    newIntercept: segment.intercept ?? 0,
+    newWeekPatternsId: segment.weekPatternsId ?? -99,
+    newNote: ''
+  })
+);
+
 
 const selectDaySegmentId = (daySegment: DaySegment) => daySegment.id;
 export const selectDefaultSplitDaySegmentValues = createSelector(

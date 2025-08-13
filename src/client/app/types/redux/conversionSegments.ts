@@ -27,3 +27,16 @@ export interface UpdateConversionSegmentPayload extends ConversionSegmentData {
 	originalStartTime: string;
 	originalEndTime: string;
 }
+
+// TODO add comment
+export interface SplitConversionSegmentPayload {
+	sourceId: number;
+	destinationId: number;
+	startTime: string;
+	endTime: string;
+	splitTime: string;
+	newSlope: number;
+	newIntercept: number;
+	newWeekPatternsId: number;
+	newNote?: string;
+}

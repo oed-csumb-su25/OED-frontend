@@ -237,10 +237,7 @@ router.post('/splitEarlier', adminAuthMiddleware('split earlier conversion segme
 				type: 'string'
 			},
 			newWeekPatternsId: {
-				oneOf: [
-					{type: 'integer', minimum: 0},
-					{type: 'null'}
-				]
+				type: 'integer'
 			},
 			newSlope: {
 				type: 'number'
@@ -271,7 +268,7 @@ router.post('/splitEarlier', adminAuthMiddleware('split earlier conversion segme
 			const earlierSegment = new ConversionSegment(
 				req.body.sourceId, 
 				req.body.destinationId,
-				req.body.newWeekPatternsId,
+				req.body.newWeekPatternsId === -99 ? null : req.body.newWeekPatternsId,
 				req.body.newSlope,
 				req.body.newIntercept,
 				momentToIsoOrInfinity(req.body.startTime),
@@ -326,10 +323,7 @@ router.post('/splitLater', adminAuthMiddleware('split later conversion segment')
 				type: 'string'
 			},
 			newWeekPatternsId: {
-				oneOf: [
-					{type: 'integer', minimum: 0},
-					{type: 'null'}
-				]
+				type: 'integer'
 			},
 			newSlope: {
 				type: 'number'
@@ -360,7 +354,7 @@ router.post('/splitLater', adminAuthMiddleware('split later conversion segment')
 			const laterSegment = new ConversionSegment(
 				req.body.sourceId, 
 				req.body.destinationId,
-				req.body.newWeekPatternsId,
+				req.body.newWeekPatternsId === -99 ? null : req.body.newWeekPatternsId,
 				req.body.newSlope,
 				req.body.newIntercept,
 				momentToIsoOrInfinity(req.body.splitTime),
