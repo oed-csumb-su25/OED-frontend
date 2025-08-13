@@ -172,7 +172,7 @@ export default function SplitConversionSegmentModalComponent(props: SplitConvers
 							value={newSegment.newWeekPatternsId}
 							onChange={e => handlePatternChange(e)}
 						>
-							<option value={-99}>No Pattern</option>
+							<option value={-99}>{translate('conversion.pattern.no')}</option>
 							{props.weekPatterns.map(pattern => (
 								<option key={pattern.id} value={pattern.id}>{pattern.name}</option>
 							))}

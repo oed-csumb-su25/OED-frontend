@@ -237,7 +237,10 @@ router.post('/splitEarlier', adminAuthMiddleware('split earlier conversion segme
 				type: 'string'
 			},
 			newWeekPatternsId: {
-				type: 'integer'
+				oneOf: [
+					{ type: 'integer' },
+					{ type: 'null' }
+				]
 			},
 			newSlope: {
 				type: 'number'
@@ -323,7 +326,10 @@ router.post('/splitLater', adminAuthMiddleware('split later conversion segment')
 				type: 'string'
 			},
 			newWeekPatternsId: {
-				type: 'integer'
+				oneOf: [
+					{ type: 'integer' },
+					{ type: 'null' }
+				]
 			},
 			newSlope: {
 				type: 'number'
@@ -404,7 +410,10 @@ router.post('/edit', adminAuthMiddleware('edit conversion segment'), async (req,
 				minimum: 0
 			},
 			weekPatternsId: {
-				type: 'integer'
+				oneOf: [
+					{ type: 'integer' },
+					{ type: 'null' }
+				]
 			},
 			slope: {
 				type: 'number'
