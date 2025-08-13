@@ -22,27 +22,15 @@ import TooltipMarkerComponent from '../TooltipMarkerComponent';
  * @returns Day create element
  */
 export default function CreateDayModalComponent() {
+	/* Hooks & Selectors */
 	const translate = useTranslate();
 	const [addDayMutation] = daysApi.useAddDayMutation();
-
 	const defaultValues = useAppSelector(selectDefaultCreateDayValues);
+	/* End Hooks & Selectors */
 
-	/* State */
-	// Modal show
-	const [showModal, setShowModal] = useState(false);
-
-	// State for the warning modal
-	const [showWarningModal, setShowWarningModal] = useState(false);
-	const [warningMessage, setWarningMessage] = useState('');
-
-	const handleClose = () => {
-		setShowModal(false);
-		resetState();
-	};
-	const handleShow = () => setShowModal(true);
-
-	// Handlers for each type of input change
-	const [patternState, setPatternState] = useState({
+	/* Utility Functions */
+	// Utility to get the initial pattern state
+	const getInitialPatternState = () => ({
 		Day: {
 			name: defaultValues.name,
 			note: defaultValues.DayNote
@@ -56,67 +44,14 @@ export default function CreateDayModalComponent() {
 		}
 	});
 
-	// Check if the daily pattern is valid
-	const [isValidDay, reason] = useAppSelector(state =>
-		selectIsValidCreateDay(state, patternState)
-	);
-
-	const handleTextInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-		const { name, value } = e.target;
-		if (name === 'DayNote') {
-			setPatternState(prev => ({
-				...prev,
-				Day: {
-					...prev.Day,
-					note: value
-				}
-			}));
-		} else if (name === 'initialSegmentNote') {
-			setPatternState(prev => ({
-				...prev,
-				initialSegment: {
-					...prev.initialSegment,
-					segmentNote: value
-				}
-			}));
-		} else {
-			setPatternState(prev => ({
-				...prev,
-				Day: {
-					...prev.Day,
-					name: value
-				}
-			}));
-		}
+	// Reset the state to default values
+	const resetState = () => {
+		setPatternState(getInitialPatternState());
 	};
 
-	const handleNumberInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-		const { name, value } = e.target;
-		const newValue = Number(value);
-		if (name === 'slope') {
-			setPatternState(prev => ({
-				...prev,
-				initialSegment: {
-					...prev.initialSegment,
-					slope: newValue
-				}
-			}));
-		} else if (name === 'intercept') {
-			setPatternState(prev => ({
-				...prev,
-				initialSegment: {
-					...prev.initialSegment,
-					intercept: newValue
-				}
-			}));
-		}
-	};
-
-	/* Warning Modal */
-	const handleWarningConfirm = () => {
-		//Close the warning modal
-		setShowWarningModal(false);
-		// Add the new pattern and update the store
+	const submitDay = () => {
+		// Close modal first to avoid repeat clicks
+		setShowModal(false);
 		addDayMutation({
 			name: patternState.Day.name,
 			slope: patternState.initialSegment.slope,
@@ -130,34 +65,74 @@ export default function CreateDayModalComponent() {
 			.catch(error => {
 				showErrorNotification(translate('day.create.failure') + error);
 			});
-		// Reset the state to default values
 		resetState();
-		// Close the modal
+	};
+	/* End Utility Functions */
+
+	/* State */
+	const [showModal, setShowModal] = useState(false);
+	const [showWarningModal, setShowWarningModal] = useState(false);
+	const [warningMessage, setWarningMessage] = useState('');
+	const [patternState, setPatternState] = useState(getInitialPatternState());
+	/* End State */
+
+	/* Derived State*/
+	const [isValidDay, reason] = useAppSelector(state =>
+		selectIsValidCreateDay(state, patternState)
+	);
+		/* End Derived State */
+
+	/* Handlers */
+	const handleInitialSegmentNoteChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+		setPatternState(prev => ({
+			...prev,
+			initialSegment: {
+				...prev.initialSegment,
+				segmentNote: e.target.value
+			}
+		}));
+	};
+
+	const handleTextChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+		const { name, value } = e.target;
+		setPatternState(prev => ({
+			...prev,
+			Day: {
+				...prev.Day,
+				[name]: value
+			}
+		}));
+	};
+
+	const handleNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+		const { name, value } = e.target;
+		const newValue = Number(value);
+		setPatternState(prev => ({
+			...prev,
+			initialSegment: {
+				...prev.initialSegment,
+				[name]: newValue
+			}
+		}));
+	};
+
+	const handleClose = () => {
 		setShowModal(false);
+		resetState();
+	};
+
+	const handleShow = () => setShowModal(true);
+
+	const handleWarningConfirm = () => {
+		//Close the warning modal
+		setShowWarningModal(false);
+		submitDay();
 	};
 
 	const handleWarningCancel = () => {
 		//Close the warning modal
 		setShowWarningModal(false);
 	};
-
-	// Reset the state to default values
-	const resetState = () => {
-		setPatternState({
-			Day: {
-				name: defaultValues.name,
-				note: defaultValues.DayNote
-			},
-			initialSegment: {
-				slope: defaultValues.slope,
-				intercept: defaultValues.intercept,
-				startHour: defaultValues.startHour,
-				endHour: defaultValues.endHour,
-				segmentNote: defaultValues.initialSegmentNote
-			}
-		});
-	};
-	/* End Warning Modal */
 
 	// Submit
 	const handleSubmit = () => {
@@ -166,26 +141,10 @@ export default function CreateDayModalComponent() {
 			setWarningMessage(translate('day.slope.intercept.zero'));
 			setShowWarningModal(true);
 		} else {
-			// Close modal first to avoid repeat clicks
-			setShowModal(false);
-			// Add the new pattern and update the store
-			addDayMutation({
-				name: patternState.Day.name,
-				slope: patternState.initialSegment.slope,
-				intercept: patternState.initialSegment.intercept,
-				note: patternState.Day.note,
-				segmentNote: patternState.initialSegment.segmentNote
-			}).unwrap()
-				.then(() => {
-					showSuccessNotification(translate('day.create.success'));
-				})
-				.catch(error => {
-					showErrorNotification(translate('day.create.failure') + error);
-				});
-			// Reset the state to default values
-			resetState();
+			submitDay();
 		}
 	};
+	/* End Handlers */
 
 	const tooltipStyle = {
 		...tooltipBaseStyle,
@@ -223,11 +182,11 @@ export default function CreateDayModalComponent() {
 							<Label for='name'>{translate('name')}</Label>
 							<Input
 								id='DayName'
-								name='DayName'
+								name='name'
 								type='text'
-								onChange={e => handleTextInputChange(e)}
+								onChange={e => handleTextChange(e)}
 								value={patternState.Day.name}
-								invalid={!patternState.Day.name || patternState.Day.name.trim() === ''} // TODO: OED needs to decide how to trim names universally
+								invalid={!patternState.Day.name} // TODO: OED needs to decide how to trim names universally
 								required
 							/>
 							<FormFeedback>
@@ -239,9 +198,9 @@ export default function CreateDayModalComponent() {
 							<Label for='note'>{translate('note')}</Label>
 							<Input
 								id='DayNote'
-								name='DayNote'
+								name='note'
 								type='textarea'
-								onChange={e => handleTextInputChange(e)}
+								onChange={e => handleTextChange(e)}
 								value={patternState.Day.note} />
 						</FormGroup>
 						{/*Initial day segment*/}
@@ -258,7 +217,7 @@ export default function CreateDayModalComponent() {
 										name='slope'
 										type='number'
 										value={patternState.initialSegment.slope}
-										onChange={e => handleNumberInputChange(e)} />
+										onChange={e => handleNumberChange(e)} />
 								</FormGroup>
 							</Col>
 							<Col>
@@ -270,7 +229,7 @@ export default function CreateDayModalComponent() {
 										name='intercept'
 										type='number'
 										value={patternState.initialSegment.intercept}
-										onChange={e => handleNumberInputChange(e)} />
+										onChange={e => handleNumberChange(e)} />
 								</FormGroup>
 							</Col>
 						</Row>
@@ -306,12 +265,12 @@ export default function CreateDayModalComponent() {
 						</Row>
 						{/* Note input for initial pattern*/}
 						<FormGroup>
-							<Label for='note'>{translate('note')}</Label>
+							<Label for='segmentNote'>{translate('segment.note')}</Label>
 							<Input
 								id='initialSegmentNote'
 								name='initialSegmentNote'
 								type='textarea'
-								onChange={e => handleTextInputChange(e)}
+								onChange={e => handleInitialSegmentNoteChange(e)}
 								value={patternState.initialSegment.segmentNote} />
 						</FormGroup>
 					</Container>
