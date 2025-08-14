@@ -9,7 +9,7 @@ import { daySegmentsApi } from '../../redux/api/daySegmentsApi';
 import { useTranslate } from '../../redux/componentHooks';
 import { selectDefaultSplitDaySegmentValues } from '../../redux/selectors/adminSelectors';
 import { DaySegment, SplitDaySegmentPayload } from '../../types/redux/days';
-import { showErrorNotification } from '../../utils/notifications';
+import { showErrorNotification, showSuccessNotification } from '../../utils/notifications';
 import ConfirmActionModalComponent from '../ConfirmActionModalComponent';
 
 interface SplitDaySegmentComponentProps {
@@ -87,6 +87,7 @@ export default function SplitDaySegmentComponent(props: SplitDaySegmentComponent
 		handleHideSplitModal();
 		mutation({ ...newSegment, dayId: props.daySegment.dayId, splitTime: splitHour }).unwrap()
 			.then(() => {
+				showSuccessNotification(translate('day.segments.split.success'));
 			})
 			.catch(error => {
 				showErrorNotification(error);
