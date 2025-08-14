@@ -2007,6 +2007,7 @@ const LocaleTranslationData = {
 		"week.create.failure": "No se pudo crear la semana con el mensaje: ",
 		"week.create.success": "Semana creada con éxito.",
 		"week.delete": "Borrar Semana",
+		"week.delete.confirm": "¿Estás seguro de que quieres borrar la semana?",
 		"week.delete.failure": "No se pudo borrar la semana con el mensaje: ",
 		"week.delete.success": "Semana borrada con éxito.",
 		"week.edit": "Editar Semana",
