@@ -246,7 +246,7 @@ export default function EditConversionSegmentModalComponent(props: EditConversio
 			</ModalFooter>
 			<ConfirmActionModalComponent
 				show={showWarningModal}
-				actionConfirmMessage={translate('conversion.warning.segment.neutral')}
+				actionConfirmMessage={translate('conversion.slope.intercept.zero')}
 				handleClose={() => setShowWarningModal(false)}
 				actionFunction={() => {
 					setShowWarningModal(false);

@@ -24,7 +24,7 @@ import { weeksApi } from '../../redux/api/weeksApi';
 import { useTranslate } from '../../redux/componentHooks';
 import { useAppSelector } from '../../redux/reduxHooks';
 import '../../styles/modal.css';
-import { tooltipBaseStyle } from '../../styles/modalStyle';
+import { tooltipBaseStyle, modalSectionDividerStyle } from '../../styles/modalStyle';
 import { TrueFalseType } from '../../types/items';
 import { ConversionData } from '../../types/redux/conversions';
 import { ConversionSegmentData, UpdateConversionSegmentPayload } from '../../types/redux/conversionSegments';
@@ -45,13 +45,6 @@ interface EditConversionModalComponentProps {
 	// passed in to handle closing the modal
 	handleClose: () => void;
 }
-
-const modalSectionDividerStyle: React.CSSProperties = {
-	borderTop: '1px solid gray',
-	left: '-2rem',
-	width: '100vw',
-	position: 'relative'
-};
 
 /**
  * Defines the edit conversion modal form

@@ -201,7 +201,7 @@ export default function SplitConversionSegmentModalComponent(props: SplitConvers
 
 			<ConfirmActionModalComponent
 				show={showWarningModal}
-				actionConfirmMessage={translate('conversion.warning.segment.neutral')}
+				actionConfirmMessage={translate('conversion.slope.intercept.zero')}
 				handleClose={() => setShowWarningModal(false)}
 				actionFunction={() => {
 					setShowWarningModal(false);
