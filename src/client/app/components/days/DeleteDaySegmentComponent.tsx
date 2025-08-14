@@ -7,7 +7,7 @@ import { Button } from 'reactstrap';
 import { daySegmentsApi } from '../../redux/api/daySegmentsApi';
 import { useTranslate } from '../../redux/componentHooks';
 import { DaySegment } from '../../types/redux/days';
-import { showErrorNotification } from '../../utils/notifications';
+import { showErrorNotification, showSuccessNotification } from '../../utils/notifications';
 import ConfirmActionModalComponent from '../ConfirmActionModalComponent';
 
 interface DeleteDaySegmentComponentProps {
@@ -50,6 +50,7 @@ export default function DeleteDaySegmentComponent(props: DeleteDaySegmentCompone
 				);
 			}
 			handleHideDeleteModal();
+			showSuccessNotification(translate('day.segments.delete.success'));
 		} catch (error) {
 			showErrorNotification(error);
 		}
