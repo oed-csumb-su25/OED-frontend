@@ -143,10 +143,6 @@ export default function CreateConversionModalComponent() {
 				...prev.overallConversion,
 				sourceId: newValue
 			},
-			initialConversion: {
-				...prev.initialConversion,
-				sourceId: newValue
-			},
 			destinationOptions: defaultValues.destinationOptions.filter(destination => destination.id !== newValue)
 		}));
 	};
@@ -157,10 +153,6 @@ export default function CreateConversionModalComponent() {
 			...prev,
 			overallConversion: {
 				...prev.overallConversion,
-				destinationId: newValue
-			},
-			initialConversion: {
-				...prev.initialConversion,
 				destinationId: newValue
 			},
 			sourceOptions: defaultValues.sourceOptions.filter(source => source.id !== newValue)
@@ -197,8 +189,8 @@ export default function CreateConversionModalComponent() {
 			initialConversion: {
 				...prev.initialConversion,
 				pattern: selectedValue,
-				slope: noPattern ? prev.initialConversion.slope : defaultValues.slope,
-				intercept: noPattern ? prev.initialConversion.intercept : defaultValues.intercept
+				slope: defaultValues.slope,
+				intercept: defaultValues.intercept
 			}
 		}));
 	};
