@@ -3,4 +3,4 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
  
 DELETE FROM day_patterns
-    WHERE id = ${id};
+WHERE id = ${id};

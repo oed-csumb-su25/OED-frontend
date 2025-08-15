@@ -6,10 +6,7 @@ export interface ConversionData {
 	sourceId: number;
 	destinationId: number;
 	bidirectional: boolean;
-	slope: number;
-	intercept: number;
 	note: string;
-	segments?: ConversionSegment[]; // Optional since new conversions (e.g., in Create Conversion) won’t have segments initially
 }
 
 export interface ConversionsState {
@@ -19,13 +16,4 @@ export interface ConversionsState {
 	// Use an array of ConversionData because we need the combination of source/destination id to give us a unique conversion
 	submitting: ConversionData[];
 	conversions: ConversionData[];
-}
-
-export interface ConversionSegment {
-	start_time: string;
-	end_time: string;
-	slope: number;
-	intercept: number;
-	week_patterns_id: number | null;
-	note: string;
 }

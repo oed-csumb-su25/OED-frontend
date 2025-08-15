@@ -1,14 +1,17 @@
+/* eslint-disable @typescript-eslint/indent */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+import { createSelector } from '@reduxjs/toolkit';
 import * as moment from 'moment';
 import { selectCik, selectConversionsDetails } from '../../redux/api/conversionsApi';
 import { selectAllGroups } from '../../redux/api/groupsApi';
 import { selectAllMeters, selectMeterById } from '../../redux/api/metersApi';
 import { selectAdminPreferences } from '../../redux/slices/adminSlice';
 import { selectSelectedLanguage } from '../../redux/slices/appStateSlice';
-import { ConversionData } from '../../types/redux/conversions';
+import { DaySegment, SplitDaySegmentPayload } from '../../types/redux/days';
+import { ConversionSegmentData, SplitConversionSegmentPayload } from '../../types/redux/conversionSegments';
 import { MeterData, MeterTimeSortType } from '../../types/redux/meters';
 import { DisableChecksType, UnitData, UnitType } from '../../types/redux/units';
 import { Week } from '../../types/redux/weeks';
@@ -16,6 +19,7 @@ import { unitsCompatibleWithUnit } from '../../utils/determineCompatibleUnits';
 import { AreaUnitType } from '../../utils/getAreaUnitConversion';
 import { MAX_VAL, MIN_VAL, noUnitTranslated, potentialGraphicUnits } from '../../utils/input';
 import translate from '../../utils/translate';
+import { selectAllDays } from '../api/daysApi';
 import { selectAllUnits, selectUnitDataById } from '../api/unitsApi';
 import { selectVisibleMetersAndGroups } from './authVisibilitySelectors';
 import { createAppSelector } from './selectors';
@@ -206,11 +210,9 @@ export const selectIsValidConversion = createAppSelector(
 	[
 		selectUnitDataById,
 		selectConversionsDetails,
-		(_state, conversionDetails: ConversionData) => conversionDetails.sourceId,
-		(_state, conversionDetails: ConversionData) => conversionDetails.destinationId,
-		(_state, conversionDetails: ConversionData) => conversionDetails.bidirectional
+		(_state, conversionState) => conversionState
 	],
-	(unitDataById, conversions, sourceId, destinationId, bidirectional): [boolean, string] => {
+	(unitDataById, conversions, conversionState): [boolean, string] => {
 		/* Create Conversion Validation:
 					Source equals destination: invalid conversion
 					Conversion exists: invalid conversion
@@ -221,6 +223,10 @@ export const selectIsValidConversion = createAppSelector(
 					Cannot mix unit represent
 					TODO Some of these can go away when we make the menus dynamic.
 				*/
+		const sourceId = conversionState.overallConversion.sourceId;
+		const destinationId = conversionState.overallConversion.destinationId;
+		const bidirectional = conversionState.overallConversion.bidirectional;
+
 		// The destination cannot be a meter unit.
 		if (destinationId !== -999 && unitDataById[destinationId].typeOfUnit === UnitType.meter) {
 			return [false, translate('conversion.create.destination.meter')];
@@ -334,16 +340,60 @@ export const selectDefaultCreateConversionValues = createAppSelector(
 			initialConversionNote: '',
 			slope: 0,
 			intercept: 0,
-			weeklyPattern: 'No Pattern'
+			weeklyPattern: -99
 		};
 		return defaultValues;
 	}
 );
 
+export const selectDefaultCreateDayValues = createAppSelector(
+	[selectAllUnits],
+	() => {
+		const defaultValues = {
+			name: '',
+			DayNote: '',
+			slope: 0,
+			intercept: 0,
+			startHour: 0,
+			endHour: 24,
+			initialSegmentNote: ''
+		};
+		return defaultValues;
+	}
+);
+
+export const selectDefaultSplitConversionSegmentValues = createSelector(
+	[(segment: ConversionSegmentData) => segment],
+	(segment): SplitConversionSegmentPayload => ({
+		splitTime: '',
+		sourceId: segment.sourceId,
+		destinationId: segment.destinationId,
+		startTime: segment.startTime,
+		endTime: segment.endTime,
+		newSlope: segment.slope ?? 0,
+		newIntercept: segment.intercept ?? 0,
+		newWeekPatternsId: segment.weekPatternsId ?? -99,
+		newNote: ''
+	})
+);
+
+
+const selectDaySegmentId = (daySegment: DaySegment) => daySegment.id;
+export const selectDefaultSplitDaySegmentValues = createSelector(
+	[selectDaySegmentId],
+	id => ({
+		id,
+		newSlope: 0,
+		newIntercept: 0,
+		newNote: '',
+		splitTime: -999
+	} as SplitDaySegmentPayload)
+);
+
 export const selectDefaultCreateWeekValues = createAppSelector<[], Omit<Week, 'id'>>(
 	[],
 	() => ({
-		weekName: '',
+		name: '',
 		note: '',
 		sunday: -999,
 		monday: -999,
@@ -353,6 +403,38 @@ export const selectDefaultCreateWeekValues = createAppSelector<[], Omit<Week, 'i
 		friday: -999,
 		saturday: -999
 	})
+);
+
+/**
+ * Validates the creation of a new daily pattern.
+ * - Ensures the day name is not blank.
+ * - Ensures the day name does not already exist in the list of days.
+ * Returns a tuple: [isValid, message].
+ * @param _state The Redux state (unused in this selector).
+ * @param patternState The full pattern state object.
+ * @param patternState.Day The Day object containing the name of the daily pattern.
+ * @param patternState.Day.name The name of the daily pattern to validate.
+ * @returns A tuple where the first element is a boolean indicating validity, and the second is a message string.
+ */
+export const selectIsValidCreateDay = createAppSelector(
+	[
+		selectAllDays,
+		(_state, patternState: { Day: { name: string } }) => patternState
+	],
+	(days, patternState): [boolean, string] => {
+		const name = patternState.Day?.name;
+		if (!name || name === '') {
+			return [false, translate('day.create.name.required')];
+		}
+		// Check if name already exists
+		const exists = days.some(day =>
+			day.name === name
+		);
+		if (exists) {
+			return [false, translate('day.create.name.exists')];
+		}
+		return [true, 'Daily Pattern is Valid'];
+	}
 );
 
 /* Create Meter Validation:
@@ -404,4 +486,3 @@ export const isValidCreateMeter = createAppSelector(
 
 	}
 );
-

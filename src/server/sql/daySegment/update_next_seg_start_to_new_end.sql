@@ -2,5 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
  
-SELECT * FROM day_patterns
-WHERE day_name = ${dayName};
+UPDATE day_segments
+	SET start_hour = ${endHour}
+	WHERE day_id = ${dayId} AND start_hour = ${originalEndHour};

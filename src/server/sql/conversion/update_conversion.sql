@@ -4,8 +4,6 @@
 
 UPDATE conversions
 	SET
-        bidirectional = ${bidirectional},
-        -- slope = ${slope},
-        -- intercept = ${intercept},
-        note = ${note}
+		bidirectional = ${bidirectional},
+		note = ${note}
 	WHERE source_id = ${sourceId} AND destination_id = ${destinationId};

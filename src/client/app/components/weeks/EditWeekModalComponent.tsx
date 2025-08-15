@@ -7,11 +7,11 @@ import { FormattedMessage } from 'react-intl';
 import { Button, Col, Container, FormFeedback, FormGroup, Input, Label, Modal, ModalBody, ModalFooter, ModalHeader, Row, Table } from 'reactstrap';
 import { daysApi } from '../../redux/api/daysApi';
 import { weeksApi } from '../../redux/api/weeksApi';
+import { useTranslate } from '../../redux/componentHooks';
 import { tooltipBaseStyle } from '../../styles/modalStyle';
 import { LocaleDataKey } from '../../translations/data';
 import { Week } from '../../types/redux/weeks';
 import { showErrorNotification, showSuccessNotification } from '../../utils/notifications';
-import translate from '../../utils/translate';
 import ConfirmActionModalComponent from '../ConfirmActionModalComponent';
 import TooltipHelpComponent from '../TooltipHelpComponent';
 import TooltipMarkerComponent from '../TooltipMarkerComponent';
@@ -39,19 +39,20 @@ interface EditWeekModalComponentProps {
  * @returns Weekly pattern edit element
  */
 export default function EditWeekModalComponent(props: EditWeekModalComponentProps): React.ReactElement {
+	const translate = useTranslate();
 
 	// State to hold the week details being edited. Initialized with the week passed in through props
 	const [weekDetails, setWeekDetails] = React.useState({ ...props.week });
 
 	// Fetch days data
-	const { data: days, isFetching: isFetchingDays } = daysApi.useGetDaysDetailsQuery();
+	const { data: days, isFetching: isFetchingDays } = daysApi.useGetDaysQuery();
 
 	// Sort days by day name to make the dropdown more user-friendly
 	const sortedDays = React.useMemo(() => {
 		if (!days) {
 			return [];
 		}
-		return [...days].sort((a, b) => a.dayName.toLocaleLowerCase().localeCompare(b.dayName.toLocaleLowerCase()));
+		return [...days].sort((a, b) => a.name.toLocaleLowerCase().localeCompare(b.name.toLocaleLowerCase()));
 	}, [days]);
 
 	// Fetch weeks data (used to check if week name already exists)
@@ -71,16 +72,24 @@ export default function EditWeekModalComponent(props: EditWeekModalComponentProp
 		setWeekDetails({ ...weekDetails, [e.target.name]: Number(e.target.value) });
 	};
 
+	const isWeekUnchanged = React.useMemo(() => {
+		return weekDetails.name === props.week.name &&
+			weekDetails.note === props.week.note &&
+			weekDetails.sunday === props.week.sunday &&
+			weekDetails.monday === props.week.monday &&
+			weekDetails.tuesday === props.week.tuesday &&
+			weekDetails.wednesday === props.week.wednesday &&
+			weekDetails.thursday === props.week.thursday &&
+			weekDetails.friday === props.week.friday &&
+			weekDetails.saturday === props.week.saturday;
+	}, [weekDetails, props.week]);
+
 	// Function to handle form submission. Validates the week details and submits them to the API
 	const handleSubmit = () => {
-		if (!isWeekNameValid) {
-			return;
-		}
-
+		props.handleClose();
 		editWeekMutation(weekDetails).unwrap()
 			.then(() => {
 				showSuccessNotification(translate('week.edit.success'));
-				props.handleClose();
 			})
 			.catch(error => {
 				showErrorNotification(translate('week.edit.failure') + error);
@@ -93,18 +102,18 @@ export default function EditWeekModalComponent(props: EditWeekModalComponentProp
 
 	// Validate the week name to ensure it is not empty and does not already exist
 	const isWeekNameValid = React.useMemo(() => {
-		if (weekDetails.weekName === '') {
+		if (weekDetails.name === '') {
 			setNameValidationMessageId('error.required');
 			return false;
 		}
-		if (weeks?.some(week => week.weekName.toLowerCase() === weekDetails.weekName.toLowerCase() && week.id !== weekDetails.id)) {
+		if (weeks?.some(week => week.name.toLowerCase() === weekDetails.name.toLowerCase() && week.id !== weekDetails.id)) {
 			setNameValidationMessageId('week.validation.name.exists');
 			return false;
 		}
 
 		setNameValidationMessageId(null);
 		return true;
-	}, [weekDetails.weekName, weeks, weekDetails.id]);
+	}, [weekDetails.name, weeks, weekDetails.id]);
 
 
 	// Delete confirmation dialog visibility
@@ -126,8 +135,8 @@ export default function EditWeekModalComponent(props: EditWeekModalComponentProp
 
 	return (
 		<>
-			<Modal isOpen={props.show} toggle={props.handleClose} backdrop="static" onClosed={resetState}>
-				<ModalHeader toggle={props.handleClose}>
+			<Modal isOpen={props.show} toggle={props.handleClose} onClosed={resetState}>
+				<ModalHeader>
 					<FormattedMessage id="week.edit" />
 					<TooltipHelpComponent page="week-edit" />
 					<div style={tooltipBaseStyle}>
@@ -144,9 +153,9 @@ export default function EditWeekModalComponent(props: EditWeekModalComponentProp
 									<Input
 										id="name"
 										type="text"
-										name="weekName"
+										name="name"
 										required
-										value={weekDetails.weekName}
+										value={weekDetails.name}
 										invalid={!isWeekNameValid}
 										onChange={handleStringChange} />
 									<FormFeedback>
@@ -193,7 +202,7 @@ export default function EditWeekModalComponent(props: EditWeekModalComponentProp
 													>
 														{sortedDays?.map(day => (
 															<option key={day.id} value={day.id} title={day.note}>
-																{day.dayName}
+																{day.name}
 															</option>
 														))}
 													</Input>
@@ -222,7 +231,7 @@ export default function EditWeekModalComponent(props: EditWeekModalComponentProp
 					<Button
 						color="primary"
 						onClick={handleSubmit}
-						disabled={!isWeekNameValid || isSaving || isDeleting}
+						disabled={isWeekUnchanged || !isWeekNameValid || isSaving || isDeleting}
 					>
 						<FormattedMessage id="save.all" />
 					</Button>

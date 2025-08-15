@@ -40,12 +40,12 @@ router.post('/edit', adminAuthMiddleware('edit conversions'), async (req, res) =
 		required: ['sourceId', 'destinationId', 'bidirectional'],
 		properties: {
 			sourceId: {
-				type: 'number',
+				type: 'integer',
 				// Do not allow negatives for now
 				minimum: 0
 			},
 			destinationId: {
-				type: 'number',
+				type: 'integer',
 				// Do not allow negatives for now
 				minimum: 0
 			},
@@ -71,11 +71,11 @@ router.post('/edit', adminAuthMiddleware('edit conversions'), async (req, res) =
 			const updatedConversion = new Conversion(req.body.sourceId, req.body.destinationId, req.body.bidirectional,
 			req.body.note);
 			await updatedConversion.update(conn);
+			success(res);
 		} catch (err) {
 			log.error(`Error while editing conversion with error(s): ${err}`);
 			failure(res, 500, `Error while editing conversion with error(s): ${err}`);
 		}
-		success(res);
 	}
 });
 
@@ -90,12 +90,12 @@ router.post('/addConversion', adminAuthMiddleware('add conversions'), async (req
 		required: ['sourceId', 'destinationId', 'bidirectional', 'slope', 'intercept'],
 		properties: {
 			sourceId: {
-				type: 'number',
+				type: 'integer',
 				// Do not allow negatives for now
 				minimum: 0
 			},
 			destinationId: {
-				type: 'number',
+				type: 'integer',
 				// Do not allow negatives for now
 				minimum: 0
 			},
@@ -109,7 +109,10 @@ router.post('/addConversion', adminAuthMiddleware('add conversions'), async (req
 				]
 			},
 			weekPatternsId: {
-				type: 'number'
+				oneOf: [
+					{ type: 'integer' },
+					{ type: 'null' }
+				]
 			},
 			slope: {
 				type: 'number'
@@ -126,7 +129,6 @@ router.post('/addConversion', adminAuthMiddleware('add conversions'), async (req
 		}
 	};
 	const validatorResult = validate(req.body, validConversion);
-
 	if (!validatorResult.valid) {
 		log.error(`Got request to insert conversion with invalid conversion data, errors: ${validatorResult.errors}`);
 		failure(res, 400, `Got request to insert conversion with invalid conversion data. Error(s): ${validatorResult.errors}`);
@@ -142,7 +144,7 @@ router.post('/addConversion', adminAuthMiddleware('add conversions'), async (req
 					req.body.note
 				);
 				await newConversion.insert(
-					req.body.weekPatternsId,
+					req.body.weekPatternsId === -99 ? null : req.body.weekPatternsId,
 					req.body.slope,
 					req.body.intercept,
 					req.body.segmentNote,
@@ -167,12 +169,12 @@ router.post('/delete', adminAuthMiddleware('delete conversions'), async (req, re
 		required: ['sourceId', 'destinationId'],
 		properties: {
 			sourceId: {
-				type: 'number',
+				type: 'integer',
 				// Do not allow negatives for now
 				minimum: 0
 			},
 			destinationId: {
-				type: 'number',
+				type: 'integer',
 				// Do not allow negatives for now
 				minimum: 0
 			}

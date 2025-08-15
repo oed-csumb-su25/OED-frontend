@@ -64,7 +64,7 @@ export default function HeaderButtonsComponent() {
 		shouldCSVReadingsButtonDisabled: true,
 		shouldUnitsButtonDisabled: true,
 		shouldConversionsButtonDisabled: true,
-		shouldDailyPatternsButtonDisabled: true,
+		shouldDaysButtonDisabled: true,
 		shouldWeeksButtonDisabled: true,
 		shouldLogMsgButtonDisabled: true,
 		shouldVisualUnitMapButtonDisabled: true,
@@ -104,7 +104,7 @@ export default function HeaderButtonsComponent() {
 			shouldCSVReadingsButtonDisabled: pathname === '/csvReadings',
 			shouldUnitsButtonDisabled: pathname === '/units',
 			shouldConversionsButtonDisabled: pathname === '/conversions',
-			shouldDailyPatternsButtonDisabled: pathname === '/dailyPatterns',
+			shouldDaysButtonDisabled: pathname === '/days',
 			shouldWeeksButtonDisabled: pathname === '/weeks',
 			shouldLogMsgButtonDisabled: pathname === '/logmsg',
 			shouldVisualUnitMapButtonDisabled: pathname === '/visual-unit'
@@ -197,13 +197,6 @@ export default function HeaderButtonsComponent() {
 							</DropdownItem>
 							<DropdownItem
 								style={state.adminViewableLinkStyle}
-								disabled={state.shouldDailyPatternsButtonDisabled}
-								tag={Link}
-								to="/dailyPatterns">
-								<FormattedMessage id='daily.patterns' />
-							</DropdownItem>
-							<DropdownItem
-								style={state.adminViewableLinkStyle}
 								disabled={state.shouldCSVMetersButtonDisabled}
 								tag={Link}
 								to="/csvMeters">
@@ -234,6 +227,13 @@ export default function HeaderButtonsComponent() {
 								tag={Link}
 								to="/meters">
 								<FormattedMessage id='meters' />
+							</DropdownItem>
+							<DropdownItem
+								style={state.adminViewableLinkStyle}
+								disabled={state.shouldDaysButtonDisabled}
+								tag={Link}
+								to="/days">
+								<FormattedMessage id='patterns.daily' />
 							</DropdownItem>
 							<DropdownItem
 								style={state.adminViewableLinkStyle}
