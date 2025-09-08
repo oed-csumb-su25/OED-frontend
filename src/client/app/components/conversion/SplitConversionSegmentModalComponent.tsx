@@ -107,9 +107,24 @@ export default function SplitConversionSegmentModalComponent(props: SplitConvers
 	};
 
 	const handleSplitSegment = async () => {
-		const isValidFormat = moment(newSegment.splitTime, 'YYYY-MM-DD HH:mm:ss', true).isValid();
-		if (!isValidFormat) {
+		const splitDatetime = moment(newSegment.splitTime, 'YYYY-MM-DD HH:mm:ss', true);
+
+		if (!splitDatetime.isValid()) {
 			setFieldError(translate('conversion.error.datetime.invalid'));
+			return;
+		}
+
+		// If segment.startTime is not -infinity, ensure split > startTime
+		if (props.segment.startTime !== '-infinity' &&
+			!splitDatetime.isAfter(moment(props.segment.startTime))) {
+			setFieldError(translate('conversion.error.split.beforeStart'));
+			return;
+		}
+
+		// If segment.endTime is not infinity, ensure split < endTime
+		if (props.segment.endTime !== 'infinity' &&
+			!splitDatetime.isBefore(moment(props.segment.endTime))) {
+			setFieldError(translate('conversion.error.split.afterEnd'));
 			return;
 		}
 
