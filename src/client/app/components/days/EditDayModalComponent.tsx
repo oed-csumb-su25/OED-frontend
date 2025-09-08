@@ -15,7 +15,7 @@ import { Day, DaySegment } from 'types/redux/days';
 import { daysApi } from '../../redux/api/daysApi';
 import { daySegmentsApi } from '../../redux/api/daySegmentsApi';
 import { useTranslate } from '../../redux/componentHooks';
-import { tooltipBaseStyle } from '../../styles/modalStyle';
+import { modalSectionDividerStyle, tooltipBaseStyle } from '../../styles/modalStyle';
 import { LocaleDataKey } from '../../translations/data';
 import { showErrorNotification, showSuccessNotification } from '../../utils/notifications';
 import ConfirmActionModalComponent from '../ConfirmActionModalComponent';
@@ -171,7 +171,7 @@ export default function EditDayModalComponent(props: EditDayModalComponentProps)
 							<Input id="note" name="note" type="textarea" value={dayDetails.note} onChange={handleStringChange} />
 						</FormGroup>
 
-						<hr />
+						<hr style={modalSectionDividerStyle}/>
 						{/* Table */}
 						<h5 className="mt-3 mb-2"><FormattedMessage id="day.segments.table.title" /></h5>
 						<Table striped bordered>
