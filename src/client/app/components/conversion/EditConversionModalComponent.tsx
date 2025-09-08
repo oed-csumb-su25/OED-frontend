@@ -70,7 +70,7 @@ export default function EditConversionModalComponent(props: EditConversionModalC
 	const [showSegmentNoteModal, setShowSegmentNoteModal] = React.useState(false);
 	const [showEditSegmentModal, setShowEditSegmentModal] = React.useState(false);
 	const [showSplitSegmentModal, setShowSplitSegmentModal] = React.useState(false);
-	const [showSegmentDeleteModal, setShowSegmentDeleteModal] = useState(false);
+	const [showDeleteSegmentModal, setShowDeleteSegmentModal] = useState(false);
 	const [actionDirection, setActionDirection] = useState<'earlier' | 'later' | null>(null);
 	const [selectedSegment, setSelectedSegment] = useState<ConversionSegmentData | null>(null);
 	const [currentPage, setCurrentPage] = React.useState(1);
@@ -403,12 +403,12 @@ export default function EditConversionModalComponent(props: EditConversionModalC
 			{/* Segment Delete Modal */}
 			{selectedSegment && actionDirection && (
 				<DeleteConversionSegmentModalComponent
-					show={showSegmentDeleteModal}
+					show={showDeleteSegmentModal}
 					direction={actionDirection}
 					segment={selectedSegment}
 					message={warningMessage}
 					handleClose={() => {
-						setShowWarningModal(false);
+						setShowDeleteSegmentModal(false);
 						setSelectedSegment(null);
 						setActionDirection(null);
 					}}
@@ -574,7 +574,7 @@ export default function EditConversionModalComponent(props: EditConversionModalC
 														onClick={() => {
 															setActionDirection('earlier');
 															setSelectedSegment(segment);
-															setShowSegmentDeleteModal(true);
+															setShowDeleteSegmentModal(true);
 														}}
 													>
 														<FormattedMessage id='delete.earlier' />
@@ -589,7 +589,7 @@ export default function EditConversionModalComponent(props: EditConversionModalC
 														onClick={() => {
 															setActionDirection('later');
 															setSelectedSegment(segment);
-															setShowSegmentDeleteModal(true);
+															setShowDeleteSegmentModal(true);
 														}}
 													>
 														<FormattedMessage id='delete.later' />
