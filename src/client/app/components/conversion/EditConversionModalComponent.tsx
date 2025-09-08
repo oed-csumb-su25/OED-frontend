@@ -8,13 +8,8 @@ import * as React from 'react';
 import { useState } from 'react';
 import { FormattedMessage } from 'react-intl';
 import {
-	Button, Col, Container,
-	FormFeedback,
-	FormGroup,
-	Input, Label, Modal, ModalBody, ModalFooter, ModalHeader,
-	Pagination,
-	PaginationItem, PaginationLink,
-	Row, Table
+	Button, Col, Container, FormFeedback, FormGroup, Input, Label, Modal, ModalBody,
+	ModalFooter, ModalHeader, Pagination, PaginationItem, PaginationLink, Row, Table
 } from 'reactstrap';
 import { conversionsApi, selectConversionsDetails } from '../../redux/api/conversionsApi';
 import { conversionSegmentsApi } from '../../redux/api/conversionSegmentsApi';
