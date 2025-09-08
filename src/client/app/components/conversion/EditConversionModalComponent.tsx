@@ -30,6 +30,7 @@ import TooltipMarkerComponent from '../TooltipMarkerComponent';
 import EditConversionSegmentModalComponent from './EditConversionSegmentModalComponent';
 import SplitConversionSegmentModalComponent from './SplitConversionSegmentModalComponent';
 import DeleteConversionSegmentModalComponent from './DeleteConversionSegmentModalComponent';
+import { ROWS_PER_TABLE } from '../../utils/pagination';
 
 interface EditConversionModalComponentProps {
 	show: boolean;
@@ -80,7 +81,7 @@ export default function EditConversionModalComponent(props: EditConversionModalC
 	const segments = getSegments.data ?? [];
 	const weekPatterns = getWeeks.data ?? [];
 
-	const PER_TABLE = 20;
+	const PER_TABLE = ROWS_PER_TABLE;
 	const totalPages = Math.ceil(segments.length / PER_TABLE);
 
 	const handleStringChange = (e: React.ChangeEvent<HTMLInputElement>) => {
