@@ -26,7 +26,8 @@ interface SplitConversionSegmentModalComponentProps {
 
 /**
  * Renders a modal that allows the user to split a conversion segment in either direction.
- * The new segment includes slope, intercept, pattern, and an optional note.
+ * The new segment starts with neutral values (slope=0, intercept=0, no pattern)
+ * so the admin must provide or confirm values before saving.
  * @param props The properties for the component
  * @returns A modal component for splitting a conversion segment
  */
@@ -162,6 +163,7 @@ export default function SplitConversionSegmentModalComponent(props: SplitConvers
 							type="number"
 							name="newSlope"
 							id="slope"
+							required
 							value={newSegment.newSlope}
 							onChange={e => handleNumberChange(e)}
 							disabled={newSegment.newWeekPatternsId !== -99}
@@ -173,6 +175,7 @@ export default function SplitConversionSegmentModalComponent(props: SplitConvers
 							type="number"
 							name="newIntercept"
 							id="intercept"
+							required
 							value={newSegment.newIntercept}
 							onChange={e => handleNumberChange(e)}
 							disabled={newSegment.newWeekPatternsId !== -99}
