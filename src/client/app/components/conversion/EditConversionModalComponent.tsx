@@ -80,7 +80,7 @@ export default function EditConversionModalComponent(props: EditConversionModalC
 	const segments = getSegments.data ?? [];
 	const weekPatterns = getWeeks.data ?? [];
 
-	const PER_TABLE = 10;
+	const PER_TABLE = 20;
 	const totalPages = Math.ceil(segments.length / PER_TABLE);
 
 	const handleStringChange = (e: React.ChangeEvent<HTMLInputElement>) => {
