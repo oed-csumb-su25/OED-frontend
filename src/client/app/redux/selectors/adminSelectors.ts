@@ -370,9 +370,9 @@ export const selectDefaultSplitConversionSegmentValues = createSelector(
 		destinationId: segment.destinationId,
 		startTime: segment.startTime,
 		endTime: segment.endTime,
-		newSlope: segment.slope ?? 0,
-		newIntercept: segment.intercept ?? 0,
-		newWeekPatternsId: segment.weekPatternsId ?? -99,
+		newSlope: 0,
+		newIntercept: 0,
+		newWeekPatternsId: -99,
 		newNote: ''
 	})
 );
