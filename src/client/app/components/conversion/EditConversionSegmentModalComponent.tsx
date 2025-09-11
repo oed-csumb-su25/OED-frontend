@@ -31,7 +31,7 @@ export default function EditConversionSegmentModalComponent(props: EditConversio
 	const translate = useTranslate();
 	const [segment, setSegment] = React.useState<UpdateConversionSegmentPayload>(props.segment);
 	const [editSegment] = conversionSegmentsApi.useEditConversionSegmentMutation();
-	const [fieldErrors, setFieldErrors] = React.useState<{ segmentTimeError?: string; errorField?: string }>({});
+	const [fieldErrors, setFieldErrors] = React.useState<{ startTimeError?: string, endTimeError?: string }>({});
 	const [showWarningModal, setShowWarningModal] = React.useState(false);
 
 	const handleNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -47,7 +47,10 @@ export default function EditConversionSegmentModalComponent(props: EditConversio
 			...prev,
 			[e.target.name]: e.target.value
 		}));
-		setFieldErrors(prev => (prev.errorField === e.target.name ? {} : prev));
+		setFieldErrors(prev => ({
+			...prev,
+			[`${name}Error`]: undefined
+		}));
 	};
 
 	const handlePatternChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -98,15 +101,11 @@ export default function EditConversionSegmentModalComponent(props: EditConversio
 		const isEndTimeValid = moment(segment.endTime, 'YYYY-MM-DD HH:mm:ss', true).isValid() || segment.endTime === 'infinity';
 
 		if (!isStartTimeValid) {
-			setFieldErrors({
-				segmentTimeError: translate('conversion.error.datetime.invalid'),
-				errorField: 'startTime' });
+			setFieldErrors({ startTimeError: translate('conversion.error.datetime.invalid') });
 			return;
 		}
 		if (!isEndTimeValid) {
-			setFieldErrors({
-				segmentTimeError: translate('conversion.error.datetime.invalid'),
-				errorField: 'endTime' });
+			setFieldErrors({ endTimeError: translate('conversion.error.datetime.invalid') });
 			return;
 		}
 
@@ -135,27 +134,50 @@ export default function EditConversionSegmentModalComponent(props: EditConversio
 		const previous = props.segments[index - 1];
 		const next = props.segments[index + 1];
 
-		// If editing a segment's time range, ensure there are no gaps or overlaps with adjacent segments,
-		// but only if the range is bounded (i.e., not -infinity or infinity).
+		// When editing a segment's time range, automatically adjust the neighboring segments
+		// to keep the timeline continuous (no gaps or overlaps).
 		if (segment.startTime !== '-infinity' && previous) {
-			const startMatches = moment.utc(segment.startTime, 'YYYY-MM-DD HH:mm:ss').isSame(moment.utc(previous.endTime));
-			if (!startMatches) {
-				setFieldErrors({
-					segmentTimeError: translate('conversion.error.segment.startTimeMismatch'),
-					errorField: 'startTime'
-				});
+			const newStart = moment.utc(segment.startTime, 'YYYY-MM-DD HH:mm:ss');
+			const prevEnd = moment.utc(previous.endTime, 'YYYY-MM-DD HH:mm:ss');
+			const currentEnd = moment.utc(segment.endTime, 'YYYY-MM-DD HH:mm:ss');
+
+			// Validation: new start must be after prevEnd AND before this segment's end
+			if (!newStart.isBefore(currentEnd)) {
+				setFieldErrors({ startTimeError: translate('conversion.segment.warning.invalidStartRange') });
 				return;
+			} else if (!newStart.isSame(prevEnd)) {
+				await editSegment({
+					segment: {
+						...previous,
+						endTime: newStart.format('YYYY-MM-DD HH:mm:ss')
+					},
+					originalStartTime: previous.startTime,
+					originalEndTime: previous.endTime
+				}).unwrap();
+				showSuccessNotification(translate('conversion.segment.warning.previousAdjusted'));
 			}
 		}
 
 		if (segment.endTime !== 'infinity' && next) {
-			const endMatches = moment.utc(segment.endTime, 'YYYY-MM-DD HH:mm:ss').isSame(moment.utc(next.startTime));
-			if (!endMatches) {
-				setFieldErrors({
-					segmentTimeError: translate('conversion.error.segment.endTimeMismatch'),
-					errorField: 'endTime'
-				});
+			const newEnd = moment.utc(segment.endTime, 'YYYY-MM-DD HH:mm:ss');
+			const nextStart = moment.utc(next.startTime, 'YYYY-MM-DD HH:mm:ss');
+			const currentStart = moment.utc(segment.startTime, 'YYYY-MM-DD HH:mm:ss');
+
+
+			// Validation: new end must be before nextStart AND after this segment's start
+			if (!newEnd.isAfter(currentStart)) {
+				setFieldErrors({ endTimeError: translate('conversion.segment.warning.invalidEndRange') });
 				return;
+			} else if (!newEnd.isSame(nextStart)) {
+				await editSegment({
+					segment: {
+						...next,
+						startTime: newEnd.format('YYYY-MM-DD HH:mm:ss')
+					},
+					originalStartTime: next.startTime,
+					originalEndTime: next.endTime
+				}).unwrap();
+				showSuccessNotification(translate('conversion.segment.warning.nextAdjusted'));
 			}
 		}
 
@@ -175,10 +197,10 @@ export default function EditConversionSegmentModalComponent(props: EditConversio
 						name='startTime'
 						value={segment.startTime}
 						onChange={e => handleDatetimeChange(e)}
-						invalid={fieldErrors.errorField === 'startTime'}
+						invalid={!!fieldErrors.startTimeError}
 						disabled={segment.startTime === '-infinity'}
 					/>
-					<FormFeedback>{fieldErrors.segmentTimeError}</FormFeedback>
+					<FormFeedback>{fieldErrors.startTimeError}</FormFeedback>
 				</FormGroup>
 				<FormGroup>
 					<Label for='endTime'><FormattedMessage id='conversion.time.end' /></Label>
@@ -187,10 +209,10 @@ export default function EditConversionSegmentModalComponent(props: EditConversio
 						name='endTime'
 						value={segment.endTime}
 						onChange={e => handleDatetimeChange(e)}
-						invalid={fieldErrors.errorField === 'endTime'}
+						invalid={!!fieldErrors.endTimeError}
 						disabled={segment.endTime === 'infinity'}
 					/>
-					<FormFeedback>{fieldErrors.segmentTimeError}</FormFeedback>
+					<FormFeedback>{fieldErrors.endTimeError}</FormFeedback>
 				</FormGroup>
 				<FormGroup>
 					<Label for='slope'><FormattedMessage id='slope' /></Label>
