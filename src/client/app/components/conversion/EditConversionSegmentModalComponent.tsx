@@ -209,6 +209,7 @@ export default function EditConversionSegmentModalComponent(props: EditConversio
 			<ModalBody>
 				<FormGroup>
 					<Label for='startTime'><FormattedMessage id='conversion.time.start' /></Label>
+					{/* !!fieldErrors converts string/undefined into a strict boolean */}
 					<Input
 						type='text'
 						name='startTime'
@@ -221,6 +222,7 @@ export default function EditConversionSegmentModalComponent(props: EditConversio
 				</FormGroup>
 				<FormGroup>
 					<Label for='endTime'><FormattedMessage id='conversion.time.end' /></Label>
+					{/* !!fieldErrors converts string/undefined into a strict boolean */}
 					<Input
 						type='text'
 						name='endTime'
