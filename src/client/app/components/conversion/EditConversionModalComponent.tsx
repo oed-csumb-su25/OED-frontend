@@ -31,6 +31,7 @@ import EditConversionSegmentModalComponent from './EditConversionSegmentModalCom
 import SplitConversionSegmentModalComponent from './SplitConversionSegmentModalComponent';
 import DeleteConversionSegmentModalComponent from './DeleteConversionSegmentModalComponent';
 import { ROWS_PER_TABLE } from '../../utils/pagination';
+import { showSuccessNotification, showErrorNotification } from '../../utils/notifications';
 
 interface EditConversionModalComponentProps {
 	show: boolean;
@@ -332,7 +333,15 @@ export default function EditConversionModalComponent(props: EditConversionModalC
 					...state,
 					bidirectional: (isMeterSource() || isSuffixUsed()) ? false : state.bidirectional
 				}, shouldRedoCik
-			});
+			})
+				.unwrap()
+				.then(() => {
+					showSuccessNotification(translate('conversion.overall.save.success'));
+					props.handleClose();
+				})
+				.catch(() => {
+					showErrorNotification(translate('conversion.overall.save.error'));
+				});
 		}
 	};
 
@@ -381,7 +390,7 @@ export default function EditConversionModalComponent(props: EditConversionModalC
 					segment={editingSegment!}
 					weekPatterns={weekPatterns}
 					segments={segments}
-					handleClose={() =>  {
+					handleClose={() => {
 						setShowEditSegmentModal(false);
 						setEditingSegment(null);
 					}}

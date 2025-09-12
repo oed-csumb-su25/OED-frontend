@@ -79,6 +79,9 @@ export default function SplitConversionSegmentModalComponent(props: SplitConvers
 			...prev,
 			splitTime: e.target.value
 		}));
+		if (fieldError) {
+			setFieldError('');
+		}
 	};
 
 
@@ -108,23 +111,21 @@ export default function SplitConversionSegmentModalComponent(props: SplitConvers
 	};
 
 	const handleSplitSegment = async () => {
-		const splitDatetime = moment(newSegment.splitTime, 'YYYY-MM-DD HH:mm:ss', true);
+		const splitDatetime = moment(newSegment.splitTime, ['YYYY-MM-DD HH:mm:ss', 'YYYY-MM-DD'], true);
 
 		if (!splitDatetime.isValid()) {
-			setFieldError(translate('conversion.error.datetime.invalid'));
+			setFieldError(translate('conversion.error.split.time.invalid'));
 			return;
 		}
 
 		// If segment.startTime is not -infinity, ensure split > startTime
-		if (props.segment.startTime !== '-infinity' &&
-			!splitDatetime.isAfter(moment(props.segment.startTime))) {
+		if (props.segment.startTime !== '-infinity' && splitDatetime.isSameOrBefore(moment(props.segment.startTime))) {
 			setFieldError(translate('conversion.error.split.beforeStart'));
 			return;
 		}
 
 		// If segment.endTime is not infinity, ensure split < endTime
-		if (props.segment.endTime !== 'infinity' &&
-			!splitDatetime.isBefore(moment(props.segment.endTime))) {
+		if (props.segment.endTime !== 'infinity' && splitDatetime.isSameOrAfter(moment(props.segment.endTime))) {
 			setFieldError(translate('conversion.error.split.afterEnd'));
 			return;
 		}
@@ -150,7 +151,7 @@ export default function SplitConversionSegmentModalComponent(props: SplitConvers
 							type="text"
 							name="splitTime"
 							id="splitTime"
-							placeholder="YYYY-MM-DD HH:mm:ss"
+							placeholder="YYYY-MM-DD HH:mm:ss (preferred)"
 							value={newSegment.splitTime}
 							onChange={e => handleSplitTimeChange(e)}
 							invalid={!!fieldError}
@@ -163,7 +164,6 @@ export default function SplitConversionSegmentModalComponent(props: SplitConvers
 							type="number"
 							name="newSlope"
 							id="slope"
-							required
 							value={newSegment.newSlope}
 							onChange={e => handleNumberChange(e)}
 							disabled={newSegment.newWeekPatternsId !== -99}
@@ -175,7 +175,6 @@ export default function SplitConversionSegmentModalComponent(props: SplitConvers
 							type="number"
 							name="newIntercept"
 							id="intercept"
-							required
 							value={newSegment.newIntercept}
 							onChange={e => handleNumberChange(e)}
 							disabled={newSegment.newWeekPatternsId !== -99}
