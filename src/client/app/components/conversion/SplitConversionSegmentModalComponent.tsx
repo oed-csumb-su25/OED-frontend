@@ -151,7 +151,7 @@ export default function SplitConversionSegmentModalComponent(props: SplitConvers
 							type="text"
 							name="splitTime"
 							id="splitTime"
-							placeholder="YYYY-MM-DD HH:mm:ss (preferred)"
+							placeholder={translate('conversion.split.datetime.placeholder')}
 							value={newSegment.splitTime}
 							onChange={e => handleSplitTimeChange(e)}
 							invalid={!!fieldError}
