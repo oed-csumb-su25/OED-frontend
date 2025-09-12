@@ -184,6 +184,15 @@ export default function EditConversionSegmentModalComponent(props: EditConversio
 		doMutation();
 	};
 
+	const isSegmentUnchanged = React.useMemo(() => {
+		return props.segment.startTime === segment.startTime &&
+			props.segment.endTime === segment.endTime &&
+			props.segment.slope === segment.slope &&
+			props.segment.intercept === segment.intercept &&
+			props.segment.weekPatternsId === segment.weekPatternsId &&
+			(props.segment.note ?? '') === (segment.note ?? '');
+	}, [props.segment, segment]);
+
 	return (
 		<Modal isOpen={props.show} toggle={props.handleClose}>
 			<ModalHeader>
@@ -262,7 +271,11 @@ export default function EditConversionSegmentModalComponent(props: EditConversio
 				<Button color='secondary' onClick={props.handleClose}>
 					<FormattedMessage id='cancel' />
 				</Button>
-				<Button color='primary' onClick={handleEditSegment}>
+				<Button
+					color='primary'
+					onClick={handleEditSegment}
+					disabled={isSegmentUnchanged}
+				>
 					<FormattedMessage id='save.all' />
 				</Button>
 			</ModalFooter>
