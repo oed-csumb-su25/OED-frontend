@@ -283,37 +283,6 @@ export default function EditConversionModalComponent(props: EditConversionModalC
 		props.handleClose();
 		resetState();
 	};
-	/* Warning Modal State */
-	const [showWarningModal, setShowWarningModal] = useState(false);
-	const [warningMessage, setWarningMessage] = useState('');
-
-	const handleWarningConfirm = async () => {
-		// Close the warning modal
-		setShowWarningModal(false);
-
-		// Proceed with saving changes
-		// Close the modal first to avoid repeat clicks
-		props.handleClose();
-
-		// Need to redo Cik if bidirectional changes.
-		const shouldRedoCik = props.conversion.bidirectional !== state.bidirectional;
-		// Check for changes by comparing state to props
-		const conversionHasChanges = shouldRedoCik || props.conversion.note != state.note;
-		// Only do work if there are changes
-		if (conversionHasChanges) {
-			// Save our changes
-			editConversion({
-				conversionData: {
-					...state,
-					bidirectional: (isMeterSource() || isSuffixUsed()) ? false : state.bidirectional
-				}, shouldRedoCik
-			});
-		}
-	};
-	const handleWarningCancel = () => {
-		// Close the warning modal
-		setShowWarningModal(false);
-	};
 
 	// Save changes
 	// Currently using the old functionality which is to compare inherited prop values to state values
@@ -352,14 +321,6 @@ export default function EditConversionModalComponent(props: EditConversionModalC
 
 	return (
 		<>
-			{/* Warning Modal */}
-			<ConfirmActionModalComponent
-				show={showWarningModal}
-				actionConfirmMessage={warningMessage}
-				handleClose={handleWarningCancel}
-				actionFunction={handleWarningConfirm}
-				actionConfirmText={translate('confirm.action')}
-				actionRejectText={translate('cancel')} />
 			<ConfirmActionModalComponent
 				show={showDeleteConfirmationModal}
 				actionConfirmMessage={deleteConfirmationMessage}
@@ -416,7 +377,6 @@ export default function EditConversionModalComponent(props: EditConversionModalC
 					show={showDeleteSegmentModal}
 					direction={actionDirection}
 					segment={selectedSegment}
-					message={warningMessage}
 					handleClose={() => {
 						setShowDeleteSegmentModal(false);
 						setSelectedSegment(null);

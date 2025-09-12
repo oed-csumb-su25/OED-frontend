@@ -12,7 +12,6 @@ import ConfirmActionModalComponent from '../ConfirmActionModalComponent';
 interface DeleteConversionSegmentModalComponentProps {
 	show: boolean;
 	direction: 'earlier' | 'later';
-	message: string;
 	segment: ConversionSegmentData;
 	handleClose: () => void;
 }
