@@ -146,15 +146,19 @@ export default function EditConversionSegmentModalComponent(props: EditConversio
 				setFieldErrors({ startTimeError: translate('conversion.segment.warning.invalidStartRange') });
 				return;
 			} else if (!newStart.isSame(prevEnd)) {
-				await editSegment({
-					segment: {
-						...previous,
-						endTime: newStart.format('YYYY-MM-DD HH:mm:ss')
-					},
-					originalStartTime: previous.startTime,
-					originalEndTime: previous.endTime
-				}).unwrap();
-				showSuccessNotification(translate('conversion.segment.warning.previousAdjusted'));
+				try{
+					await editSegment({
+						segment: {
+							...previous,
+							endTime: newStart.format('YYYY-MM-DD HH:mm:ss')
+						},
+						originalStartTime: previous.startTime,
+						originalEndTime: previous.endTime
+					}).unwrap();
+					showSuccessNotification(translate('conversion.segment.warning.previousAdjusted'));
+				} catch (error) {
+					showErrorNotification(translate('conversion.segment.warning.previousAdjustFailed'));
+				}
 			}
 		}
 
@@ -169,15 +173,19 @@ export default function EditConversionSegmentModalComponent(props: EditConversio
 				setFieldErrors({ endTimeError: translate('conversion.segment.warning.invalidEndRange') });
 				return;
 			} else if (!newEnd.isSame(nextStart)) {
-				await editSegment({
-					segment: {
-						...next,
-						startTime: newEnd.format('YYYY-MM-DD HH:mm:ss')
-					},
-					originalStartTime: next.startTime,
-					originalEndTime: next.endTime
-				}).unwrap();
-				showSuccessNotification(translate('conversion.segment.warning.nextAdjusted'));
+				try {
+					await editSegment({
+						segment: {
+							...next,
+							startTime: newEnd.format('YYYY-MM-DD HH:mm:ss')
+						},
+						originalStartTime: next.startTime,
+						originalEndTime: next.endTime
+					}).unwrap();
+					showSuccessNotification(translate('conversion.segment.warning.nextAdjusted'));
+				} catch (error) {
+					showErrorNotification(translate('conversion.segment.warning.nextAdjustFailed'));
+				}
 			}
 		}
 
