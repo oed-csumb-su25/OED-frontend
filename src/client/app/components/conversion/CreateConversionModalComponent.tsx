@@ -216,7 +216,7 @@ export default function CreateConversionModalComponent() {
 	// Otherwise, if the conversion is valid, submits the conversion and resets state.
 	// If invalid, shows an error notification.
 	const handleSubmit = () => {
-		// Show warning modal if slope and intercept are both 0
+		// Show warning modal if slope and intercept are both 0 and no pattern
 		if (
 			conversionState.initialConversion.slope === 0 &&
 			conversionState.initialConversion.intercept === 0 &&
