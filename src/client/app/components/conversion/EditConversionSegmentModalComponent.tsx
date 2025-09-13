@@ -96,7 +96,7 @@ export default function EditConversionSegmentModalComponent(props: EditConversio
 		}
 	};
 
-	const handleEditSegment = async () => {
+	const handleEditSegment = () => {
 		const isStartTimeValid = moment(segment.startTime, 'YYYY-MM-DD HH:mm:ss', true).isValid() || segment.startTime === '-infinity';
 		const isEndTimeValid = moment(segment.endTime, 'YYYY-MM-DD HH:mm:ss', true).isValid() || segment.endTime === 'infinity';
 
@@ -146,19 +146,20 @@ export default function EditConversionSegmentModalComponent(props: EditConversio
 				setFieldErrors({ startTimeError: translate('conversion.segment.warning.invalidStartRange') });
 				return;
 			} else if (!newStart.isSame(prevEnd)) {
-				try{
-					await editSegment({
-						segment: {
-							...previous,
-							endTime: newStart.format('YYYY-MM-DD HH:mm:ss')
-						},
-						originalStartTime: previous.startTime,
-						originalEndTime: previous.endTime
-					}).unwrap();
-					showSuccessNotification(translate('conversion.segment.warning.previousAdjusted'));
-				} catch (error) {
-					showErrorNotification(translate('conversion.segment.warning.previousAdjustFailed'));
-				}
+				editSegment({
+					segment: {
+						...previous,
+						endTime: newStart.format('YYYY-MM-DD HH:mm:ss')
+					},
+					originalStartTime: previous.startTime,
+					originalEndTime: previous.endTime
+				}).unwrap()
+					.then(() => {
+						showSuccessNotification(translate('conversion.segment.warning.previousAdjusted'));
+					})
+					.catch(() => {
+						showErrorNotification(translate('conversion.segment.warning.previousAdjustFailed'));
+					});
 			}
 		}
 
@@ -173,19 +174,20 @@ export default function EditConversionSegmentModalComponent(props: EditConversio
 				setFieldErrors({ endTimeError: translate('conversion.segment.warning.invalidEndRange') });
 				return;
 			} else if (!newEnd.isSame(nextStart)) {
-				try {
-					await editSegment({
-						segment: {
-							...next,
-							startTime: newEnd.format('YYYY-MM-DD HH:mm:ss')
-						},
-						originalStartTime: next.startTime,
-						originalEndTime: next.endTime
-					}).unwrap();
-					showSuccessNotification(translate('conversion.segment.warning.nextAdjusted'));
-				} catch (error) {
-					showErrorNotification(translate('conversion.segment.warning.nextAdjustFailed'));
-				}
+				editSegment({
+					segment: {
+						...next,
+						startTime: newEnd.format('YYYY-MM-DD HH:mm:ss')
+					},
+					originalStartTime: next.startTime,
+					originalEndTime: next.endTime
+				}).unwrap()
+					.then(() => {
+						showSuccessNotification(translate('conversion.segment.warning.nextAdjusted'));
+					})
+					.catch(() => {
+						showErrorNotification(translate('conversion.segment.warning.nextAdjustFailed'));
+					});
 			}
 		}
 
